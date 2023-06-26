@@ -1,0 +1,46 @@
+body {
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* font styles */
+
+.sheet-title {
+  text-transform: uppercase;
+  font-size: 15px;
+  font-family: Noto Sans, sans-serif;
+  font-weight: 700;
+}
+
+.sheet-text {
+  font-size: 20px;
+  font-family: Noto Sans, sans-serif;
+}
+
+.sheet-subscript {
+  font-size: 16px;
+  font-family: Noto Sans, sans-serif;
+}
+
+.form-title {
+  font-size: 20px;
+  font-family: Rubik, sans-serif;
+  font-weight: 700;
+}
+
+.form-text {
+  font-size: 20px;
+  font-family: Rubik, sans-serif;
+}
+
+.form-big {
+  font-size: 36px;
+  font-family: Rubik, sans-serif;
+  font-weight: 300;
+}
