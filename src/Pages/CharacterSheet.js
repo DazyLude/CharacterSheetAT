@@ -1,83 +1,128 @@
-import PrimarySkills from "./Components/primaryStatsColumn";
-import GeneralInfo from "./Components/generalInfo";
+import { useState, useReducer } from "react";
+import { characterReducer, defaultCharacter, characterDataValidation } from "./Utils";
 
-function characterDataValidation(characterData) {
-    const validatedData = {...characterData};
-    // Primary skills check
-    const primarySkillNames = ["str", "dex", "con", "int", "wis", "cha"];
-    if (!("primarySkills" in characterData)) {
-        characterData["primarySkills"] = {};
-        validatedData["primarySkills"] = {};
-    }
-    primarySkillNames.forEach(
-        ps => {
-            if (!(ps in characterData["primarySkills"])) {
-                validatedData["primarySkills"][ps] = 10;
-            }
-        }
-    );
-    return validatedData;
-}
+import PrimarySkills from "./Components/primarySkills";
+import SecondarySkills from "./Components/secondarySkills";
+import GeneralInfo from "./Components/generalInfo";
+import BattleStats from "./Components/battleStats";
+import HealthStats from "./Components/healthStats";
+import SavingThrows from "./Components/savingThrows";
+import HitdiceTracker from "./Components/hitdiceTracker";
+import ExhaustionTracker from "./Components/exhaustionTracker";
+import DeathSavesTracker from "./Components/deathSavesTracker";
+
 
 export default function CharacterSheet(props) {
-    const characterData = characterDataValidation( {
-        "characterName": "Daino",
-        "characterClass": "Artificier",
-        "characterLevel": "8",
-        "characterBackground": "Sage",
-        "characterRace": "Gnome",
-        "primarySkills": {
-            "str": 8,
-            "dex": 16,
-            "con": 12,
-            "int": 20,
-            "wis": 14,
-            "cha": 10,
-        }
-    } );
+    const [characterData, characterDispatch] = useReducer( characterReducer, defaultCharacter, characterDataValidation );
+    const [readOnly, setReadOnly] = useState(true);
 
     return (
         <div
             id="character-sheet"
             style={{
                 "margin": "auto",
-                "width": "min(820px, 100%)",
+                "width": "890px",
                 "display": "grid",
-                "gridTemplateColumns": "repeat(12, 1fr)"
+                "gridTemplateColumns": "repeat(12, 1fr)",
+                "gridAutoRows": "25px",
+                "columnGap": "10px",
+                "rowGap": "10px",
             }}>
+            <button
+                style={{
+                    "gridColumn": "1",
+                    "gridRow": "1/3",
+                    "zIndex": "9999",
+                }}
+                onClick={() => {setReadOnly(!readOnly)}}>
+                    magical debug button
+            </button>
+            <button
+                style={{
+                    "gridColumn": "2",
+                    "gridRow": "1/3",
+                    "zIndex": "9999",
+                }}
+                onClick={() => {console.log(characterData)}}>
+                    magical debug button 2
+            </button>
+
             <GeneralInfo
                 placement={{
                     "gridColumn": "1/-1",
-                    "height": "100px"
+                    "gridRow": "1/4",
                 }}
-                characterName={characterData.characterName ?? "Lorem"}
-                characterClass={characterData.characterClass ?? "Ispum"}
-                characterLevel={characterData.characterLevel ?? "Dolor"}
-                characterBackground={characterData.characterBackground ?? "Sit"}
-                characterRace={characterData.characterRace ?? "Amet"}
+                characterName={characterData.characterName}
+                characterClass={characterData.characterClass}
+                characterLevel={characterData.characterLevel}
+                characterBackground={characterData.characterBackground}
+                characterRace={characterData.characterRace}
+                changeHandler={(merge) => characterDispatch({
+                        type: "change-text-field",
+                        mergeObject: merge,
+                    })}
+                readOnly={readOnly}
             />
             <PrimarySkills
                 placement={{
                     "gridColumn": "1/3",
+                    "gridRow": "4/22",
                 }}
                 skills={characterData.primarySkills}
+                readOnly={readOnly}
+                changeHandler={(merge) => characterDispatch({
+                    type: "change-text-field",
+                    mergeObject: merge,
+                    fieldName: "primarySkills",
+                })}
             />
-            <SecondarySkills />
+            <SecondarySkills
+                placement={{
+                    "gridColumn": "3/6",
+                    "gridRow": "4/22",
+                }}
+                skills={characterData.primarySkills}
+                proficiencies={characterData.proficiencies}
+                proficiencyModifier={characterData.proficiencyModifier}
+                readOnly={readOnly}
+                changeHandler={
+                    (prof, val) => characterDispatch({
+                        type: "change-proficiency",
+                        proficiency: prof,
+                        newValue: val,
+                    })
+                }
+            />
+            <BattleStats
+                placement={{
+                    "gridColumn": "6/9",
+                    "gridRow": "4/8",
+            }}/>
+            <HealthStats
+                placement={{
+                    "gridColumn": "9/-1",
+                    "gridRow": "4/8",
+            }}/>
+            <SavingThrows
+                placement={{
+                    "gridColumn": "6/8",
+                    "gridRow": "8/11",
+            }}/>
+            <HitdiceTracker
+                placement={{
+                    "gridColumn": "8/10",
+                    "gridRow": "8/11",
+            }}/>
+            <ExhaustionTracker
+                placement={{
+                    "gridColumn": "10/12",
+                    "gridRow": "8/11",
+            }}/>
+            <DeathSavesTracker
+                placement={{
+                    "gridColumn": "7/9",
+                    "gridRow": "11/14",
+            }}/>
+
         </div>);
-}
-
-
-
-
-
-function SecondarySkills(props) {
-    return (
-        <div
-            id="secondary-skills"
-            style={{
-                "gridColumn": "3/6"
-            }}
-        >
-        </div>
-    );
 }
