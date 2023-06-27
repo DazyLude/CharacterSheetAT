@@ -105,27 +105,47 @@ export default function CharacterSheet(props) {
                 placement={{
                     "gridColumn": "9/-1",
                     "gridRow": "4/8",
-            }}/>
-            <SavingThrows
-                placement={{
-                    "gridColumn": "6/8",
-                    "gridRow": "8/11",
-            }}/>
+                }}
+                health={{
+                    ...characterData.health
+                }}
+                changeHandler={(merge) => characterDispatch({
+                    type: "change-text-field",
+                    mergeObject: merge,
+                    fieldName: "health",
+                })}
+                readOnly={readOnly}
+            />
             <HitdiceTracker
                 placement={{
                     "gridColumn": "8/10",
                     "gridRow": "8/11",
-            }}/>
+                }}
+                hitDice={characterData.hitDice}
+                changeHandler={(merge) => characterDispatch({
+                    type: "change-text-field",
+                    mergeObject: merge,
+                })}
+                readOnly={readOnly}
+            />
+            <SavingThrows
+                placement={{
+                    "gridColumn": "6/8",
+                    "gridRow": "8/11",
+                }}
+            />
             <ExhaustionTracker
                 placement={{
                     "gridColumn": "10/12",
                     "gridRow": "8/11",
-            }}/>
+                }}
+            />
             <DeathSavesTracker
                 placement={{
                     "gridColumn": "7/9",
                     "gridRow": "11/14",
-            }}/>
+                }}
+            />
 
         </div>);
 }

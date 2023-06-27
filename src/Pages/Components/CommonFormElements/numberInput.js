@@ -7,14 +7,11 @@ export default function NumberInput(props) {
         <>
             {readOnly ? (<div>{value}</div>) : (
                 <input
-                    type="number"
-                    style={{
-                        paddingLeft: "18px",
-                        width: "80%"
-                    }}
+                    type="text"
                     value={value}
                     onChange={event => {
-                        onChange(parseInt(event.target.value));
+                        const newValue = parseInt(event.target.value);
+                        onChange(isNaN(newValue) ? event.target.value : newValue);
                     }}
                 />
             )}

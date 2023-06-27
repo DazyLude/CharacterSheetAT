@@ -24,10 +24,10 @@ export default function BattleStats(props) {
             <div>
                 <div className="sheet-title">armor</div>
                 <div className="form-big">
-                <NumberInput
-                        value={props.armorClass}
-                        onChange={(newValue)=>{props.changeHandler({"armorClass": newValue})}}
-                        readOnly={props.readOnly}
+                    <NumberInput
+                            value={props.armorClass}
+                            onChange={(newValue)=>{props.changeHandler({"armorClass": newValue})}}
+                            readOnly={props.readOnly}
                     />
                 </div>
                 <div className="sheet-title">class</div>

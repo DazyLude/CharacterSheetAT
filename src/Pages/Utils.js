@@ -1,10 +1,8 @@
 export function getStatMod(value, otherModifiers = 0) {
     if (typeof(value) !== "number") {
-        console.error(`value type must be a number:\nvalue: ${value}, type: ${typeof(value)}`);
         return 0;
     }
     if (typeof(otherModifiers) !== "number") {
-        console.error(`otherModifiers type must be a number:\nvalue: ${otherModifiers}, type: ${typeof(otherModifiers)}`);
         otherModifiers = 0;
     }
 
@@ -120,4 +118,5 @@ export const defaultCharacter = {
     },
     "armorClass": 19,
     "initiative": "+3",
+    "hitDice": "8d8",
 }
