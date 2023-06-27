@@ -57,11 +57,11 @@ function changeProficiency(oldData, proficiency, newValue) {
 export function characterDataValidation(characterData) {
     const validatedData = {...characterData};
     // General info check
-    validatedData.characterName = validatedData.characterName ?? "Lorem";
-    validatedData.characterClass = validatedData.characterClass ?? "Ispum";
-    validatedData.characterLevel = validatedData.characterLevel ?? "Dolor";
-    validatedData.characterBackground = validatedData.characterBackground ?? "Sit";
-    validatedData.characterRace = validatedData.characterRace ?? "Amet";
+    validatedData.characterName ??= "Lorem";
+    validatedData.characterClass ??= "Ispum";
+    validatedData.characterLevel ??= "Dolor";
+    validatedData.characterBackground ??= "Sit";
+    validatedData.characterRace ??= "Amet";
     // Primary skills check
     const primarySkillNames = ["str", "dex", "con", "int", "wis", "cha"];
     if (!("primarySkills" in validatedData)) {
@@ -83,6 +83,11 @@ export function characterDataValidation(characterData) {
     ) {
         validatedData["proficiencyModifier"] = 2;
     }
+    // Battle stats
+    validatedData.armorClass ??= 10;
+    validatedData.intiative ??= "+0";
+
+
     return validatedData;
 }
 
@@ -112,5 +117,7 @@ export const defaultCharacter = {
         "maxHp": 43,
         "currentHp": 43,
         "tempHp": 7,
-    }
+    },
+    "armorClass": 19,
+    "initiative": "+3",
 }

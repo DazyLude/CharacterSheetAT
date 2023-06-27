@@ -11,6 +11,8 @@ import HitdiceTracker from "./Components/hitdiceTracker";
 import ExhaustionTracker from "./Components/exhaustionTracker";
 import DeathSavesTracker from "./Components/deathSavesTracker";
 
+import MagicalDebugButton from "./Components/magicalDebugButton";
+
 
 export default function CharacterSheet(props) {
     const [characterData, characterDispatch] = useReducer( characterReducer, defaultCharacter, characterDataValidation );
@@ -28,24 +30,17 @@ export default function CharacterSheet(props) {
                 "columnGap": "10px",
                 "rowGap": "10px",
             }}>
-            <button
-                style={{
-                    "gridColumn": "1",
-                    "gridRow": "1/3",
-                    "zIndex": "9999",
-                }}
-                onClick={() => {setReadOnly(!readOnly)}}>
-                    magical debug button
-            </button>
-            <button
-                style={{
-                    "gridColumn": "2",
-                    "gridRow": "1/3",
-                    "zIndex": "9999",
-                }}
-                onClick={() => {console.log(characterData)}}>
-                    magical debug button 2
-            </button>
+
+            <MagicalDebugButton
+                placement={{"gridColumn": "1", "gridRow": "23/25"}}
+                action={() => {setReadOnly(!readOnly)}}
+                additive={" 1"}
+            />
+            <MagicalDebugButton
+                placement={{"gridColumn": "2", "gridRow": "23/25"}}
+                action={() => {console.log(characterData)}}
+                additive={" 2"}
+            />
 
             <GeneralInfo
                 placement={{
@@ -97,7 +92,10 @@ export default function CharacterSheet(props) {
                 placement={{
                     "gridColumn": "6/9",
                     "gridRow": "4/8",
-            }}/>
+                }}
+                initiative={characterData.initiative}
+                armorClass={characterData.armorClass}
+            />
             <HealthStats
                 placement={{
                     "gridColumn": "9/-1",
