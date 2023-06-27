@@ -9,7 +9,6 @@ export default function NumberInput(props) {
                 <input
                     type="number"
                     style={{
-                        textAlign: "center",
                         paddingLeft: "18px",
                         width: "80%"
                     }}

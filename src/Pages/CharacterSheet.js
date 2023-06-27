@@ -95,6 +95,11 @@ export default function CharacterSheet(props) {
                 }}
                 initiative={characterData.initiative}
                 armorClass={characterData.armorClass}
+                changeHandler={(merge) => characterDispatch({
+                    type: "change-text-field",
+                    mergeObject: merge,
+                })}
+                readOnly={readOnly}
             />
             <HealthStats
                 placement={{
