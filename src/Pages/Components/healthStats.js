@@ -3,7 +3,6 @@ import NumberInput from "./CommonFormElements/numberInput";
 export default function HealthStats(props) {
     return (
         <div style={{
-            "textAlign": "center",
             "display": "grid",
             "gridTemplateColumns": "1fr 1fr 1fr",
             "gridTemplateRows": "30px auto",
@@ -11,8 +10,8 @@ export default function HealthStats(props) {
             "alignItems": "start",
             "justifyItems": "center",
             "background": "#eeeeee",
-            "padding": "5px",
-            ...props.placement,
+            "textAlign": "center",
+            "height": "100%",
         }}>
             <div className="sheet-title" style={{gridColumn: "1/-1", alignSelf: "end"}}>Health</div>
             <div>
@@ -21,7 +20,6 @@ export default function HealthStats(props) {
                     <NumberInput
                         value={props.health.maxHp}
                         onChange={(newValue)=>{props.changeHandler({"maxHp": newValue})}}
-                        readOnly={props.readOnly}
                     />
                 </div>
             </div>
@@ -31,7 +29,6 @@ export default function HealthStats(props) {
                     <NumberInput
                             value={props.health.currentHp}
                             onChange={(newValue)=>{props.changeHandler({"currentHp": newValue})}}
-                            readOnly={props.readOnly}
                     />
                 </div>
             </div>
@@ -41,7 +38,6 @@ export default function HealthStats(props) {
                     <NumberInput
                             value={props.health.tempHp}
                             onChange={(newValue)=>{props.changeHandler({"tempHp": newValue})}}
-                            readOnly={props.readOnly}
                     />
                 </div>
             </div>

@@ -1,6 +1,10 @@
-import { getStatMod} from "../Utils";
+import { useContext } from "react";
+import { getStatMod } from "../Utils";
+import { AppContext } from "./appContext";
 
 export default function SecondarySkills(props) {
+    const context = useContext(AppContext);
+
     const skillList = {
         "acrobatics": "dex",
         "animal Handling": "cha",
@@ -25,7 +29,7 @@ export default function SecondarySkills(props) {
         ([skillName, skillDep]) => {
             const isProficient = props.proficiencies[skillName] ?? false;
             const modifier = (props.proficiencies[skillName] ?? 0) * props.proficiencyModifier;
-            const changeHandler = props.readOnly ? () => {} : () => {props.changeHandler(skillName, isProficient ? 0 : 1)};
+            const changeHandler = context.readOnly ? () => {} : () => {props.changeHandler(skillName, isProficient ? 0 : 1)};
             return {
                 name: skillName,
                 prof: isProficient,
@@ -44,12 +48,12 @@ export default function SecondarySkills(props) {
         <div
             id="secondary-skills"
             style={{
+                "height": "100%",
                 "display": "flex",
                 "flexDirection": "column",
                 "justifyContent": "space-around",
                 "textAlign": "center",
                 "padding": "5px 0px",
-                ...props.placement,
             }}
         >
             <span className="sheet-title">skills</span>

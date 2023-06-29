@@ -18,7 +18,6 @@ export default function PrimarySkills(props) {
                 key={key}
                 value={props.skills[key]}
                 title={val}
-                readOnly={props.readOnly}
                 onChange={(newValue) => {
                     const mergeObject = {};
                     mergeObject[key] = newValue;
@@ -32,11 +31,11 @@ export default function PrimarySkills(props) {
         <div
             id="primary-skills"
             style={{
+                "height": "100%",
                 "display": "flex",
                 "flexDirection": "column",
                 "textAlign": "center",
                 "justifyContent": "space-around",
-                ...props.placement
             }}
         >
             {statList}
@@ -61,11 +60,10 @@ function StatSquare(props) {
                 <NumberInput
                     value={props.value}
                     onChange={(val) => props.onChange(val)}
-                    readOnly={props.readOnly}
                 />
             </div>
             <div
-                className="form-text"
+                className="sheet-large"
                 style={{
 
             }}>

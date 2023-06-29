@@ -6,15 +6,22 @@ export default function HitdiceTracker(props) {
             "textAlign": "center",
             "alignItems": "center",
             "background": "#eeeeee",
-            "paddingTop": "18px",
-            ...props.placement,
+            "height": "100%",
+            "display": "grid",
+            "gridTemplateColumns": "1fr 1fr",
         }}>
-            <div className="sheet-title">hit dice</div>
-            <div className="form-big">
+            <div style={{gridColumn:"1/-1", paddingTop:"5px"}} className="sheet-title">hit dice</div>
+            <span className="sheet-text">total: </span>
+            <span className="form-text">
+                <TextInput
+                    value={props.hitDiceTotal}
+                    onChange={(newValue)=>{props.changeHandler({"hitDiceTotal": newValue})}}
+                />
+            </span>
+            <div style={{gridColumn:"1/-1"}} className="form-big">
                 <TextInput
                     value={props.hitDice}
                     onChange={(newValue)=>{props.changeHandler({"hitDice": newValue})}}
-                    readOnly={props.readOnly}
                 />
             </div>
         </div>

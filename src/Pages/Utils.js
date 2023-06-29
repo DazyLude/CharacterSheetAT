@@ -28,7 +28,7 @@ export function characterReducer(oldData, action) {
     return oldData;
 }
 
-function changeField(oldData, replacementData, fieldName = "") {
+export function changeField(oldData, replacementData, fieldName = "") {
     if (fieldName !== "") {
         const newData = {
             ...oldData
@@ -81,10 +81,16 @@ export function characterDataValidation(characterData) {
     ) {
         validatedData["proficiencyModifier"] = 2;
     }
+    // Death saving throws
+    validatedData.deathSavingThrows ??= {};
+    validatedData.deathSavingThrows.successes ??= 0;
+    validatedData.deathSavingThrows.failures ??= 0;
     // Battle stats
     validatedData.armorClass ??= 10;
     validatedData.intiative ??= "+0";
-
+    validatedData.hitDice ??= "0d0";
+    validatedData.hitDiceTotal ??= "0";
+    validatedData.exhaustion ??=  0;
 
     return validatedData;
 }
@@ -110,8 +116,10 @@ export const defaultCharacter = {
         "history": 1,
         "medicine": 1,
         "perception": 1,
+        "conSaving": 1,
+        "intSaving": 1,
     },
-    "health" : {
+    "health": {
         "maxHp": 43,
         "currentHp": 43,
         "tempHp": 7,
@@ -119,4 +127,25 @@ export const defaultCharacter = {
     "armorClass": 19,
     "initiative": "+3",
     "hitDice": "8d8",
+    "hitDiceTotal": "8d8",
+    "exhaustion": 0,
+    "deathSavingThrows": {
+        "successes": 0,
+        "failures": 0,
+    }
+}
+
+export const defaultLayout = {
+    "MagicalButton1": {x: 1, y: 23, w: 1, h: 2},
+    "MagicalButton2": {x: 2, y: 23, w: 1, h: 2},
+    "MagicalButton3": {x: 3, y: 23, w: 1, h: 2},
+    "GeneralInfo": {x: 1, y: 1, w: -1, h: 3},
+    "PrimarySkills": {x: 1, y: 4, w: 2, h: 18},
+    "SecondarySkills": {x: 3, y: 4, w: 3, h: 18},
+    "BattleStats": {x: 6, y: 4, w: 3, h: 4},
+    "HealthStats": {x: 9, y: 4, w: -1, h: 4},
+    "DeathSavesTracker": {x: 6, y: 8, w: 3, h: 3},
+    "HitdiceTracker": {x: 9, y: 8, w: 2, h: 3},
+    "ExhaustionTracker": {x: 11, y: 8, w: -1, h: 3},
+    "SavingThrows": {x: 7, y: 11, w: 2, h: 3},
 }

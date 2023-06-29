@@ -1,7 +1,10 @@
+import { useContext } from "react";
+import { AppContext } from "../appContext";
+
 export default function TextInput(props) {
     const value = props.value ?? "";
     const onChange = props.onChange ?? ((e) => {});
-    const readOnly = props.readOnly ?? true;
+    const {readOnly} = useContext(AppContext);
 
     return(
         <>
