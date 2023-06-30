@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { HashRouter, Route, Routes } from 'react-router-dom';
 
 import CharacterSheet from './Pages/CharacterSheet';
 import ConfigPage from './Pages/ConfigPage';
@@ -9,7 +9,7 @@ import { useReducer } from 'react';
 function App() {
   const [context, contextDispatcher] = useReducer(contextReducer, initialContext);
   return (
-    <BrowserRouter>
+    <HashRouter>
       <AppContext.Provider value={context}>
         <AppDispatchContext.Provider value={contextDispatcher}>
           <Routes>
@@ -18,7 +18,7 @@ function App() {
           </Routes>
         </AppDispatchContext.Provider>
       </AppContext.Provider>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 

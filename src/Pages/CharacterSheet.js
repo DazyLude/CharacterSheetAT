@@ -1,4 +1,4 @@
-import { useReducer, useContext } from "react";
+import { useReducer, useContext, useEffect } from "react";
 import { characterReducer, defaultCharacter, characterDataValidation } from "./Utils";
 
 import MagicalDebugButton from "./Components/magicalDebugButton";
@@ -8,11 +8,27 @@ import { GridContext, GridContextReducer, gridContextReducer, initialGridContext
 
 import MainSection from "./Sections/mainSection";
 
-
 export default function CharacterSheet(props) {
     const [characterData, characterDispatch] = useReducer( characterReducer, defaultCharacter, characterDataValidation );
     const [gridContext, gridContextDispatch] = useReducer( gridContextReducer, initialGridContext );
     const contextDispatcher = useContext(AppDispatchContext);
+
+    useEffect(() => {
+        const loadData = localStorage.getItem('characterData');
+        if (loadData !== null) {
+            let parsedData;
+            try {
+                parsedData = JSON.parse(loadData);
+            }
+            catch {
+                return;
+            }
+            finally {
+                characterDispatch({type: "load-from-disk", data: parsedData});
+            }
+        }
+    }, [])
+
     return (
         <GridContext.Provider value={gridContext}>
             <GridContextReducer.Provider value={gridContextDispatch}>
@@ -46,9 +62,49 @@ export default function CharacterSheet(props) {
                             additive={" 3"}
                         />
                     </GridElement>
+                    <GridElement id={"MagicalButton4"}>
+                        Choose a file:
+                        <input type="file" id="file-selector" accept="application/json"/>
+                        <MagicalDebugButton
+                            action={() => {pickCharacterFile(characterDispatch)}}
+                            additive={" 4"}
+                        />
+                    </GridElement>
+                    <GridElement id={"MagicalButton5"}>
+                        <MagicalDebugButton
+                            action={() => {saveCharacterToFile(characterData)}}
+                            additive={" 5"}
+                        />
+                    </GridElement>
+
                     <MainSection characterData={characterData} characterDispatch={characterDispatch} />
                 </div>
             </GridContextReducer.Provider>
         </GridContext.Provider>
         );
+}
+
+
+function pickCharacterFile(characterDispatch) {
+    const selectedFile = document.getElementById("file-selector").files[0];
+    if (selectedFile === undefined) {
+        return;
+    }
+    const reader = new FileReader();
+    reader.addEventListener(
+        "load",
+        () => {
+            localStorage.setItem("characterData", reader.result);
+            characterDispatch({type: "load-from-disk", data: JSON.parse(reader.result)});
+        },
+        false
+    );
+    reader.readAsText(selectedFile);
+}
+
+function saveCharacterToFile(data) {
+    var a = document.createElement('a');
+    a.setAttribute('href', 'data:text/plain;charset=utf-8,'+encodeURIComponent(JSON.stringify(data)));
+    a.setAttribute('download', 'characterData.json');
+    a.click()
 }

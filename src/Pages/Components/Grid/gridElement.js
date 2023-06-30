@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import { AppContext } from "../appContext";
 import { GridContext, GridContextReducer } from "./gridContext";
 import NumberInput from "../CommonFormElements/numberInput";
@@ -9,7 +9,6 @@ export default function GridElement({id, children}) {
     const gridContextReducer = useContext(GridContextReducer);
 
     const placement = `${y} / ${x} / ${h === -1 ? -1 : y + h} /  ${w === -1 ? -1 : x + w}`
-    const [tempX, setTempX] = useState(x);
 
     return (
         <div style={{position: "relative", gridArea: placement}}>

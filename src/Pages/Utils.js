@@ -21,6 +21,9 @@ export function characterReducer(oldData, action) {
             return changeProficiency(oldData, action.proficiency, action.newValue);
         case "change-text-field":
             return changeField(oldData, action.mergeObject, action.fieldName);
+        case "load-from-disk":
+            console.log("loaded file from local storage");
+            return characterDataValidation(action.data);
         default:
             break;
     }
@@ -95,50 +98,14 @@ export function characterDataValidation(characterData) {
     return validatedData;
 }
 
-export const defaultCharacter = {
-    "characterName": "Daino",
-    "characterClass": "Artificier",
-    "characterLevel": "8",
-    "characterBackground": "Sage",
-    "characterRace": "Gnome",
-    "primarySkills": {
-        "str": 8,
-        "dex": 16,
-        "con": 12,
-        "int": 20,
-        "wis": 14,
-        "cha": 10,
-    },
-    "proficiencyModifier": 3,
-    "proficiencies": {
-        "acrobatics": 1,
-        "arcana": 1,
-        "history": 1,
-        "medicine": 1,
-        "perception": 1,
-        "conSaving": 1,
-        "intSaving": 1,
-    },
-    "health": {
-        "maxHp": 43,
-        "currentHp": 43,
-        "tempHp": 7,
-    },
-    "armorClass": 19,
-    "initiative": "+3",
-    "hitDice": "8d8",
-    "hitDiceTotal": "8d8",
-    "exhaustion": 0,
-    "deathSavingThrows": {
-        "successes": 0,
-        "failures": 0,
-    }
-}
+export const defaultCharacter = {}
 
 export const defaultLayout = {
     "MagicalButton1": {x: 1, y: 23, w: 1, h: 2},
     "MagicalButton2": {x: 2, y: 23, w: 1, h: 2},
     "MagicalButton3": {x: 3, y: 23, w: 1, h: 2},
+    "MagicalButton4": {x: 4, y: 23, w: 1, h: 2},
+    "MagicalButton5": {x: 5, y: 23, w: 1, h: 2},
     "GeneralInfo": {x: 1, y: 1, w: -1, h: 3},
     "PrimarySkills": {x: 1, y: 4, w: 2, h: 18},
     "SecondarySkills": {x: 3, y: 4, w: 3, h: 18},
