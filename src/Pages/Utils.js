@@ -21,6 +21,8 @@ export function characterReducer(oldData, action) {
             return changeProficiency(oldData, action.proficiency, action.newValue);
         case "change-text-field":
             return changeField(oldData, action.mergeObject, action.fieldName);
+        case "change-grid-field":
+            return changeField(oldData.gridData, action.merge, action.id);
         case "load-from-disk":
             console.log("loaded file from local storage");
             return characterDataValidation(action.data);
@@ -95,10 +97,18 @@ export function characterDataValidation(characterData) {
     validatedData.hitDiceTotal ??= "0";
     validatedData.exhaustion ??=  0;
 
+    validatedData.gridData ??= {};
+    validatedData.gridData.GeneralInfo ??= {x: 1, y: 1, w: -1, h: 3};
+    validatedData.gridData.PrimarySkills ??= {x: 1, y: 4, w: 2, h: 18};
+    validatedData.gridData.SecondarySkills ??= {x: 3, y: 4, w: 3, h: 18};
+    validatedData.gridData.BattleStats ??= {x: 6, y: 4, w: 3, h: 4};
+    validatedData.gridData.HealthStats ??= {x: 9, y: 4, w: -1, h: 4};
+    validatedData.gridData.DeathSavesTracker ??= {x: 6, y: 8, w: 3, h: 3};
+    validatedData.gridData.HitdiceTracker ??= {x: 9, y: 8, w: 2, h: 3};
+    validatedData.gridData.ExhaustionTracker ??= {x: 11, y: 8, w: -1, h: 3};
+    validatedData.gridData.SavingThrows ??= {x: 7, y: 11, w: 2, h: 3};
     return validatedData;
 }
-
-export const defaultCharacter = {}
 
 export const defaultLayout = {
     "MagicalButton1": {x: 1, y: 23, w: 1, h: 2},

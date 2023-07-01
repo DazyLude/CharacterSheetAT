@@ -5,10 +5,10 @@ import NumberInput from "../CommonFormElements/numberInput";
 
 export default function GridElement({id, children}) {
     const { isLayoutLocked } = useContext(AppContext);
-    const { x, y, h, w } = useContext(GridContext)[id];
+    const { x, y, h, w } = useContext(GridContext)[id] ?? { x: 1, y: 1, w: 1, h: 1 };
     const gridContextReducer = useContext(GridContextReducer);
 
-    const placement = `${y} / ${x} / ${h === -1 ? -1 : y + h} /  ${w === -1 ? -1 : x + w}`
+    const placement = `${y} / ${x} / ${h === -1 ? -1 : y + h} / ${w === -1 ? -1 : x + w}`
 
     return (
         <div style={{position: "relative", gridArea: placement}}>

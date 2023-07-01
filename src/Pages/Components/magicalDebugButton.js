@@ -7,7 +7,7 @@ export default function MagicalDebugButton({additive, action}) {
             return;
         }
         action();
-        console.log(`ran magical debug button ${additive} button for ${activationSwitch} time`); // eslint-disable-next-line
+        console.log(`ran magical debug button ${additive} for ${activationSwitch} time`); // eslint-disable-next-line
     }, [activationSwitch])
 
     return (
