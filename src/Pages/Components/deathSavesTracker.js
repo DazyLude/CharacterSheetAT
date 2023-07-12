@@ -4,9 +4,7 @@ import { AppContext } from "./appContext";
 export default function DeathSavesTracker(props) {
     return (
         <div style={{
-            "textAlign": "center",
             "alignItems": "center",
-            "background": "#eeeeee",
             "height": "100%",
             "display": "grid",
             "gridAutoRows": "1fr",
@@ -52,9 +50,9 @@ function RadioRow(props) {
             onClick={() => {clickHandler()}}
         >
             <span className="sheet-text" style={{paddingTop: "5px"}}>{props.title}</span>
-            <input type="radio" checked={props.count >= 1} readOnly/>
-            <input type="radio" checked={props.count >= 2} readOnly/>
-            <input type="radio" checked={props.count >= 3} readOnly/>
+            <input type="radio" tabIndex="-1" checked={props.count >= 1} readOnly/>
+            <input type="radio" tabIndex="-1" checked={props.count >= 2} readOnly/>
+            <input type="radio" tabIndex="-1" checked={props.count >= 3} readOnly/>
         </div>
     );
 }

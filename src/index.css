@@ -17,6 +17,7 @@ code {
   font-family: Noto Sans, sans-serif;
   font-weight: 700;
   user-select: none;
+  width: 100%;
 }
 
 .sheet-text {
@@ -24,6 +25,7 @@ code {
   font-size: 16px;
   font-family: Noto Sans, sans-serif;
   user-select: none;
+  width: 100%;
 }
 
 .sheet-large {
@@ -31,36 +33,51 @@ code {
   font-size: 20px;
   font-family: Noto Sans, sans-serif;
   user-select: none;
+  width: 100%;
+}
+
+.sheet-big {
+  font-size: 36px;
+  font-family: Noto Sans, sans-serif;
+  user-select: none;
+  font-weight: 300;
+  width: 100%;
 }
 
 .sheet-subscript {
   font-size: 16px;
   font-family: Noto Sans, sans-serif;
   user-select: none;
+  width: 100%;
 }
 
 .form-title {
   font-size: 20px;
-  font-family: Rubik, sans-serif;
+  font-family: Consolas, sans-serif;
   font-weight: 700;
+  width: 100%;
 }
 
 .form-text {
   font-size: 20px;
-  font-family: Rubik, sans-serif;
+  font-family: Consolas, sans-serif;
   font-weight: 300;
+  width: 100%;
 }
 
 .form-big {
   font-size: 36px;
-  font-family: Rubik, sans-serif;
+  font-family: Consolas, sans-serif;
   font-weight: 300;
+  width: 100%;
 }
 
 .form-subscript {
   font-size: 16px;
-  font-family: Rubik, sans-serif;
+  font-family: Consolas, sans-serif;
   user-select: none;
+  font-weight: 300;
+  width: 100%;
 }
 
 input[type="text"],
@@ -72,15 +89,57 @@ input[type="number"] {
   text-align: inherit;
   width: 90%;
   background: inherit;
-  transition: linear;
   border: none;
-  transition-duration: 50ms;
+
+  overflow: visible;
 }
 
 input[type="text"]:focus,
 input[type="number"]:focus {
   border: 2px dashed black;
   margin: -2px;
-  transition: linear;
-  transition-duration: 50ms;
+}
+
+textarea {
+  resize: none;
+  width: 95%;
+  height: 96%;
+  box-sizing: border-box;
+  border: 2px solid #ccc;
+  border-radius: 2px;
+  background-color: #f8f8f8;
+  font-family: Consolas;
+}
+
+button, select {
+  padding: 10px 20px;
+  font-size: 16px;
+  font-family: Noto Sans, sans-serif;
+  border-radius: 1px;
+  background-color: #e8e8e8;
+  border: 1px solid #c0c0c0;
+}
+
+button:hover, select:hover {
+  background-color: #e0e0e0;
+}
+
+button:active, select:active {
+  background-color: #d0d0d0;
+}
+
+option:focus {
+  background-color: #ccc;
+}
+
+.grid-element {
+  text-align: center;
+  align-items: center;
+  background: #eeeeee;
+  height: 100%;
+  width: 100%;
+}
+
+.error {
+  color: #880000;
 }

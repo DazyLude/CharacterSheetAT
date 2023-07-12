@@ -22,12 +22,7 @@ export default function HitdiceTracker(props) {
     }
 
     return (
-        <div style={{
-            "textAlign": "center",
-            "alignItems": "center",
-            "background": "#eeeeee",
-            "height": "100%",
-            }}
+        <div
             title={exhaustionTooltip}
         >
             <div className="sheet-title" style={{"paddingTop": "10px"}}>exhaustion</div>

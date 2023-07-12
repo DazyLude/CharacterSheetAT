@@ -10,13 +10,16 @@ export default function FileManipulation({characterDispatch, characterData}) {
         pickCharacterFile(characterDispatch); // eslint-disable-next-line
     }, [submitCounter])
     return (
-        <div>
-            file and cache manipulation element
+        <div style={{
+            position: "absolute",
+            display: "grid",
+            zIndex: "10"
+        }}>
             <UseEffectButton title={"clear local storage"} action={() => {localStorage.clear()}} />
-            <UseEffectButton title={"save character"} action={() => {saveCharacterToFile(characterData)}} />
+            <UseEffectButton title={"save character sheet"} action={() => {saveCharacterToFile(characterData)}} />
             <input type="file" id="file-selector" onChange={() => {setSubmitCounter(submitCounter + 1)}} accept="application/json" style={{display:"none"}}/>
             <UseEffectButton
-                title={"load character"}
+                title={"load character sheet"}
                 action={() => {
                     document.getElementById("file-selector").click();
                 }}
@@ -34,6 +37,7 @@ function pickCharacterFile(characterDispatch) {
     reader.addEventListener(
         "load",
         () => {
+            console.log(reader.result);
             localStorage.setItem("characterData", reader.result);
             characterDispatch({type: "load-from-disk", data: JSON.parse(reader.result)});
         },

@@ -6,6 +6,7 @@ export const AppDispatchContext = createContext(null)
 export const initialContext = {
     readOnly: false,
     isLayoutLocked: true,
+    isEditingElements: false,
 }
 
 export function contextReducer(state, action) {
@@ -17,6 +18,8 @@ export function contextReducer(state, action) {
         case "layoutEdit-switch":
             newState.isLayoutLocked = !state.isLayoutLocked;
             break;
+        case "elementEdit-switch":
+            newState.isEditingElements = !state.isEditingElements;
         default:
             break;
     }

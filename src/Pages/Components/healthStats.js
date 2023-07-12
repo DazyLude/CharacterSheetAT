@@ -9,9 +9,6 @@ export default function HealthStats(props) {
             "rowGap": "10px",
             "alignItems": "start",
             "justifyItems": "center",
-            "background": "#eeeeee",
-            "textAlign": "center",
-            "height": "100%",
         }}>
             <div className="sheet-title" style={{gridColumn: "1/-1", alignSelf: "end"}}>Health</div>
             <div>

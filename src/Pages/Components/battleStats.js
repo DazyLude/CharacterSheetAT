@@ -5,11 +5,9 @@ export default function BattleStats(props) {
     return (
         <div style={{
             "height": "100%",
-            "textAlign": "center",
             "display": "grid",
-            "gridTemplateColumns": "1fr 1fr",
             "alignItems": "center",
-            "background": "#eeeeee",
+            "gridTemplateColumns": "1fr 1fr"
         }}>
             <div>
                 <div className="sheet-title">initiative</div>

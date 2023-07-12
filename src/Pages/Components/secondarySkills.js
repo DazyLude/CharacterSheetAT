@@ -45,20 +45,20 @@ export default function SecondarySkills(props) {
         }
     )
     return (
-        <div
-            id="secondary-skills"
-            style={{
-                "height": "100%",
-                "display": "flex",
-                "flexDirection": "column",
-                "justifyContent": "space-around",
-                "textAlign": "center",
-                "padding": "5px 0px",
-            }}
-        >
-            <span className="sheet-title">skills</span>
-            {rows}
-        </div>
+        <>
+            <div
+                id="secondary-skills"
+                style={{
+                    "height": "100%",
+                    "display": "grid",
+                    "rowGap": "5px",
+                    "paddingTop": "1px",
+                }}
+            >
+                <div className="sheet-title">skills</div>
+                {rows}
+            </div>
+        </>
     );
 }
 
@@ -73,16 +73,15 @@ function SecondarySkillRow(props) {
             className="sheet-text"
             style={{
                 "display": "grid",
-                "height": "27px",
-                "paddingTop": "5px",
+                "height": "22px",
                 "gridTemplateColumns": "21px 30px auto 40px 3px",
-                "background": (props.even ? "#eeeeee" : "#f8f8f8"),
+                "background": "#e0e0e0",
+                "paddingTop": "5px",
             }}
         >
             <input
                 type="checkbox"
                 style={{
-                    position: "relative",
                     "width": "15px",
                     "height": "15px",
                 }}

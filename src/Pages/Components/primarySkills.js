@@ -35,7 +35,7 @@ export default function PrimarySkills(props) {
                 "display": "flex",
                 "flexDirection": "column",
                 "textAlign": "center",
-                "justifyContent": "space-around",
+                "justifyContent": "space-between",
             }}
         >
             {statList}
@@ -48,7 +48,7 @@ function StatSquare(props) {
     return(
         <div
             style={{
-                "background": (props.even ? "#eeeeee" : "#f8f8f8"),
+                "background": "#e0e0e0",
                 "padding": "5px 0px",
             }}
         >

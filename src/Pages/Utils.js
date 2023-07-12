@@ -14,26 +14,104 @@ export function getStatMod(value, otherModifiers = 0) {
 }
 
 export function characterReducer(oldData, action) {
+    let newData;
     switch (action.type) {
         case "validate":
-            return characterDataValidation(oldData);
+            newData = characterDataValidation(oldData);
+            break;
         case "change-proficiency":
-            return changeProficiency(oldData, action.proficiency, action.newValue);
+            newData = changeProficiency(oldData, action.proficiency, action.newValue);
+            break;
         case "change-text-field":
-            return changeField(oldData, action.mergeObject, action.fieldName);
-        case "change-grid-field":
-            return changeField(oldData.gridData, action.merge, action.id);
+            newData = changeField(oldData, action.mergeObject, action.fieldName);
+            break;
+        case "add-grid-element":
+            newData = addGridElement(oldData, action.elementId, action.elementData, action.elementPlacement);
+            break;
+        case "remove-grid-element":
+            newData = removeGridElement(oldData, action.elementId);
+            break;
+        case "change-grid-data":
+            newData = changeGridData(oldData, action.merge, action.id);
+            break;
+        case "change-grid-element":
+            newData = changeGridElement(oldData, action.merge, action.id);
+            break;
         case "load-from-disk":
             console.log("loaded file from local storage");
-            return characterDataValidation(action.data);
+            newData = characterDataValidation(action.data);
+            break;
+        case "add-set-item":
+            console.log("adding array item")
+            newData = addToSet(oldData, action.id, action.itemId, action.item);
+            break;
+        case "remove-set-item":
+            newData = removeFromSet(oldData, action.id, action.itemId);
+            break;
+        case "replace-set-item":
+            newData = replaceInSet(oldData, action.id, action.itemId, action.replacement);
+            break;
         default:
+            console.error("incorrect action type passed to characterReducer: " + action.type);
             break;
     }
-    console.error("incorrect action type passed to characterReducer");
-    return oldData;
+    localStorage.setItem("characterData", JSON.stringify(newData));
+    return newData;
 }
 
-export function changeField(oldData, replacementData, fieldName = "") {
+function replaceInSet(oldData, id, itemId, replacement) {
+    const newData = {...oldData};
+    newData.gridElements[id].dataSet[itemId] = {...replacement};
+    return newData;
+}
+
+function addToSet(oldData, id, itemId, item) {
+    const newData = {...oldData};
+    newData.gridElements[id].dataSet[itemId] = item;
+    return newData;
+}
+
+function removeFromSet(oldData, id, itemId) {
+    const newData = {...oldData};
+    delete newData.gridElements[id].dataSet[itemId];
+    return newData;
+}
+
+function addGridElement(oldData, id, data, placement) {
+    const newData = {...oldData};
+    newData.gridElements[id] ??= {};
+    newData.gridElements[id] = {...newData.gridElements[id], ...data}
+    newData.gridData[id] ??= {x: 1, y: 1, h: 1, w: 1};
+    newData.gridData[id] = {...newData.gridData[id], ...placement};
+    return newData;
+}
+
+function removeGridElement(oldData, id) {
+    const newData = {...oldData};
+    delete newData.gridElements[id];
+    delete newData.gridData[id];
+    return newData;
+}
+
+function changeGridData(oldData, replacementData, gridElementId) {
+    const newData = {...oldData};
+    newData.gridData[gridElementId] = {
+        ...newData.gridData[gridElementId],
+        ...replacementData,
+    }
+    return newData;
+}
+
+function changeGridElement(oldData, replacementData, gridElementId) {
+    const newData = {...oldData};
+    newData.gridElements[gridElementId] = {
+        ...newData.gridElements[gridElementId],
+        ...replacementData,
+    }
+    return newData;
+}
+
+function changeField(oldData, replacementData, fieldName = "") {
     if (fieldName !== "") {
         const newData = {
             ...oldData
@@ -50,6 +128,7 @@ export function changeField(oldData, replacementData, fieldName = "") {
         ...replacementData,
     };
 }
+
 
 function changeProficiency(oldData, proficiency, newValue) {
     const newData = {...oldData};
@@ -98,31 +177,8 @@ export function characterDataValidation(characterData) {
     validatedData.exhaustion ??=  0;
 
     validatedData.gridData ??= {};
-    validatedData.gridData.GeneralInfo ??= {x: 1, y: 1, w: -1, h: 3};
-    validatedData.gridData.PrimarySkills ??= {x: 1, y: 4, w: 2, h: 18};
-    validatedData.gridData.SecondarySkills ??= {x: 3, y: 4, w: 3, h: 18};
-    validatedData.gridData.BattleStats ??= {x: 6, y: 4, w: 3, h: 4};
-    validatedData.gridData.HealthStats ??= {x: 9, y: 4, w: -1, h: 4};
-    validatedData.gridData.DeathSavesTracker ??= {x: 6, y: 8, w: 3, h: 3};
-    validatedData.gridData.HitdiceTracker ??= {x: 9, y: 8, w: 2, h: 3};
-    validatedData.gridData.ExhaustionTracker ??= {x: 11, y: 8, w: -1, h: 3};
-    validatedData.gridData.SavingThrows ??= {x: 7, y: 11, w: 2, h: 3};
-    return validatedData;
-}
 
-export const defaultLayout = {
-    "MagicalButton1": {x: 1, y: 23, w: 1, h: 2},
-    "MagicalButton2": {x: 2, y: 23, w: 1, h: 2},
-    "MagicalButton3": {x: 3, y: 23, w: 1, h: 2},
-    "MagicalButton4": {x: 4, y: 23, w: 1, h: 2},
-    "MagicalButton5": {x: 5, y: 23, w: 1, h: 2},
-    "GeneralInfo": {x: 1, y: 1, w: -1, h: 3},
-    "PrimarySkills": {x: 1, y: 4, w: 2, h: 18},
-    "SecondarySkills": {x: 3, y: 4, w: 3, h: 18},
-    "BattleStats": {x: 6, y: 4, w: 3, h: 4},
-    "HealthStats": {x: 9, y: 4, w: -1, h: 4},
-    "DeathSavesTracker": {x: 6, y: 8, w: 3, h: 3},
-    "HitdiceTracker": {x: 9, y: 8, w: 2, h: 3},
-    "ExhaustionTracker": {x: 11, y: 8, w: -1, h: 3},
-    "SavingThrows": {x: 7, y: 11, w: 2, h: 3},
+    validatedData.gridElements ??= {};
+
+    return validatedData;
 }

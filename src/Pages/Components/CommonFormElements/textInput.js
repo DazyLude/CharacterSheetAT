@@ -12,6 +12,7 @@ export default function TextInput(props) {
                 <input
                     type="text"
                     value={value}
+                    style={props.style}
                     onChange={event => {onChange(event.target.value)}}
                 />
             )}

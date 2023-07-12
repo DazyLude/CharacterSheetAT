@@ -5,14 +5,10 @@ export default function GeneralInfo(props) {
         <div
             id="general-information"
             style={{
-                "paddingLeft": "15%",
                 "paddingTop": "2px",
-                "height": "100%",
                 "display": "grid",
-                "gridTemplateColumns": "1fr 1fr 1fr",
+                "gridTemplateColumns": "2fr 1fr 1fr",
                 "gridTemplateRows": "1fr 1fr",
-                "background": "#eeeeee",
-                "placeItems": "start",
             }}
         >
             <div

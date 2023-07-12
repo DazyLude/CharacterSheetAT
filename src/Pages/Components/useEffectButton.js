@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-export default function UseEffectButton({title, action}) {
+export default function UseEffectButton({title, action, style}) {
     const [activationSwitch, setActivationSwitch] = useState(0);
 
     useEffect(() => {
@@ -11,7 +11,7 @@ export default function UseEffectButton({title, action}) {
     }, [activationSwitch])
 
     return (
-        <button onClick = {() => {setActivationSwitch(activationSwitch + 1)}}>
+        <button style={{...style}} onClick = {(e) => {e.preventDefault(); setActivationSwitch(activationSwitch + 1)}}>
             {title}
         </button>
     );

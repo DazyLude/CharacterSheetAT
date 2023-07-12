@@ -11,11 +11,11 @@ export default function GridElement({id, children}) {
     const placement = `${y} / ${x} / ${h === -1 ? -1 : y + h} / ${w === -1 ? -1 : x + w}`
 
     return (
-        <div style={{position: "relative", gridArea: placement}}>
+        <div className="grid-element" style={{position: "relative", gridArea: placement}}>
             {isLayoutLocked ? null :
                 <>
                     <div style={{
-                        zIndex: "1",
+                        zIndex: "2",
                         width: "100%",
                         height: "100%",
                         position: "absolute",

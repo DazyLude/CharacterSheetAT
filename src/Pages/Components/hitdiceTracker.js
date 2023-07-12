@@ -5,8 +5,6 @@ export default function HitdiceTracker(props) {
         <div style={{
             "textAlign": "center",
             "alignItems": "center",
-            "background": "#eeeeee",
-            "height": "100%",
             "display": "grid",
             "gridTemplateColumns": "1fr 1fr",
         }}>
