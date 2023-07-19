@@ -1,5 +1,7 @@
-# DND5e character sheet assist tool (cheesiol)
+# DND5e character sheet assist tool
 A small open source SPA that can be used to manage your DND5e character and share them in a form of a .json file.
+
+![image](https://github.com/DazyLude/CharacterSheetAT/assets/36658009/8a009fa6-ff5e-472e-b621-97b61c95ebe8)
 
 ## features
 - basic character sheet features: tracking your character HP, exhaustion levels and death saves, skill and saving throw modifiers.
@@ -9,6 +11,8 @@ A small open source SPA that can be used to manage your DND5e character and shar
 - exhaustion level tool-tip shows current debuffs, if there are any
 
 ## how-to's
+###
+
 ### chaging values
 - most ability throw, skill check and saving throw modifiers are calculated automatically from provided **ability scores** and proficiency bonus(es).
 - to change a value you need to click (tap) on a checkbox, death-saves tracker or a text-field. Using tab to cycle through different fields works as well.
@@ -16,12 +20,13 @@ A small open source SPA that can be used to manage your DND5e character and shar
 ### sharing a .pdf
 you can print character sheet to a .pdf file using built-in browser features. Pressing ctrl+p opens a printing interface, where you can select "Save to PDF" in most browsers.
 
-## planned features
+## planned features in no particular order
 - multiple character sheets opened at once, for your DM'ing needs
 - ability to set an expertise in a skill
 - quick new character sheet creation using various templates
 - enhancing layout editor UI/UX
 - configuring custom fonts and templates
+- photo-mode with hidden status bar
 
 ## about
 ### why I made this
