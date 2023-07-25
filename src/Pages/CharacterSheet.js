@@ -20,6 +20,7 @@ import AbilitySaveDC from "./Components/abilitySaveDC";
 import Senses from "./Components/senses";
 import SavingThrows from "./Components/savingThrows";
 import Inventory from "./Components/inventory";
+import SpellList from "./Components/spellList";
 
 export default function CharacterSheet() {
     const [characterData, characterDispatch] = useReducer( characterReducer, {}, characterDataValidation );
@@ -229,6 +230,16 @@ export default function CharacterSheet() {
                 return (
                     <GridElement key={id} id={id}>
                         <Inventory
+                            skills={characterData.primarySkills}
+                            data={characterData.gridElements[id]}
+                            dispatcher={(args) => {characterDispatch({id: id, ...args})}}
+                        />
+                    </GridElement>
+                );
+            case "spellList":
+                return (
+                    <GridElement key={id} id={id}>
+                        <SpellList
                             skills={characterData.primarySkills}
                             data={characterData.gridElements[id]}
                             dispatcher={(args) => {characterDispatch({id: id, ...args})}}

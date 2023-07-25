@@ -4,19 +4,20 @@ import NumberInput from "./CommonFormElements/numberInput";
 import { useContext } from "react";
 import { AppContext } from "./appContext";
 
-export default function Inventory({skills, data, dispatcher}) {
+export default function SpellList({data, skills, dispatcher}) {
     const entriesCount = data.count;
-    const inventoryContents = data.dataSet;
+    const spellListContents = data.dataSet;
     const {isEditingElements} = useContext(AppContext);
 
-    const carriedWeight = Object.values(inventoryContents).reduce(
+    const carriedWeight = Object.values(spellListContents).reduce(
         (accumulator, entry) => {return accumulator += entry.wght * entry.qty},
         0
     );
-    const displayEntries = Object.entries(inventoryContents).map(([id, entry]) => {
+
+    const displayEntries = Object.entries(spellListContents).map(([id, entry]) => {
         entry ??= {};
         return (
-            <InventoryItem key={id} entry={entry} id={id} editItem={(id, val) => {editItem(id, val)}} removeItem={(args) => {removeItem(args)}} />
+            <SpellListItem key={id} entry={entry} id={id} editItem={(id, val) => {editItem(id, val)}} removeItem={(args) => {removeItem(args)}} />
         );
     });
 
@@ -51,7 +52,7 @@ export default function Inventory({skills, data, dispatcher}) {
         <>
             <div style={{display: "flex", justifyContent: "space-around"}}>
                 <span className="sheet-subscript">
-                    Carried: {carriedWeight} lb
+                    Spellcasting ability: {carriedWeight} lb
                 </span>
                 <span className="sheet-subscript">
                     Encumbered: {skills.str * 15} lb
@@ -64,9 +65,8 @@ export default function Inventory({skills, data, dispatcher}) {
             </div>
             <div style={{height: "90%"}}>
                 <div style={{position: "relative", zIndex: "1"}}>
-                    <div style={{display: "grid", gridTemplateColumns: "1fr 1fr", columnGap: "10px", rowGap: "5px", margin:"20px"}}>
-                        <InventoryHead />
-                        <InventoryHead />
+                    <div style={{display: "flex", direction: "column"}}>
+                        <SpellListHead />
                         {displayEntries}
                     </div>
                 </div>
@@ -75,7 +75,24 @@ export default function Inventory({skills, data, dispatcher}) {
     );
 }
 
-function InventoryItem({entry, id, editItem, removeItem}) {
+function SpellListHead() {
+    return (
+        <div className="form-subscript" style={{display: 'grid', gridTemplateColumns: 'auto 8fr auto 2fr auto 2fr 1fr 1fr', alignItems: "center"}}>
+            <span>Prep</span>
+            <span>Spell Name</span>
+            <span>Source</span>
+            <span>Save/Atk</span>
+            <span>Time</span>
+            <span>Range</span>
+            <span>Comp</span>
+            <span>Duration</span>
+            <span>Ref</span>
+            <span>Notes</span>
+        </div>
+    );
+}
+
+function SpellListItem({entry, id, editItem, removeItem}) {
     const {isEditingElements} = useContext(AppContext);
     return(
         <div className="form-subscript" style={{display: 'grid', gridTemplateColumns: 'auto 8fr auto 2fr auto 2fr 1fr 1fr', alignItems: "center"}}>
@@ -93,17 +110,6 @@ function InventoryItem({entry, id, editItem, removeItem}) {
                 :
                 null
             }
-        </div>
-    );
-}
-
-function InventoryHead() {
-    return(
-        <div className="sheet-subscript" style={{display: 'grid', gridTemplateColumns: '1fr 8fr 2fr 3fr 1fr', alignItems: "center", textAlign: "left", borderBottomStyle: "solid"}}>
-            <div></div>
-            <div>Name</div>
-            <div>qty</div>
-            <div>weight</div>
         </div>
     );
 }

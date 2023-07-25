@@ -76,6 +76,11 @@ const constructibleElements = {
         data: {dataSet: {}, count: 0},
         idCode: "inventory",
         defaultSize: {w: 12, h: 10},
+    },
+    "spellList": {
+        data: {dataSet: {}, count: 0},
+        idCode: "spell list",
+        defaultSize: {w: 12, h: 10},
     }
 }
 
