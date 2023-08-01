@@ -2,6 +2,7 @@ import { AppContext } from "./appContext";
 import { getStatMod } from "../Utils";
 import { useContext } from "react";
 import TextFieldInput from "./CommonFormElements/textFieldInput";
+import { Checkbox } from "./CommonFormElements/checkbox";
 
 export default function SavingThrows({proficiencies, skills, proficiencyModifier, dispatcher, textFieldValue, textFieldHandler}) {
     const context = useContext(AppContext);
@@ -18,13 +19,13 @@ export default function SavingThrows({proficiencies, skills, proficiencyModifier
         ([skillName, skillDep], num) => {
             const isProficient = proficiencies[skillName] ?? false;
             const modifier = (proficiencies[skillName] ?? 0) * proficiencyModifier;
-            const changeHandler = context.readOnly ? () => {} : () => {dispatcher(skillName, isProficient ? 0 : 1)};
+            const changeHandler = (value) => {dispatcher(skillName, value)};
             const skill = {
                 even: num % 2 === 0,
                 name: skillName,
                 isProficient: isProficient,
                 modifier: getStatMod(skills[skillDep], modifier),
-                changeHandler: () => {changeHandler()},
+                changeHandler: changeHandler,
             }
             return (<SavingThrowRow skill={skill} key={skillDep}/>);
         }
@@ -61,15 +62,9 @@ function SavingThrowRow({skill}) {
                 "paddingTop": "5px",
             }}
         >
-            <input
-                type="checkbox"
-                style={{
-                    position: "relative",
-                    "width": "15px",
-                    "height": "15px",
-                }}
-                checked={isProficient}
-                onChange={changeHandler}
+            <Checkbox
+                isChecked={isProficient}
+                changeHandler={changeHandler}
             />
             <div className="sheet-subscript">{modifier}</div>
             <div style={{textAlign: "left"}} className="sheet-subscript">{name}</div>

@@ -13,6 +13,17 @@ export function getStatMod(value, otherModifiers = 0) {
     return "+" + modifier;
 }
 
+export function getStatModNumeric(value, otherModifiers) {
+    if (typeof(value) !== "number") {
+        return 0;
+    }
+    if (typeof(otherModifiers) !== "number") {
+        otherModifiers = 0;
+    }
+    const modifier = Math.floor((value - 10)/2) + otherModifiers;
+    return modifier;
+}
+
 export function characterReducer(oldData, action) {
     let newData;
     switch (action.type) {

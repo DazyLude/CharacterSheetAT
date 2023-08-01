@@ -78,7 +78,7 @@ const constructibleElements = {
         defaultSize: {w: 12, h: 10},
     },
     "spellList": {
-        data: {dataSet: {}, count: 0},
+        data: {dataSet: {}, count: 0, spellCastingAbility: "cha", weaponBonus: 0},
         idCode: "spell list",
         defaultSize: {w: 12, h: 10},
     }

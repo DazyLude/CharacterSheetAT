@@ -1,6 +1,7 @@
 import { useContext } from "react";
 import { getStatMod } from "../Utils";
 import { AppContext } from "./appContext";
+import { Checkbox } from "./CommonFormElements/checkbox";
 
 export default function SecondarySkills(props) {
     const context = useContext(AppContext);
@@ -29,13 +30,13 @@ export default function SecondarySkills(props) {
         ([skillName, skillDep]) => {
             const isProficient = props.proficiencies[skillName] ?? false;
             const modifier = (props.proficiencies[skillName] ?? 0) * props.proficiencyModifier;
-            const changeHandler = context.readOnly ? () => {} : () => {props.changeHandler(skillName, isProficient ? 0 : 1)};
+            const changeHandler = (value) => {props.changeHandler(skillName, value)};
             return {
                 name: skillName,
                 prof: isProficient,
                 mod: getStatMod(props.skills[skillDep], modifier),
                 dep: skillDep,
-                changeHandler: () => {changeHandler()},
+                changeHandler: changeHandler,
             }
         }
     )
@@ -79,14 +80,9 @@ function SecondarySkillRow(props) {
                 "paddingTop": "5px",
             }}
         >
-            <input
-                type="checkbox"
-                style={{
-                    "width": "15px",
-                    "height": "15px",
-                }}
-                checked={proficiency}
-                onChange={skill.changeHandler}
+            <Checkbox
+                isChecked={proficiency}
+                changeHandler={(value) => {skill.changeHandler(value)}}
             />
             <div>
                 {modifier}

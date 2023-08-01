@@ -1,14 +1,14 @@
 import { useContext } from "react";
 import { AppContext } from "../appContext";
 
-export default function TextFieldInput(props) {
-    const value = props.value ?? "";
-    const onChange = props.onChange ?? ((e) => {});
+export default function TextFieldInput({value, onChange, size}) {
+    value ??= "";
+    onChange ??= ((e) => {});
     const {readOnly} = useContext(AppContext);
 
     return(
         <textarea
-            style={{...props.size}}
+            style={{...size}}
             readOnly={readOnly}
             value={value}
             onChange={event => {onChange(event.target.value)}}

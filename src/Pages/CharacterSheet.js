@@ -241,6 +241,7 @@ export default function CharacterSheet() {
                     <GridElement key={id} id={id}>
                         <SpellList
                             skills={characterData.primarySkills}
+                            proficiencyModifier={characterData.proficiencyModifier}
                             data={characterData.gridElements[id]}
                             dispatcher={(args) => {characterDispatch({id: id, ...args})}}
                         />

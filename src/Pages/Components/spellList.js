@@ -3,16 +3,18 @@ import TextInput from "./CommonFormElements/textInput";
 import NumberInput from "./CommonFormElements/numberInput";
 import { useContext } from "react";
 import { AppContext } from "./appContext";
+import { getStatModNumeric, getStatMod } from "../Utils";
+import TextFieldInput from "./CommonFormElements/textFieldInput";
+import { Checkbox } from "./CommonFormElements/checkbox";
 
-export default function SpellList({data, skills, dispatcher}) {
+export default function SpellList({data, skills, proficiencyModifier, dispatcher}) {
     const entriesCount = data.count;
     const spellListContents = data.dataSet;
     const {isEditingElements} = useContext(AppContext);
 
-    const carriedWeight = Object.values(spellListContents).reduce(
-        (accumulator, entry) => {return accumulator += entry.wght * entry.qty},
-        0
-    );
+    const spellCastingAbility = data.spellCastingAbility ?? "cha";
+    const spellSavingThrow = getStatModNumeric(skills[spellCastingAbility], 8 + proficiencyModifier);
+    const spellAttackBonus = getStatMod(skills[spellCastingAbility], proficiencyModifier + data.weaponBonus);
 
     const displayEntries = Object.entries(spellListContents).map(([id, entry]) => {
         entry ??= {};
@@ -48,24 +50,40 @@ export default function SpellList({data, skills, dispatcher}) {
         })
     }
 
+    const changeSpellCastingAbility = (val) => {
+        dispatcher({type: "change-grid-element", merge: {spellCastingAbility: val}});
+    }
+
     return (
         <>
             <div style={{display: "flex", justifyContent: "space-around"}}>
-                <span className="sheet-subscript">
-                    Spellcasting ability: {carriedWeight} lb
-                </span>
-                <span className="sheet-subscript">
-                    Encumbered: {skills.str * 15} lb
-                </span>
+
                 { isEditingElements ?
-                <UseEffectButton style={{height: "18px", width: "300px", padding: "0px 5px 2px"}} title="add element" action={() => {incrementCount(); addItem();}}/>
+                <>
+                    <select value={spellCastingAbility} onChange={(e) => changeSpellCastingAbility(e.target.value)}>
+                        <option value="int">intelligence</option>
+                        <option value="wis">wisdom</option>
+                        <option value="cha">charisma</option>
+                    </select>
+                    <UseEffectButton style={{height: "18px", width: "300px", padding: "0px 5px 2px"}} title="add element" action={() => {incrementCount(); addItem();}}/>
+                </>
                 :
-                null
+                <>
+                    <span className="sheet-subscript">
+                        Spellcasting ability: {spellCastingAbility}
+                    </span>
+                    <span className="sheet-subscript">
+                        Spell saving throw: {spellSavingThrow}
+                    </span>
+                    <span className="sheet-subscript">
+                        Spell attack bonus: {spellAttackBonus}
+                    </span>
+                </>
                 }
             </div>
             <div style={{height: "90%"}}>
                 <div style={{position: "relative", zIndex: "1"}}>
-                    <div style={{display: "flex", direction: "column"}}>
+                    <div className="form-subscript" style={{display: 'grid', gridTemplateColumns: 'repeat(10, auto)', alignItems: "center"}}>
                         <SpellListHead />
                         {displayEntries}
                     </div>
@@ -77,7 +95,7 @@ export default function SpellList({data, skills, dispatcher}) {
 
 function SpellListHead() {
     return (
-        <div className="form-subscript" style={{display: 'grid', gridTemplateColumns: 'auto 8fr auto 2fr auto 2fr 1fr 1fr', alignItems: "center"}}>
+        <>
             <span>Prep</span>
             <span>Spell Name</span>
             <span>Source</span>
@@ -88,19 +106,21 @@ function SpellListHead() {
             <span>Duration</span>
             <span>Ref</span>
             <span>Notes</span>
-        </div>
+        </>
     );
 }
 
 function SpellListItem({entry, id, editItem, removeItem}) {
     const {isEditingElements} = useContext(AppContext);
+    const longDescription = entry.isLong;
+    const isPrepared = entry.isPrepared;
     return(
-        <div className="form-subscript" style={{display: 'grid', gridTemplateColumns: 'auto 8fr auto 2fr auto 2fr 1fr 1fr', alignItems: "center"}}>
-            <div style={{border: "solid 1px #ccc", height: "100%"}}> </div>
-            <TextInput style={{width: "99%"}} value={entry.name} onChange={(value) => {editItem(id, {name: value, qty: entry.qty, wght: entry.wght})}} />
-            <div style={{border: "solid 1px #ccc", height: "100%"}}> </div>
+        <>
+            <Checkbox isChecked={isPrepared} changeHandler={(value) => {editItem(id, {...entry, isPrepared: value})}} />
+            <TextInput style={{width: "99%"}} value={entry.name} onChange={(value) => {editItem(id, {...entry, name: value})}} />
+
             <NumberInput value={entry.qty} onChange={(value) => {editItem(id, {name: entry.name, qty: value, wght: entry.wght})}} />
-            <div style={{border: "solid 1px #ccc", height: "100%"}}> </div>
+
             <span style={{textAlign: "right"}}>
                 <NumberInput value={entry.wght} onChange={(value) => {editItem(id, {name: entry.name, qty: entry.qty, wght: value})}} />
             </span>
@@ -110,6 +130,19 @@ function SpellListItem({entry, id, editItem, removeItem}) {
                 :
                 null
             }
-        </div>
+        </>
+    );
+}
+
+function SpoileredDescription({text, changeHandler, isOpen}) {
+    return (
+        <TextFieldInput
+            size={{
+                display: (isOpen ? "block" : "none"),
+                position: "relative",
+            }}
+            value={text}
+            onChange={changeHandler}
+        />
     );
 }
