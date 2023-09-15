@@ -1,7 +1,7 @@
 import UseEffectButton from "./useEffectButton";
 import TextInput from "./CommonFormElements/textInput";
-import NumberInput from "./CommonFormElements/numberInput";
 import { useContext } from "react";
+import { useState } from "react";
 import { AppContext } from "./appContext";
 import { getStatModNumeric, getStatMod } from "../Utils";
 import TextFieldInput from "./CommonFormElements/textFieldInput";
@@ -19,7 +19,7 @@ export default function SpellList({data, skills, proficiencyModifier, dispatcher
     const displayEntries = Object.entries(spellListContents).map(([id, entry]) => {
         entry ??= {};
         return (
-            <SpellListItem key={id} entry={entry} id={id} editItem={(id, val) => {editItem(id, val)}} removeItem={(args) => {removeItem(args)}} />
+            <SpellListItem key={id} entry={entry} editItem={(val) => {editItem(id, val)}} removeItem={() => {removeItem(id)}} />
         );
     });
 
@@ -30,8 +30,12 @@ export default function SpellList({data, skills, proficiencyModifier, dispatcher
     const addItem = () => {
         const newItem = {
             name: "",
-            wght: 0,
-            qty: 0,
+            source: "",
+            save_atk: "",
+            cast_time: "",
+            range: "",
+            duration: "",
+            text: "",
         }
         dispatcher({type: "add-set-item", itemId: entriesCount + 1, item: newItem});
     }
@@ -83,7 +87,16 @@ export default function SpellList({data, skills, proficiencyModifier, dispatcher
             </div>
             <div style={{height: "90%"}}>
                 <div style={{position: "relative", zIndex: "1"}}>
-                    <div className="form-subscript" style={{display: 'grid', gridTemplateColumns: 'repeat(10, auto)', alignItems: "center"}}>
+                    <div
+                        className="form-subscript"
+                        style={{
+                            display: 'grid',
+                            gridTemplateColumns: '40px 170px 60px 80px 80px 80px 60px 90px auto',
+                            gridTemplateRows: '30px',
+                            rowGap: "3px",
+                            alignItems: "center"
+                        }}
+                    >
                         <SpellListHead />
                         {displayEntries}
                     </div>
@@ -104,45 +117,139 @@ function SpellListHead() {
             <span>Range</span>
             <span>Comp</span>
             <span>Duration</span>
-            <span>Ref</span>
             <span>Notes</span>
         </>
     );
 }
 
-function SpellListItem({entry, id, editItem, removeItem}) {
+function SpellListItem({entry, editItem, removeItem}) {
     const {isEditingElements} = useContext(AppContext);
     const longDescription = entry.isLong;
     const isPrepared = entry.isPrepared;
+
+    const description = (isEditingElements, longDescription, entry, editItem, removeItem) => {
+        const textHandler = (value) => {editItem({...entry, text: value})};
+        const spoilerHandler = (value) => {editItem({...entry, isLong: value})};
+        if (isEditingElements) {
+            return (
+                <span style={{width: "99%"}}>
+                    <Checkbox
+                        isChecked={longDescription}
+                        changeHandler={spoilerHandler}
+                    />
+                    <button onClick={() => {removeItem()}}> - </button>
+                </span>
+            );
+        }
+        else if (longDescription) {
+            return(
+                <SpoileredDescription
+                    text={entry.text}
+                    onChange={textHandler}
+                />
+            );
+        }
+        else return(
+            <TextInput
+                style={{width: "99%"}}
+                value={entry.text}
+                onChange={textHandler}
+            />
+        );
+    };
+
     return(
         <>
-            <Checkbox isChecked={isPrepared} changeHandler={(value) => {editItem(id, {...entry, isPrepared: value})}} />
-            <TextInput style={{width: "99%"}} value={entry.name} onChange={(value) => {editItem(id, {...entry, name: value})}} />
-
-            <NumberInput value={entry.qty} onChange={(value) => {editItem(id, {name: entry.name, qty: value, wght: entry.wght})}} />
-
-            <span style={{textAlign: "right"}}>
-                <NumberInput value={entry.wght} onChange={(value) => {editItem(id, {name: entry.name, qty: entry.qty, wght: value})}} />
-            </span>
-            <span className={"sheet-subscript"} style={{textAlign: "left"}}>&nbsp;lb</span>
-            {isEditingElements ?
-                <UseEffectButton style={{height: "19px", padding: "0px 0px 3px"}} title={"-"} action={() => {removeItem(id)}} />
+            {/* prepared status */}
+            <Checkbox
+                style={{width: "99%"}}
+                isChecked={isPrepared}
+                changeHandler={(value) => {editItem({...entry, isPrepared: value})}}
+            />
+            {/* name */}
+            <TextInput
+                style={{width: "99%"}}
+                value={entry.name}
+                onChange={(value) => {editItem({...entry, name: value})}}
+            />
+            {/* name */}
+            <TextInput
+                style={{width: "99%"}}
+                value={entry.source}
+                onChange={(value) => {editItem({...entry, source: value})}}
+            />
+            {/* name */}
+            { isEditingElements ?
+                <select value={entry.save_atk} onChange={(e) => {editItem({...entry, save_atk: e.target.value})}}>
+                    <option value="">---</option>
+                    <option value="atk">atk</option>
+                    <option value="str">str</option>
+                    <option value="dex">dex</option>
+                    <option value="con">con</option>
+                    <option value="int">int</option>
+                    <option value="wis">wis</option>
+                    <option value="cha">cha</option>
+                </select>
                 :
-                null
+                <span>{entry.save_atk}</span>
             }
+            {/* cast time */}
+            <TextInput
+                style={{width: "99%"}}
+                value={entry.cast_time}
+                onChange={(value) => {editItem({...entry, cast_time: value})}}
+            />
+            {/* range */}
+            <TextInput
+                style={{width: "99%"}}
+                value={entry.range}
+                onChange={(value) => {editItem({...entry, range: value})}}
+            />
+            {/* spell components */}
+            <TextInput
+                style={{width: "99%"}}
+                value={entry.components}
+                onChange={(value) => {editItem({...entry, components: value})}}
+            />
+            {/* spell duration */}
+            <TextInput
+                style={{width: "99%"}}
+                value={entry.duration}
+                onChange={(value) => {editItem({...entry, duration: value})}}
+            />
+            {/* spell description */}
+            {description(isEditingElements, longDescription, entry, editItem, removeItem)}
         </>
     );
 }
 
-function SpoileredDescription({text, changeHandler, isOpen}) {
-    return (
-        <TextFieldInput
-            size={{
-                display: (isOpen ? "block" : "none"),
-                position: "relative",
-            }}
-            value={text}
-            onChange={changeHandler}
-        />
-    );
+function SpoileredDescription({text, onChange}) {
+    let [isOpen, setIsOpen] = useState(false);
+    if (isOpen) {
+        return (
+            <div style={{height: "30px"}}>
+                <div style={{
+                    position: "absolute",
+                }}>
+                    <TextFieldInput
+                        size={{
+                            height: "100px",
+                            width: "100%",
+                        }}
+                        value={text}
+                        onChange={onChange}
+                    />
+                    <button onClick={() => {setIsOpen(false)}}> hide </button>
+                </div>
+            </div>
+        );
+    }
+    else {
+        return (
+            <div style={{height: "30px"}}>
+                <TextInput style={{width: "69%"}} value={text} onChange={onChange}/>
+                <button style={{padding: "5px 10px", width: "30%"}} onClick={() => {setIsOpen(true)}}> more </button>
+            </div>
+        );
+    }
 }
