@@ -7,18 +7,15 @@ export default function NumberInput({style, onChange, value}) {
     const { readOnly } = useContext(AppContext);
 
     return(
-        <>
-            {readOnly ? (<div>{value}</div>) : (
-                <input
-                    style={style}
-                    type="text"
-                    value={value}
-                    onChange={event => {
-                        const newValue = parseFloat(event.target.value);
-                        onChange(isNaN(newValue) ? event.target.value : newValue);
-                    }}
-                />
-            )}
-        </>
+        <input
+            style={style}
+            type="text"
+            value={value}
+            onChange={event => {
+                if (readOnly) return;
+                const newValue = parseFloat(event.target.value);
+                onChange(isNaN(newValue) ? event.target.value : newValue);
+            }}
+        />
     );
 }
