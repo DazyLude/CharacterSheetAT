@@ -29,6 +29,7 @@ export default function SpellList({data, skills, proficiencyModifier, dispatcher
 
     const addItem = () => {
         const newItem = {
+            isPrepared: false,
             name: "",
             source: "",
             save_atk: "",
@@ -60,11 +61,11 @@ export default function SpellList({data, skills, proficiencyModifier, dispatcher
 
     return (
         <>
-            <div style={{display: "flex", justifyContent: "space-around"}}>
+            <div style={{height: "30px", display: "flex", justifyContent: "space-around"}}>
 
                 { isEditingElements ?
                 <>
-                    <select value={spellCastingAbility} onChange={(e) => changeSpellCastingAbility(e.target.value)}>
+                    <select style={{padding: "2px 10px"}} value={spellCastingAbility} onChange={(e) => changeSpellCastingAbility(e.target.value)}>
                         <option value="int">intelligence</option>
                         <option value="wis">wisdom</option>
                         <option value="cha">charisma</option>
@@ -132,12 +133,13 @@ function SpellListItem({entry, editItem, removeItem}) {
         const spoilerHandler = (value) => {editItem({...entry, isLong: value})};
         if (isEditingElements) {
             return (
-                <span style={{width: "99%"}}>
+                <span style={{heigth: "30px", width: "99%"}}>
+                    Long description
                     <Checkbox
                         isChecked={longDescription}
                         changeHandler={spoilerHandler}
                     />
-                    <button onClick={() => {removeItem()}}> - </button>
+                    <button style={{padding: "5px 10px"}} onClick={() => {removeItem()}}> - </button>
                 </span>
             );
         }
@@ -151,7 +153,7 @@ function SpellListItem({entry, editItem, removeItem}) {
         }
         else return(
             <TextInput
-                style={{width: "99%"}}
+                style={{width: "90%", height: "20px", padding: "5px"}}
                 value={entry.text}
                 onChange={textHandler}
             />
@@ -180,7 +182,7 @@ function SpellListItem({entry, editItem, removeItem}) {
             />
             {/* name */}
             { isEditingElements ?
-                <select value={entry.save_atk} onChange={(e) => {editItem({...entry, save_atk: e.target.value})}}>
+                <select style={{padding: "5px 10px"}} value={entry.save_atk} onChange={(e) => {editItem({...entry, save_atk: e.target.value})}}>
                     <option value="">---</option>
                     <option value="atk">atk</option>
                     <option value="str">str</option>

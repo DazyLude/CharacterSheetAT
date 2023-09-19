@@ -5,11 +5,12 @@ import ElementEditor from "./elementConstructor";
 
 import UseEffectButton from "./useEffectButton";
 
-import { AppDispatchContext } from "./appContext";
+import { AppContext, AppDispatchContext } from "./appContext";
 
 
 export default function StatusBar({characterData, characterDispatch}) {
     const contextDispatcher = useContext(AppDispatchContext);
+    const { readOnly, isLayoutLocked, isEditingElements } = useContext(AppContext);
     const [openedMenu, setOpenedMenu] = useState(0);
     const openMenu = (n) => {if (openedMenu!==n) {setOpenedMenu(n)} else {setOpenedMenu(0)}}
 
@@ -35,15 +36,15 @@ export default function StatusBar({characterData, characterDispatch}) {
             </SpoilerButton>
             <UseEffectButton
                 action={() => {contextDispatcher({type: "elementEdit-switch"})}}
-                title={"switch element editing mode"}
+                title={"switch element editing mode " + (isEditingElements ? "off" : "on")}
             />
             <UseEffectButton
                 action={() => {contextDispatcher({type: "layoutEdit-switch"})}}
-                title={"switch layout editing mode"}
+                title={"switch layout editing mode " + (isLayoutLocked ? "on" : "off")}
             />
             <UseEffectButton
                 action={() => {contextDispatcher({type: "readOnly-switch"})}}
-                title={"switch readonly mode"}
+                title={"switch readonly mode " + (readOnly ? "off" : "on")}
             />
         </div>
     );

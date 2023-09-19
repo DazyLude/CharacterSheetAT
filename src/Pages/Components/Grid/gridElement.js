@@ -1,12 +1,10 @@
 import { useContext } from "react";
 import { AppContext } from "../appContext";
 import { GridContext, GridContextReducer } from "./gridContext";
-import NumberInput from "../CommonFormElements/numberInput";
-
 export default function GridElement({id, children}) {
     const { isLayoutLocked } = useContext(AppContext);
     const { x, y, h, w } = useContext(GridContext)[id] ?? { x: 1, y: 1, w: 1, h: 1 };
-    const gridContextReducer = useContext(GridContextReducer);
+    const gridReducer = useContext(GridContextReducer);
 
     const placement = `${y} / ${x} / ${h === -1 ? -1 : y + h} / ${w === -1 ? -1 : x + w}`
 
@@ -28,14 +26,36 @@ export default function GridElement({id, children}) {
                         }}
                         className="form-subscript"
                     >
-                        x:
-                        <NumberInput value={x} onChange={(newValue) => {gridContextReducer({id: id, merge: {x: newValue}})}} />
-                        w:
-                        <NumberInput value={w} onChange={(newValue) => {gridContextReducer({id: id, merge: {w: newValue}})}} />
-                        y:
-                        <NumberInput value={y} onChange={(newValue) => {gridContextReducer({id: id, merge: {y: newValue}})}} />
-                        h:
-                        <NumberInput value={h} onChange={(newValue) => {gridContextReducer({id: id, merge: {h: newValue}})}} />
+                        <div>move:</div>
+                        <div onMouseDown={() => {
+                                window.addEventListener("mouseup", () => {gridReducer("moveEnd")}, {once: true});
+                                gridReducer("moveStart", {id});
+                            }}
+                            onTouchStart={() => {
+                                window.addEventListener("touchend", () => {gridReducer("moveEnd")}, {once: true});
+                                gridReducer("moveStart", {id});
+                            }}
+                            style={{
+                                background: "red",
+                            }}
+                        >
+                            hold
+                        </div>
+                        <div>resize up:</div>
+                        <div onMouseDown={() => {
+                                window.addEventListener("mouseup", () => {gridReducer("resizeEnd")}, {once: true});
+                                gridReducer("resizeStart", {id, direction: 'u'});
+                            }}
+                            onTouchStart={() => {
+                                window.addEventListener("touchend", () => {gridReducer("resizeEnd")}, {once: true});
+                                gridReducer("resizeStart", {id, direction: 'u'});
+                            }}
+                            style={{
+                                background: "red",
+                            }}
+                        >
+                            hold
+                        </div>
                     </div>
                 </>
             }

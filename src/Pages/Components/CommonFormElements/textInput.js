@@ -8,14 +8,12 @@ export default function TextInput(props) {
 
     return(
         <>
-            {readOnly ? (<div>{value}</div>) : (
-                <input
-                    type="text"
-                    value={value}
-                    style={props.style}
-                    onChange={event => {onChange(event.target.value)}}
-                />
-            )}
+            <input
+                type="text"
+                value={value}
+                style={props.style}
+                onChange={event => {if (!readOnly) {onChange(event.target.value)}}}
+            />
         </>
     );
 }
