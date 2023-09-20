@@ -95,7 +95,7 @@ export default function ElementEditor({dispatch}) {
     const usedKeys = Object.keys(gridData);
     const lowestRow = Object.values(gridData).map(({y, h}) => y + h).reduce((val, sav) => val < sav ? sav : val);
     const [placement, setPlacement] = useState({x: 1, y: lowestRow, w: 1, h: 1});
-    useEffect(() => {setPlacement({...placement, y: lowestRow})}, [lowestRow]);
+    useEffect(() => {setPlacement((p) => {return {...p, y: lowestRow}})}, [lowestRow]);
 
     const isCreateButtonActive = () => {
         if (usedKeys.find((e) => e === id)) {
