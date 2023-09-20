@@ -1,6 +1,12 @@
 import TextInput from "./CommonFormElements/textInput";
 
-export default function GeneralInfo(props) {
+export default function GeneralInfo({characterDispatch, characterData}) {
+    const {characterName, characterClass, characterLevel, characterBackground, characterRace} = characterData;
+    const changeHandler = (merge) => characterDispatch({
+        type: "change-text-field",
+        mergeObject: merge,
+    });
+
     return (
         <div
             id="general-information"
@@ -19,8 +25,8 @@ export default function GeneralInfo(props) {
             >
                 <div className="form-big">
                     <TextInput
-                        value={props.characterName}
-                        onChange={(newValue) => props.changeHandler({"characterName": newValue})}
+                        value={characterName}
+                        onChange={(newValue) => changeHandler({"characterName": newValue})}
                     />
                 </div>
                 <div className="sheet-subscript">character name</div>
@@ -28,8 +34,8 @@ export default function GeneralInfo(props) {
             <div>
                 <div className="form-text">
                     <TextInput
-                        value={props.characterClass}
-                        onChange={(newValue) => props.changeHandler({"characterClass": newValue})}
+                        value={characterClass}
+                        onChange={(newValue) => changeHandler({"characterClass": newValue})}
                     />
                 </div>
                 <div className="sheet-subscript">class</div>
@@ -37,8 +43,8 @@ export default function GeneralInfo(props) {
             <div>
                 <div className="form-text">
                     <TextInput
-                        value={props.characterLevel}
-                        onChange={(newValue) => props.changeHandler({"characterLevel": newValue})}
+                        value={characterLevel}
+                        onChange={(newValue) => changeHandler({"characterLevel": newValue})}
                     />
                 </div>
                 <div className="sheet-subscript">level</div>
@@ -46,8 +52,8 @@ export default function GeneralInfo(props) {
             <div>
                 <div className="form-text">
                     <TextInput
-                        value={props.characterBackground}
-                        onChange={(newValue) => props.changeHandler({"characterBackground": newValue})}
+                        value={characterBackground}
+                        onChange={(newValue) => changeHandler({"characterBackground": newValue})}
                     />
                 </div>
                 <div className="sheet-subscript">background</div>
@@ -55,8 +61,8 @@ export default function GeneralInfo(props) {
             <div>
                 <div className="form-text">
                     <TextInput
-                        value={props.characterRace}
-                        onChange={(newValue) => props.changeHandler({"characterRace": newValue})}
+                        value={characterRace}
+                        onChange={(newValue) => changeHandler({"characterRace": newValue})}
                     />
                 </div>
                 <div className="sheet-subscript">race</div>

@@ -1,8 +1,16 @@
 import NumberInput from "./CommonFormElements/numberInput";
 
-export default function HitdiceTracker(props) {
+export default function HitdiceTracker({characterData, characterDispatch}) {
+    const { exhaustion } = characterData;
+    const changeHandler= (merge) => {
+        characterDispatch({
+            type: "change-text-field",
+            mergeObject: merge,
+        });
+    };
+
     let exhaustionTooltip = "";
-    switch (props.exhaustion) { // fallthrough in this switch statement is intended
+    switch (exhaustion) { // fallthrough in this switch statement is intended
         case 6:
             exhaustionTooltip += "Death";
             break;
@@ -28,8 +36,8 @@ export default function HitdiceTracker(props) {
             <div className="sheet-title" style={{"paddingTop": "10px"}}>exhaustion</div>
             <div className="form-big">
                 <NumberInput
-                    value={props.exhaustion}
-                    onChange={(newValue)=>{props.changeHandler({"exhaustion": newValue})}}
+                    value={exhaustion}
+                    onChange={(newValue)=>{changeHandler({"exhaustion": newValue})}}
                 />
             </div>
         </div>

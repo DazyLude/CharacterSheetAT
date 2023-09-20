@@ -1,10 +1,15 @@
-import { useContext } from "react";
 import { getStatMod } from "../Utils";
-import { AppContext } from "./appContext";
 import { Checkbox } from "./CommonFormElements/checkbox";
 
-export default function SecondarySkills(props) {
-    const context = useContext(AppContext);
+export default function SecondarySkills({characterData, characterDispatch}) {
+    const {primarySkills, proficiencies, proficiencyModifier} = characterData;
+    const changeHandler = (prof, val) => {
+        characterDispatch({
+            type: "change-proficiency",
+            proficiency: prof,
+            newValue: val,
+        })
+    }
 
     const skillList = {
         "acrobatics": "dex",
@@ -28,15 +33,15 @@ export default function SecondarySkills(props) {
     };
     const skills = Object.entries(skillList).map(
         ([skillName, skillDep]) => {
-            const isProficient = props.proficiencies[skillName] ?? false;
-            const modifier = (props.proficiencies[skillName] ?? 0) * props.proficiencyModifier;
-            const changeHandler = (value) => {props.changeHandler(skillName, value)};
+            const isProficient = proficiencies[skillName] ?? false;
+            const modifier = (proficiencies[skillName] ?? 0) * proficiencyModifier;
+            const skillChangeHandler = (value) => {changeHandler(skillName, value)};
             return {
                 name: skillName,
                 prof: isProficient,
-                mod: getStatMod(props.skills[skillDep], modifier),
+                mod: getStatMod(primarySkills[skillDep], modifier),
                 dep: skillDep,
-                changeHandler: changeHandler,
+                changeHandler: skillChangeHandler,
             }
         }
     )

@@ -1,6 +1,14 @@
 import NumberInput from "./CommonFormElements/numberInput";
 
-export default function ProficiencyModifier({proficiencyModifier, changeHandler}) {
+export default function ProficiencyModifier({characterData, characterDispatch}) {
+    const { proficiencyModifier } = characterData;
+    const changeHandler = (merge) => {
+        characterDispatch({
+            type: "change-text-field",
+            mergeObject: merge,
+        });
+    };
+
     return (
         <>
             <div className="sheet-title" style={{"paddingTop": "10px"}}>Proficiency modifier</div>

@@ -1,6 +1,14 @@
 import NumberInput from "./CommonFormElements/numberInput";
 
-export default function HealthStats(props) {
+export default function HealthStats({characterData, characterDispatch}) {
+    const {health} = characterData;
+    const changeHandler = (merge) => {
+        characterDispatch({
+            type: "change-text-field",
+            mergeObject: merge,
+            fieldName: "health",
+        });
+    };
     return (
         <div style={{
             "display": "grid",
@@ -15,8 +23,8 @@ export default function HealthStats(props) {
                 <div className="sheet-title">maximum</div>
                 <div className="form-big">
                     <NumberInput
-                        value={props.health.maxHp}
-                        onChange={(newValue)=>{props.changeHandler({"maxHp": newValue})}}
+                        value={health.maxHp}
+                        onChange={(newValue)=>{changeHandler({"maxHp": newValue})}}
                     />
                 </div>
             </div>
@@ -24,8 +32,8 @@ export default function HealthStats(props) {
                 <div className="sheet-title">current</div>
                 <div className="form-big">
                     <NumberInput
-                            value={props.health.currentHp}
-                            onChange={(newValue)=>{props.changeHandler({"currentHp": newValue})}}
+                            value={health.currentHp}
+                            onChange={(newValue)=>{changeHandler({"currentHp": newValue})}}
                     />
                 </div>
             </div>
@@ -33,8 +41,8 @@ export default function HealthStats(props) {
                 <div className="sheet-title">temporary</div>
                 <div className="form-big">
                     <NumberInput
-                            value={props.health.tempHp}
-                            onChange={(newValue)=>{props.changeHandler({"tempHp": newValue})}}
+                            value={health.tempHp}
+                            onChange={(newValue)=>{changeHandler({"tempHp": newValue})}}
                     />
                 </div>
             </div>

@@ -1,9 +1,11 @@
 import { useContext, useState } from "react";
 import { AppContext } from "./appContext";
 
-export default function AbilitySaveDC({proficiencyModifier, skills}) {
+export default function AbilitySaveDC({characterData, characterDispatch}) {
     const {isEditingElements} = useContext(AppContext);
     const [ability, setAbility] = useState("int");
+
+    const { proficiencyModifier, primarySkills } = characterData;
 
     const abilityOptions = ['str', 'dex', 'con', 'int', 'wis', 'cha'].map((ability) => {
         return <option key={ability} value={ability}>{ability}</option>;
@@ -22,7 +24,7 @@ export default function AbilitySaveDC({proficiencyModifier, skills}) {
             <>
                 <div className="sheet-title" style={{"paddingTop": "10px"}}>Ability save DC</div>
                 <div className="sheet-big">
-                    {8 + proficiencyModifier + Math.floor((skills[ability] - 10)/2)}
+                    {8 + proficiencyModifier + Math.floor((primarySkills[ability] - 10)/2)}
                     {" "}
                     {ability}
                 </div>

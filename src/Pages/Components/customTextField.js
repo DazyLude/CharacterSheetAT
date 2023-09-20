@@ -1,7 +1,15 @@
 import TextInput from "./CommonFormElements/textInput";
 import TextFieldInput from "./CommonFormElements/textFieldInput";
 
-export default function CustomTextField({titleText, titleChangeHandler, bodyText, bodyChangeHandler}) {
+export default function CustomTextField({characterData, characterDispatch, id}) {
+    const bodyText = characterData.gridElements[id].bodyText;
+    const titleText = characterData.gridElements[id].titleText;
+    const bodyChangeHandler = (value) => {
+        characterDispatch({type: "change-grid-element", merge: {bodyText: value}, id});
+    };
+    const titleChangeHandler = (value) => {
+        characterDispatch({type: "change-grid-element", merge: {titleText: value}, id})
+    };
     return (
         <div style={{display: "grid", gridTemplateRows: "25px auto", justifyItems: "center", height: "100%", width: "100%"}}>
             <div className={"form-title"}>

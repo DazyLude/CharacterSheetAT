@@ -4,7 +4,11 @@ import NumberInput from "./CommonFormElements/numberInput";
 import { useContext } from "react";
 import { AppContext } from "./appContext";
 
-export default function Inventory({skills, data, dispatcher}) {
+export default function Inventory({characterData, characterDispatch, id}) {
+    const skills = characterData.primarySkills;
+    const data = characterData.gridElements[id];
+    const dispatcher = (args) => {characterDispatch({id: id, ...args})}; // operation type is defined later
+
     const entriesCount = data.count;
     const inventoryContents = data.dataSet;
     const {isEditingElements} = useContext(AppContext);
@@ -78,32 +82,40 @@ export default function Inventory({skills, data, dispatcher}) {
 function InventoryItem({entry, id, editItem, removeItem}) {
     const {isEditingElements} = useContext(AppContext);
     return(
-        <div className="form-subscript" style={{display: 'grid', gridTemplateColumns: 'auto 8fr auto 2fr auto 2fr 1fr 1fr', alignItems: "center"}}>
-            <div style={{border: "solid 1px #ccc", height: "100%"}}> </div>
+        <div className="form-subscript" style={{display: 'grid', gridTemplateColumns: '16fr 3fr 2fr 1fr 5px', alignItems: "center"}}>
             <TextInput style={{width: "99%"}} value={entry.name} onChange={(value) => {editItem(id, {name: value, qty: entry.qty, wght: entry.wght})}} />
-            <div style={{border: "solid 1px #ccc", height: "100%"}}> </div>
-            <NumberInput value={entry.qty} onChange={(value) => {editItem(id, {name: entry.name, qty: value, wght: entry.wght})}} />
-            <div style={{border: "solid 1px #ccc", height: "100%"}}> </div>
-            <span style={{textAlign: "right"}}>
-                <NumberInput value={entry.wght} onChange={(value) => {editItem(id, {name: entry.name, qty: entry.qty, wght: value})}} />
-            </span>
-            <span className={"sheet-subscript"} style={{textAlign: "left"}}>&nbsp;lb</span>
             {isEditingElements ?
-                <UseEffectButton style={{height: "19px", padding: "0px 0px 3px"}} title={"-"} action={() => {removeItem(id)}} />
+                <>
+                    <div style={{background: "red", gridColumn: "-5/-4", width: "100%"}}>move</div>
+                    <UseEffectButton style={{height: "19px", padding: "0px 0px 3px", gridColumn: "-4/-1"}} title={"del"} action={() => {removeItem(id)}} />
+                </>
                 :
-                null
+                <>
+                    <NumberInput value={entry.qty} onChange={(value) => {editItem(id, {name: entry.name, qty: value, wght: entry.wght})}} />
+                    <span style={{textAlign: "right"}}>
+                        <NumberInput value={entry.wght} onChange={(value) => {editItem(id, {name: entry.name, qty: entry.qty, wght: value})}} />
+                    </span>
+                    <span className={"sheet-subscript"} style={{textAlign: "left"}}>&nbsp;lb</span>
+                </>
             }
         </div>
     );
 }
 
 function InventoryHead() {
+    const {isEditingElements} = useContext(AppContext);
     return(
-        <div className="sheet-subscript" style={{display: 'grid', gridTemplateColumns: '1fr 8fr 2fr 3fr 1fr', alignItems: "center", textAlign: "left", borderBottomStyle: "solid"}}>
+        <div className="sheet-subscript" style={{display: 'grid', gridTemplateColumns: '10px 22fr 5fr 3fr 10px', alignItems: "center", textAlign: "left", borderBottomStyle: "solid"}}>
             <div>{/* empty block */}</div>
             <div>Name</div>
-            <div>qty</div>
-            <div>weight</div>
+            {isEditingElements ?
+                <></>
+                :
+                <>
+                    <div>qty</div>
+                    <div>wght</div>
+                </>
+            }
         </div>
     );
 }

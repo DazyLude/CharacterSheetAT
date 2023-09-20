@@ -1,7 +1,16 @@
 import { useContext } from "react";
 import { AppContext } from "./appContext";
 
-export default function DeathSavesTracker(props) {
+export default function DeathSavesTracker({characterData, characterDispatch}) {
+    const successes = characterData.deathSavingThrows.successes;
+    const failures = characterData.deathSavingThrows.failures;
+    const changeHandler = (merge) => {
+        characterDispatch({
+            type: "change-text-field",
+            mergeObject: merge,
+            fieldName: "deathSavingThrows",
+        });
+    };
     return (
         <div style={{
             "alignItems": "center",
@@ -12,13 +21,13 @@ export default function DeathSavesTracker(props) {
             <div className="sheet-title">death saves</div>
             <RadioRow
                 title={"successes"}
-                count={props.successes}
-                changeHandler={(value) => {props.changeHandler({"successes": value})}}
+                count={successes}
+                changeHandler={(value) => {changeHandler({"successes": value})}}
             />
             <RadioRow
                 title={"failures"}
-                count={props.failures}
-                changeHandler={(value) => {props.changeHandler({"failures": value})}}
+                count={failures}
+                changeHandler={(value) => {changeHandler({"failures": value})}}
             />
         </div>
     );

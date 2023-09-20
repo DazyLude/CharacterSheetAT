@@ -1,4 +1,4 @@
-import { useReducer, useEffect, useState, useCallback } from "react";
+import { useReducer, useEffect, useState, useCallback, createElement } from "react";
 import { characterReducer, characterDataValidation } from "./Utils";
 
 import GridElement from "./Components/Grid/gridElement";
@@ -24,6 +24,16 @@ import SpellList from "./Components/spellList";
 
 export default function CharacterSheet() {
     const [characterData, characterDispatch] = useReducer( characterReducer, {}, characterDataValidation );
+    const [mouseX, setMouseX] = useState(0);
+    const [mouseY, setMouseY] = useState(0);
+    const [mousePosition, setMousePosition] = useState([0, 0]);
+    const [movingElement, setMovingElement] = useState(undefined);
+    const [resizingElement, setResizingElement] = useState({id: undefined, direction: undefined});
+
+    const columnWidth = 65; // columns are 65px wide
+    const columnGap = 10;
+    const rowHeight = 25; // rows are 25px high
+    const rowGap = 10;
 
     useEffect(() => { // attempts to load character data from local storage
         const loadData = localStorage.getItem('characterData');
@@ -41,15 +51,6 @@ export default function CharacterSheet() {
         }
     }, [characterDispatch]);
 
-    const [mouseX, setMouseX] = useState(0);
-    const [mouseY, setMouseY] = useState(0);
-    const [mousePosition, setMousePosition] = useState([0, 0]);
-    const [movingElement, setMovingElement] = useState(undefined);
-    const [resizingElement, setResizingElement] = useState({id: undefined, direction: undefined});
-    const columnWidth = 65; // columns are 65px wide
-    const columnGap = 10;
-    const rowHeight = 25; // rows are 25px high
-    const rowGap = 10;
 
     useEffect(
         () => { // tracks cursor position at all times
@@ -57,8 +58,9 @@ export default function CharacterSheet() {
                 setMouseX(e.x);
                 setMouseY(e.y);
             }
-            window.addEventListener('mousemove', update);
             window.addEventListener('touchmove', update);
+            window.addEventListener('mousemove', update);
+
             return () => {
                 window.removeEventListener('mousemove', update);
                 window.removeEventListener('touchmove', update);
@@ -145,6 +147,8 @@ export default function CharacterSheet() {
                 else if (direction.includes('d')) {
                     gridReducer("resize", {id, dh: dy});
                     setMousePosition([mousePosition[0], mouseY]);
+                } else {
+                    setMousePosition([mousePosition[0], mouseY]);
                 }
                 if (dx === 0) {}
                 else if (direction.includes('l')) {
@@ -155,6 +159,8 @@ export default function CharacterSheet() {
                 else if (direction.includes('r')) {
                     gridReducer("resize", {id, dw: dx});
                     setMousePosition([mouseX, mousePosition[1]]);
+                } else {
+                    setMousePosition([mouseX, mousePosition[1]]);
                 }
             }
         },
@@ -162,212 +168,35 @@ export default function CharacterSheet() {
     )
 
     const gridElements = {...characterData.gridElements};
+    const getClassFromString = (typeString) => {
+        const classLibrary = {
+            "generalInfo" : GeneralInfo,
+            "primarySkills" : PrimarySkills,
+            "secondarySkills" : SecondarySkills,
+            "battleStats" : BattleStats,
+            "healthStats": HealthStats,
+            "deathSavesTracker": DeathSavesTracker,
+            "hitdiceTracker": HitdiceTracker,
+            "exhaustionTracker": ExhaustionTracker,
+            "savingThrowsStats": SavingThrows,
+            "proficiencyModifierTracker": ProficiencyModifier,
+            "abilitySaveDC": AbilitySaveDC,
+            "sensesStats": Senses,
+            "customTextField": CustomTextField,
+            "inventory": Inventory,
+            "spellList": SpellList,
+        }
+        return classLibrary[typeString] ?? "div";
+    };
     const gridElementsList = Object.entries(gridElements).map(([key, val]) => {
         const id = key;
-        const type = val.type;
-        switch(type) {
-            case "generalInfo":
-                return (
-                    <GridElement key={id} id={id}>
-                        <GeneralInfo
-                            characterName={characterData.characterName}
-                            characterClass={characterData.characterClass}
-                            characterLevel={characterData.characterLevel}
-                            characterBackground={characterData.characterBackground}
-                            characterRace={characterData.characterRace}
-                            changeHandler={(merge) => characterDispatch({
-                                type: "change-text-field",
-                                mergeObject: merge,
-                            })}
-                        />
-                    </GridElement>
-                );
-            case "primarySkills":
-                return (
-                    <GridElement key={id} id={id}>
-                        <PrimarySkills
-                            skills={characterData.primarySkills}
-                            changeHandler={(merge) => characterDispatch({
-                                type: "change-text-field",
-                                mergeObject: merge,
-                                fieldName: "primarySkills",
-                            })}
-                        />
-                    </GridElement>
-                );
-            case "secondarySkills":
-                return (
-                    <GridElement key={id} id={id}>
-                        <SecondarySkills
-                            skills={characterData.primarySkills}
-                            proficiencies={characterData.proficiencies}
-                            proficiencyModifier={characterData.proficiencyModifier}
-                            changeHandler={
-                                (prof, val) => characterDispatch({
-                                    type: "change-proficiency",
-                                    proficiency: prof,
-                                    newValue: val,
-                                })
-                            }
-                        />
-                    </GridElement>);
-            case "battleStats":
-                return (
-                    <GridElement key={id} id={id}>
-                        <BattleStats
-                            initiative={characterData.initiative}
-                            armorClass={characterData.armorClass}
-                            changeHandler={(merge) => characterDispatch({
-                                type: "change-text-field",
-                                mergeObject: merge,
-                            })}
-                        />
-                    </GridElement>
-                );
-            case "healthStats":
-                return (
-                    <GridElement key={id} id={id}>
-                        <HealthStats
-                            health={{...characterData.health}}
-                            changeHandler={(merge) => characterDispatch({
-                                type: "change-text-field",
-                                mergeObject: merge,
-                                fieldName: "health",
-                            })}
-                        />
-                    </GridElement>
-                );
-            case "deathSavesTracker":
-                return (
-                    <GridElement key={id} id={id}>
-                        <DeathSavesTracker
-                            successes={characterData.deathSavingThrows.successes}
-                            failures={characterData.deathSavingThrows.failures}
-                            changeHandler={(merge) => characterDispatch({
-                                type: "change-text-field",
-                                mergeObject: merge,
-                                fieldName: "deathSavingThrows",
-                            })}
-                        />
-                    </GridElement>
-                );
-            case "hitdiceTracker":
-                return (
-                    <GridElement key={id} id={id}>
-                        <HitdiceTracker
-                            hitDice={characterData.hitDice}
-                            hitDiceTotal={characterData.hitDiceTotal}
-                            changeHandler={(merge) => characterDispatch({
-                                type: "change-text-field",
-                                mergeObject: merge,
-                            })}
-                        />
-                    </GridElement>
-                );
-            case "exhaustionTracker":
-                return (
-                    <GridElement key={id} id={id}>
-                        <ExhaustionTracker
-                            exhaustion={characterData.exhaustion}
-                            changeHandler={(merge) => characterDispatch({
-                                type: "change-text-field",
-                                mergeObject: merge,
-                            })}
-                        />
-                    </GridElement>
-                );
-            case "savingThrowsStats":
-                return (
-                    <GridElement key={id} id={id}>
-                        <SavingThrows
-                            skills={characterData.primarySkills}
-                            proficiencies={characterData.proficiencies}
-                            proficiencyModifier={characterData.proficiencyModifier}
-                            dispatcher={
-                                (prof, val) => characterDispatch({
-                                    type: "change-proficiency",
-                                    proficiency: prof,
-                                    newValue: val,
-                                })
-                            }
-                            textFieldValue={characterData.savingThrowsModifiers}
-                            textFieldHandler={(merge) => characterDispatch({
-                                type: "change-text-field",
-                                mergeObject: merge,
-                            })}
-                        />
-                    </GridElement>
-                );
-            case "proficiencyModifierTracker":
-                return (
-                    <GridElement key={id} id={id}>
-                        <ProficiencyModifier
-                            proficiencyModifier={characterData.proficiencyModifier}
-                            changeHandler={(merge) => characterDispatch({
-                                type: "change-text-field",
-                                mergeObject: merge,
-                            })}
-                        />
-                    </GridElement>
-                );
-            case "abilitySaveDC":
-                return (
-                    <GridElement key={id} id={id}>
-                        <AbilitySaveDC
-                            proficiencyModifier={characterData.proficiencyModifier}
-                            skills={characterData.primarySkills}
-                        />
-                    </GridElement>
-                );
-            case "sensesStats":
-                return (
-                    <GridElement key={id} id={id}>
-                        <Senses
-                            skills={characterData.primarySkills}
-                            proficiencies={characterData.proficiencies}
-                            modifier={characterData.proficiencyModifier}
-                        />
-                    </GridElement>
-                );
-            case "customTextField":
-                return (
-                    <GridElement key={id} id={id}>
-                        <CustomTextField
-                            bodyText={val.bodyText}
-                            bodyChangeHandler={(value) => {
-                                characterDispatch({type: "change-grid-element", merge: {bodyText: value}, id: id})
-                            }}
-                            titleText={val.titleText}
-                            titleChangeHandler={(value) => {
-                                characterDispatch({type: "change-grid-element", merge: {titleText: value}, id: id})
-                            }}
-                        />
-                    </GridElement>
-                );
-            case "inventory":
-                return (
-                    <GridElement key={id} id={id}>
-                        <Inventory
-                            skills={characterData.primarySkills}
-                            data={characterData.gridElements[id]}
-                            dispatcher={(args) => {characterDispatch({id: id, ...args})}}
-                        />
-                    </GridElement>
-                );
-            case "spellList":
-                return (
-                    <GridElement key={id} id={id}>
-                        <SpellList
-                            skills={characterData.primarySkills}
-                            proficiencyModifier={characterData.proficiencyModifier}
-                            data={characterData.gridElements[id]}
-                            dispatcher={(args) => {characterDispatch({id: id, ...args})}}
-                        />
-                    </GridElement>
-                );
-            default:
-                return null;
-        }
+        const typeString = val.type;
+
+        return (
+            <GridElement key={id} id={id}>
+                {createElement(getClassFromString(typeString), {characterDispatch, characterData, id})}
+            </GridElement>
+        );
     });
 
     return (

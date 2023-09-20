@@ -7,7 +7,12 @@ import { getStatModNumeric, getStatMod } from "../Utils";
 import TextFieldInput from "./CommonFormElements/textFieldInput";
 import { Checkbox } from "./CommonFormElements/checkbox";
 
-export default function SpellList({data, skills, proficiencyModifier, dispatcher}) {
+export default function SpellList({characterData, characterDispatch, id}) {
+    const skills = characterData.primarySkills;
+    const proficiencyModifier = characterData.proficiencyModifier;
+    const data = characterData.gridElements[id];
+    const dispatcher = (args) => {characterDispatch({id: id, ...args})}; // operation type is defined later
+
     const entriesCount = data.count;
     const spellListContents = data.dataSet;
     const {isEditingElements} = useContext(AppContext);

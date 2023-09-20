@@ -1,11 +1,22 @@
-import { AppContext } from "./appContext";
 import { getStatMod } from "../Utils";
-import { useContext } from "react";
 import TextFieldInput from "./CommonFormElements/textFieldInput";
 import { Checkbox } from "./CommonFormElements/checkbox";
 
-export default function SavingThrows({proficiencies, skills, proficiencyModifier, dispatcher, textFieldValue, textFieldHandler}) {
-    const context = useContext(AppContext);
+export default function SavingThrows({characterData, characterDispatch}) {
+    const {proficiencies, primarySkills, proficiencyModifier, savingThrowsModifiers} = characterData;
+    const dispatcher = (prof, val) => {
+        characterDispatch({
+            type: "change-proficiency",
+            proficiency: prof,
+            newValue: val,
+        });
+    };
+    const textFieldHandler = (merge) => {
+        characterDispatch({
+            type: "change-text-field",
+            mergeObject: merge,
+        });
+    };
 
     const skillList = {
         "Strength": "str",
@@ -24,7 +35,7 @@ export default function SavingThrows({proficiencies, skills, proficiencyModifier
                 even: num % 2 === 0,
                 name: skillName,
                 isProficient: isProficient,
-                modifier: getStatMod(skills[skillDep], modifier),
+                modifier: getStatMod(primarySkills[skillDep], modifier),
                 changeHandler: changeHandler,
             }
             return (<SavingThrowRow skill={skill} key={skillDep}/>);
@@ -44,7 +55,7 @@ export default function SavingThrows({proficiencies, skills, proficiencyModifier
             {savingThrowRows}
             <div style={{gridArea: "2 / 2 / -1 / 3"}}>
                 <TextFieldInput
-                    value={textFieldValue}
+                    value={savingThrowsModifiers}
                     onChange={(newValue)=>{textFieldHandler({"savingThrowsModifiers": newValue})}}
                 />
             </div>

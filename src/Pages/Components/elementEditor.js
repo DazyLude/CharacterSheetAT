@@ -3,10 +3,10 @@ import { GridContext } from "./Grid/gridContext";
 import UseEffectButton from "./useEffectButton";
 
 const constructibleElements = {
-    "none": {
-        data: {},
-        idCode: "",
-        defaultSize: {w: 1, h: 1}
+    "none": { // an example element
+        data: {}, // default data values
+        idCode: "", // default id value
+        defaultSize: {w: 1, h: 1} // default size values
     },
     "customTextField": {
         data: {titleText: "", bodyText: ""},

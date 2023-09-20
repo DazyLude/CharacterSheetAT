@@ -1,7 +1,16 @@
 import { getStatMod } from "../Utils";
 import NumberInput from "./CommonFormElements/numberInput";
 
-export default function PrimarySkills(props) {
+export default function PrimarySkills({characterDispatch, characterData}) {
+    const { primarySkills } = characterData;
+    const changeHandler = (merge) => {
+        characterDispatch({
+            type: "change-text-field",
+            mergeObject: merge,
+            fieldName: "primarySkills",
+        })
+    };
+
     const skills = {
         "str": "strength",
         "dex": "dexterity",
@@ -16,12 +25,12 @@ export default function PrimarySkills(props) {
             return <StatSquare
                 even={(num % 2) === 0}
                 key={key}
-                value={props.skills[key]}
+                value={primarySkills[key]}
                 title={val}
                 onChange={(newValue) => {
                     const mergeObject = {};
                     mergeObject[key] = newValue;
-                    props.changeHandler(mergeObject);
+                    changeHandler(mergeObject);
                 }}
             />
         }
