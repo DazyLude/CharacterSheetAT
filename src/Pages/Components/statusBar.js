@@ -1,7 +1,7 @@
 import { useContext, useState } from "react";
 
 import FileManipulation from "./fileManipulation";
-import ElementEditor from "./elementConstructor";
+import ElementEditor from "./elementEditor";
 
 import UseEffectButton from "./useEffectButton";
 
@@ -31,7 +31,6 @@ export default function StatusBar({characterData, characterDispatch}) {
             <SpoilerButton text="add/remove element" isOpen={openedMenu===2} clickHandler={() => {openMenu(2)}}>
                 <ElementEditor
                     dispatch={characterDispatch}
-                    usedKeys={Object.keys(characterData.gridElements)}
                 />
             </SpoilerButton>
             <UseEffectButton

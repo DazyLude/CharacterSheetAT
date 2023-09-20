@@ -100,15 +100,13 @@ export default function CharacterSheet() {
                 setMousePosition([mouseX, mouseY]);
                 setResizingElement({id, direction});
             break;
-            case ("resizeEnd"):
-                setResizingElement({id: undefined, direction: undefined});
-            break;
             case ("moveStart"):
                 setMousePosition([mouseX, mouseY]);
                 setMovingElement(id);
             break;
-            case ("moveEnd"):
-                setMovingElement(undefined)
+            case ("release"):
+                setMovingElement(undefined);
+                setResizingElement({id: undefined, direction: undefined});
             break;
             default:
         }
@@ -138,34 +136,25 @@ export default function CharacterSheet() {
             if (id !== undefined) {
                 const dx = Math.trunc((mouseX - mousePosition[0]) / (columnGap + columnWidth));
                 const dy = Math.trunc((mouseY - mousePosition[1]) / (rowGap + rowHeight));
-                switch(direction) {
-                    case('u'):
-                        if (dy !== 0) {
-                            gridReducer("move", {id, dy});
-                            gridReducer("resize", {id, dh: -dy});
-                            setMousePosition([mousePosition[0], mouseY]);
-                        }
-                    break;
-                    case('d'):
-                        if (dy !== 0) {
-                            gridReducer("resize", {id, dh: dy});
-                            setMousePosition([mousePosition[0], mouseY]);
-                        }
-                    break;
-                    case('l'):
-                        if (dx !== 0) {
-                            gridReducer("move", {id, dx});
-                            gridReducer("resize", {id, dw: -dx});
-                            setMousePosition([mouseX, mousePosition[1]]);
-                        }
-                    break;
-                    case('r'):
-                        if (dx !== 0) {
-                            gridReducer("resize", {id, dw: dx});
-                            setMousePosition([mouseX, mousePosition[1]]);
-                        }
-                    break;
-                    default:
+                if (dy === 0) {}
+                else if (direction.includes('u')) {
+                    gridReducer("move", {id, dy});
+                    gridReducer("resize", {id, dh: -dy});
+                    setMousePosition([mousePosition[0], mouseY]);
+                }
+                else if (direction.includes('d')) {
+                    gridReducer("resize", {id, dh: dy});
+                    setMousePosition([mousePosition[0], mouseY]);
+                }
+                if (dx === 0) {}
+                else if (direction.includes('l')) {
+                    gridReducer("move", {id, dx});
+                    gridReducer("resize", {id, dw: -dx});
+                    setMousePosition([mouseX, mousePosition[1]]);
+                }
+                else if (direction.includes('r')) {
+                    gridReducer("resize", {id, dw: dx});
+                    setMousePosition([mouseX, mousePosition[1]]);
                 }
             }
         },

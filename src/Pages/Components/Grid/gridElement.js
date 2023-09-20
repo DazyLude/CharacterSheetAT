@@ -6,6 +6,24 @@ export default function GridElement({id, children}) {
     const { x, y, h, w } = useContext(GridContext)[id] ?? { x: 1, y: 1, w: 1, h: 1 };
     const gridReducer = useContext(GridContextReducer);
 
+    const resizeInDirection = (direction) => {
+        gridReducer("resizeStart", {id, direction});
+        const release = () => {
+            gridReducer("release", {});
+        }
+        window.addEventListener("mouseup", release, {once: true});
+        window.addEventListener("touchend", release, {once: true});
+    };
+
+    const move = () => {
+        gridReducer("moveStart", {id});
+        const release = () => {
+            gridReducer("release", {});
+        }
+        window.addEventListener("mouseup", release, {once: true});
+        window.addEventListener("touchend", release, {once: true});
+    };
+
     const placement = `${y} / ${x} / ${h === -1 ? -1 : y + h} / ${w === -1 ? -1 : x + w}`
 
     return (
@@ -21,41 +39,30 @@ export default function GridElement({id, children}) {
                         opacity: "0.95",
                         alignItems: "center",
                         display: "grid",
-                        gridTemplateColumns: "1fr 1fr 1fr 1fr",
+                        gridTemplateColumns: "1fr 4fr 1fr",
+                        gridTemplateRows: "1fr 4fr 1fr",
                         textAlign: "center",
                         }}
                         className="form-subscript"
                     >
-                        <div>move:</div>
-                        <div onMouseDown={() => {
-                                window.addEventListener("mouseup", () => {gridReducer("moveEnd")}, {once: true});
-                                gridReducer("moveStart", {id});
-                            }}
-                            onTouchStart={() => {
-                                window.addEventListener("touchend", () => {gridReducer("moveEnd")}, {once: true});
-                                gridReducer("moveStart", {id});
-                            }}
-                            style={{
-                                background: "red",
-                            }}
-                        >
-                            hold
-                        </div>
-                        <div>resize up:</div>
-                        <div onMouseDown={() => {
-                                window.addEventListener("mouseup", () => {gridReducer("resizeEnd")}, {once: true});
-                                gridReducer("resizeStart", {id, direction: 'u'});
-                            }}
-                            onTouchStart={() => {
-                                window.addEventListener("touchend", () => {gridReducer("resizeEnd")}, {once: true});
-                                gridReducer("resizeStart", {id, direction: 'u'});
-                            }}
-                            style={{
-                                background: "red",
-                            }}
-                        >
-                            hold
-                        </div>
+                        {/* top left */}
+                        <div onMouseDown={() => {resizeInDirection('ul')}} style={{width: "100%", height: "100%", cursor: "nw-resize"}}></div>
+                        {/* neutral good */}
+                        <div onMouseDown={() => {resizeInDirection('u')}} style={{width: "100%", height: "100%", cursor: "n-resize"}}></div>
+                        {/* top right */}
+                        <div onMouseDown={() => {resizeInDirection('ur')}} style={{width: "100%", height: "100%", cursor: "ne-resize"}}></div>
+                        {/* lawful neutral */}
+                        <div onMouseDown={() => {resizeInDirection('l')}} style={{width: "100%", height: "100%", cursor: "w-resize"}}></div>
+                        {/* center */}
+                        <div onMouseDown={() => {move()}} style={{width: "100%", height: "100%", cursor: "move"}}></div>
+                        {/* chaotic neutral */}
+                        <div onMouseDown={() => {resizeInDirection('r')}} style={{width: "100%", height: "100%", cursor: "e-resize"}}></div>
+                        {/* bottom left */}
+                        <div onMouseDown={() => {resizeInDirection('ld')}} style={{width: "100%", height: "100%", cursor: "sw-resize"}}></div>
+                        {/* neutral evil */}
+                        <div onMouseDown={() => {resizeInDirection('d')}} style={{width: "100%", height: "100%", cursor: "s-resize"}}></div>
+                        {/* bottom right */}
+                        <div onMouseDown={() => {resizeInDirection('rd')}} style={{width: "100%", height: "100%", cursor: "se-resize"}}></div>
                     </div>
                 </>
             }

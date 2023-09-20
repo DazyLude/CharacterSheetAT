@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useContext, useEffect, useState } from "react";
+import { GridContext } from "./Grid/gridContext";
 import UseEffectButton from "./useEffectButton";
 
 const constructibleElements = {
@@ -84,12 +85,17 @@ const constructibleElements = {
     }
 }
 
-export default function ElementEditor({dispatch, usedKeys}) {
+export default function ElementEditor({dispatch}) {
     const [selection, setSelection] = useState("none");
     const [id, setId]= useState("");
-    const [placement, setPlacement] = useState({x: 1, y: 1, w: 1, h: 1})
     const [removerSelection, setRemSelection] = useState("none");
-    const [activeWindow, setActiveWindow] = useState(0)
+    const [activeWindow, setActiveWindow] = useState(0);
+
+    const gridData = useContext(GridContext);
+    const usedKeys = Object.keys(gridData);
+    const lowestRow = Object.values(gridData).map(({y, h}) => y + h).reduce((val, sav) => val < sav ? sav : val);
+    const [placement, setPlacement] = useState({x: 1, y: lowestRow, w: 1, h: 1});
+    useEffect(() => {setPlacement({...placement, y: lowestRow})}, [lowestRow]);
 
     const isCreateButtonActive = () => {
         if (usedKeys.find((e) => e === id)) {

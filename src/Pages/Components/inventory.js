@@ -100,7 +100,7 @@ function InventoryItem({entry, id, editItem, removeItem}) {
 function InventoryHead() {
     return(
         <div className="sheet-subscript" style={{display: 'grid', gridTemplateColumns: '1fr 8fr 2fr 3fr 1fr', alignItems: "center", textAlign: "left", borderBottomStyle: "solid"}}>
-            <div></div>
+            <div>{/* empty block */}</div>
             <div>Name</div>
             <div>qty</div>
             <div>weight</div>
