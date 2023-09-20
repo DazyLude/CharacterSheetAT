@@ -93,7 +93,7 @@ export default function ElementEditor({dispatch}) {
 
     const gridData = useContext(GridContext);
     const usedKeys = Object.keys(gridData);
-    const lowestRow = Object.values(gridData).map(({y, h}) => y + h).reduce((val, sav) => val < sav ? sav : val);
+    const lowestRow = Object.values(gridData).map(({y, h}) => y + h).reduce((val, sav) => val < sav ? sav : val, 0);
     const [placement, setPlacement] = useState({x: 1, y: lowestRow, w: 1, h: 1});
     useEffect(() => {setPlacement((p) => {return {...p, y: lowestRow}})}, [lowestRow]);
 
