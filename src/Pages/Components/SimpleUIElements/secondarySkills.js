@@ -1,5 +1,8 @@
+import { useContext } from "react";
 import { getStatMod } from "../../Utils";
 import { Checkbox } from "../CommonFormElements/checkbox";
+import NumberInput from "../CommonFormElements/numberInput";
+import { AppContext } from "../appContext";
 
 export default function SecondarySkills({characterData, characterDispatch}) {
     const {primarySkills, proficiencies, proficiencyModifier} = characterData;
@@ -33,12 +36,28 @@ export default function SecondarySkills({characterData, characterDispatch}) {
     };
     const skills = Object.entries(skillList).map(
         ([skillName, skillDep]) => {
-            const isProficient = proficiencies[skillName] ?? false;
-            const modifier = (proficiencies[skillName] ?? 0) * proficiencyModifier;
+            const typeOfProficiency = typeof(proficiencies[skillName]);
+            let isProficient = false;   // default for undefined
+            let modifier = 0;           // default for undefined
+            if (typeOfProficiency === "boolean") {  // default case for initialized proficiencies
+                isProficient = proficiencies[skillName];
+                modifier = proficiencyModifier * (isProficient ? 1 : 0);
+            }
+            else if (typeOfProficiency === "number") {  // customized case for multiplicative proficiency bonuses such as expertise
+                isProficient = true;
+                modifier = proficiencyModifier * proficiencies[skillName];
+            } else if (typeOfProficiency === "object") {
+                isProficient = true;
+                const profObj = proficiencies[skillName] ?? {add: 0, mul: 1};
+                const add = profObj.add ?? 0;
+                const mul = profObj.mul ?? 1;
+                modifier = proficiencyModifier * mul + add;
+            }
+
             const skillChangeHandler = (value) => {changeHandler(skillName, value)};
             return {
                 name: skillName,
-                prof: isProficient,
+                prof: proficiencies[skillName],
                 mod: getStatMod(primarySkills[skillDep], modifier),
                 dep: skillDep,
                 changeHandler: skillChangeHandler,
@@ -69,45 +88,78 @@ export default function SecondarySkills({characterData, characterDispatch}) {
 }
 
 function SecondarySkillRow(props) {
+    const {isEditingElements} = useContext(AppContext);
     const skill = props.skill ?? {};
     const proficiency = skill.prof ?? false;
     const modifier = skill.mod ?? 0;
     const skillName = skill.name ?? "skill";
     const mainSkill = skill.dep ?? "str";
-    return (
-        <div
-            className="sheet-text"
-            style={{
-                "display": "grid",
-                "height": "22px",
-                "gridTemplateColumns": "21px 30px auto 40px 3px",
-                "background": "#e0e0e0",
-                "paddingTop": "5px",
-            }}
-        >
-            <Checkbox
-                isChecked={proficiency}
-                changeHandler={(value) => {skill.changeHandler(value)}}
-            />
-            <div>
-                {modifier}
-            </div>
+    if (isEditingElements) {
+        return (
             <div
+                className={(isEditingElements ? "sheet-subscript" : "sheet-text")}
                 style={{
-                    "textAlign": "left",
-                    "textTransform": "capitalize",
+                    "display": "grid",
+                    "height": "22px",
+                    "gridTemplateColumns": "20px auto 20px auto",
+                    "background": "#e0e0e0",
+                    "paddingTop": "5px",
+                }}>
+                *
+                <NumberInput
+                    style={{width: "100%"}}
+                    value={proficiency.mul ?? 1}
+                    onChange={(value) => {
+                        skill.changeHandler({...proficiency, mul: value})}
+                    }
+                />
+                +
+                <NumberInput
+                    style={{width: "100%"}}
+                    value={proficiency.add ?? 0}
+                    onChange={(value) => {
+                        skill.changeHandler({...proficiency, add: value})}
+                    }
+                />
+            </div>
+        );
+    }   // end of isEditingElements == true
+    else {
+        return(
+            <div
+                className={(isEditingElements ? "sheet-subscript" : "sheet-text")}
+                style={{
+                    "display": "grid",
+                    "height": "22px",
+                    "gridTemplateColumns": "21px 30px auto 40px 3px",
+                    "background": "#e0e0e0",
+                    "paddingTop": "5px",
                 }}
             >
-                {skillName}
+                <Checkbox
+                    isChecked={proficiency}
+                    changeHandler={(value) => {skill.changeHandler(value)}}
+                />
+                <div>
+                    {modifier}
+                </div>
+                <div
+                    style={{
+                        "textAlign": "left",
+                        "textTransform": "capitalize",
+                    }}
+                >
+                    {skillName}
+                </div>
+                <div
+                    style={{
+                        "textAlign": "right",
+                        "textTransform": "uppercase",
+                    }}
+                >
+                    {mainSkill}
+                </div>
             </div>
-            <div
-                style={{
-                    "textAlign": "right",
-                    "textTransform": "uppercase",
-                }}
-            >
-                {mainSkill}
-            </div>
-        </div>
-    );
+        );
+    }   // end of isEditingElements == false
 }
