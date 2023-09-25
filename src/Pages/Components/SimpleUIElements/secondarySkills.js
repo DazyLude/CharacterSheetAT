@@ -54,7 +54,17 @@ export default function SecondarySkills({characterData, characterDispatch}) {
                 modifier = proficiencyModifier * mul + add;
             }
 
-            const skillChangeHandler = (value) => {changeHandler(skillName, value)};
+            const skillChangeHandler = (value) => {
+                if (typeof(value) === "boolean") {
+                    changeHandler(skillName, value);
+                } else if ((value.add ?? 0) === 0 && value.mul === 0) {
+                    changeHandler(skillName, false);
+                } else if ((value.add ?? 0) === 0 && value.mul === 1) {
+                    changeHandler(skillName, true);
+                } else {
+                    changeHandler(skillName, value);
+                }
+            };
             return {
                 name: skillName,
                 prof: proficiencies[skillName],
@@ -101,14 +111,15 @@ function SecondarySkillRow(props) {
                 style={{
                     "display": "grid",
                     "height": "22px",
-                    "gridTemplateColumns": "20px auto 20px auto",
+                    "gridTemplateColumns": "35px 60px auto 40px auto",
                     "background": "#e0e0e0",
                     "paddingTop": "5px",
                 }}>
-                *
+                <span>{modifier}</span>
+                = PM *
                 <NumberInput
                     style={{width: "100%"}}
-                    value={proficiency.mul ?? 1}
+                    value={proficiency.mul ?? (proficiency ? 1 : 0)}
                     onChange={(value) => {
                         skill.changeHandler({...proficiency, mul: value})}
                     }
