@@ -1,4 +1,4 @@
-import TextInput from "./CommonFormElements/textInput";
+import TextInput from "../CommonFormElements/textInput";
 
 export default function GeneralInfo({characterDispatch, characterData}) {
     const {characterName, characterClass, characterLevel, characterBackground, characterRace} = characterData;

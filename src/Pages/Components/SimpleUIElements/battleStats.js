@@ -1,5 +1,5 @@
-import TextInput from "./CommonFormElements/textInput";
-import NumberInput from "./CommonFormElements/numberInput";
+import TextInput from "../CommonFormElements/textInput";
+import NumberInput from "../CommonFormElements/numberInput";
 
 export default function BattleStats({characterData, characterDispatch}) {
     const {initiative, armorClass} = characterData;

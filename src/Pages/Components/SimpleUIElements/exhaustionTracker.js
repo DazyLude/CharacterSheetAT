@@ -1,4 +1,4 @@
-import NumberInput from "./CommonFormElements/numberInput";
+import NumberInput from "../CommonFormElements/numberInput";
 
 export default function HitdiceTracker({characterData, characterDispatch}) {
     const { exhaustion } = characterData;

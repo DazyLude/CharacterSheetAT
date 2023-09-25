@@ -2,31 +2,30 @@ import { useReducer, useEffect, useState, useCallback, createElement } from "rea
 import { characterReducer, characterDataValidation } from "./Utils";
 
 import GridElement from "./Components/Grid/gridElement";
-import { GridContext, GridContextReducer } from "./Components/Grid/gridContext";
+import { GridContext, GridContextReducer, MousePositionContext } from "./Components/Grid/gridContext";
 
 import CustomTextField from "./Components/customTextField";
 import StatusBar from "./Components/statusBar";
 
-import GeneralInfo from "./Components/generalInfo";
-import PrimarySkills from "./Components/primarySkills";
-import SecondarySkills from "./Components/secondarySkills";
-import BattleStats from "./Components/battleStats";
-import HealthStats from "./Components/healthStats";
-import DeathSavesTracker from "./Components/deathSavesTracker";
-import HitdiceTracker from "./Components/hitdiceTracker";
-import ExhaustionTracker from "./Components/exhaustionTracker";
-import ProficiencyModifier from "./Components/proficiencyModifier";
-import AbilitySaveDC from "./Components/abilitySaveDC";
-import Senses from "./Components/senses";
-import SavingThrows from "./Components/savingThrows";
+import GeneralInfo from "./Components/SimpleUIElements/generalInfo";
+import PrimarySkills from "./Components/SimpleUIElements/primarySkills";
+import SecondarySkills from "./Components/SimpleUIElements/secondarySkills";
+import BattleStats from "./Components/SimpleUIElements/battleStats";
+import HealthStats from "./Components/SimpleUIElements/healthStats";
+import DeathSavesTracker from "./Components/SimpleUIElements/deathSavesTracker";
+import HitdiceTracker from "./Components/SimpleUIElements/hitdiceTracker";
+import ExhaustionTracker from "./Components/SimpleUIElements/exhaustionTracker";
+import ProficiencyModifier from "./Components/SimpleUIElements/proficiencyModifier";
+import AbilitySaveDC from "./Components/SimpleUIElements/abilitySaveDC";
+import Senses from "./Components/SimpleUIElements/senses";
+import SavingThrows from "./Components/SimpleUIElements/savingThrows";
 import Inventory from "./Components/inventory";
 import SpellList from "./Components/spellList";
 
 export default function CharacterSheet() {
     const [characterData, characterDispatch] = useReducer( characterReducer, {}, characterDataValidation );
-    const [mouseX, setMouseX] = useState(0);
-    const [mouseY, setMouseY] = useState(0);
     const [mousePosition, setMousePosition] = useState([0, 0]);
+    const [savedMousePosition, setSavedMousePosition] = useState([0, 0]);
     const [movingElement, setMovingElement] = useState(undefined);
     const [resizingElement, setResizingElement] = useState({id: undefined, direction: undefined});
 
@@ -55,18 +54,17 @@ export default function CharacterSheet() {
     useEffect(
         () => { // tracks cursor position at all times
             const update = (e) => {
-                setMouseX(e.x);
-                setMouseY(e.y);
+                setMousePosition([e.x, e.y]);
             }
-            window.addEventListener('touchmove', update);
             window.addEventListener('mousemove', update);
+            window.addEventListener('touchmove', update);
 
             return () => {
                 window.removeEventListener('mousemove', update);
                 window.removeEventListener('touchmove', update);
             }
         },
-        [setMouseX, setMouseY]
+        [setMousePosition]
     )
     const gridReducer = useCallback((type, action) => {
         const {id} = action;
@@ -99,11 +97,11 @@ export default function CharacterSheet() {
         switch(type) {
             case ("resizeStart"):
                 let {direction} = action;
-                setMousePosition([mouseX, mouseY]);
+                setSavedMousePosition(mousePosition);
                 setResizingElement({id, direction});
             break;
             case ("moveStart"):
-                setMousePosition([mouseX, mouseY]);
+                setSavedMousePosition(mousePosition);
                 setMovingElement(id);
             break;
             case ("release"):
@@ -117,54 +115,50 @@ export default function CharacterSheet() {
     useEffect( // moves the clicked-on element
         () => {
             if (movingElement !== undefined) {
-                const dx = Math.trunc((mouseX - mousePosition[0]) / (columnGap + columnWidth));
-                const dy = Math.trunc((mouseY - mousePosition[1]) / (rowGap + rowHeight));
+                const dx = Math.trunc((mousePosition[0] - savedMousePosition[0]) / (columnGap + columnWidth));
+                const dy = Math.trunc((mousePosition[1] - savedMousePosition[1]) / (rowGap + rowHeight));
                 if (dx !== 0) {
                     gridReducer("move", {id: movingElement, dx});
-                    setMousePosition([mouseX, mousePosition[1]]);
+                    setSavedMousePosition([mousePosition[0], savedMousePosition[1]]);
                 }
                 if (dy !== 0) {
                     gridReducer("move", {id: movingElement, dy});
-                    setMousePosition([mousePosition[0], mouseY]);
+                    setSavedMousePosition([savedMousePosition[0], mousePosition[1]]);
                 }
             }
         },
-        [mousePosition, setMousePosition, mouseX, mouseY, movingElement, gridReducer]
+        [savedMousePosition, setSavedMousePosition, mousePosition, movingElement, gridReducer]
     )
 
     useEffect( // resizes provided (by id) grid element by delta in a provided direction (l(eft)/r(ight)/u(p)/d(down))
         () => {
             const {id, direction} = resizingElement;
             if (id !== undefined) {
-                const dx = Math.trunc((mouseX - mousePosition[0]) / (columnGap + columnWidth));
-                const dy = Math.trunc((mouseY - mousePosition[1]) / (rowGap + rowHeight));
-                if (dy === 0) {}
-                else if (direction.includes('u')) {
-                    gridReducer("move", {id, dy});
-                    gridReducer("resize", {id, dh: -dy});
-                    setMousePosition([mousePosition[0], mouseY]);
+                const dx = Math.trunc((mousePosition[0] - savedMousePosition[0]) / (columnGap + columnWidth));
+                const dy = Math.trunc((mousePosition[1] - savedMousePosition[1]) / (rowGap + rowHeight));
+                if (dy !== 0) {
+                    if (direction.includes('u')) {
+                        gridReducer("move", {id, dy});
+                        gridReducer("resize", {id, dh: -dy});
+                    }
+                    else if (direction.includes('d')) {
+                        gridReducer("resize", {id, dh: dy});
+                    }
+                    setSavedMousePosition([savedMousePosition[0], mousePosition[1]]);
                 }
-                else if (direction.includes('d')) {
-                    gridReducer("resize", {id, dh: dy});
-                    setMousePosition([mousePosition[0], mouseY]);
-                } else {
-                    setMousePosition([mousePosition[0], mouseY]);
-                }
-                if (dx === 0) {}
-                else if (direction.includes('l')) {
-                    gridReducer("move", {id, dx});
-                    gridReducer("resize", {id, dw: -dx});
-                    setMousePosition([mouseX, mousePosition[1]]);
-                }
-                else if (direction.includes('r')) {
-                    gridReducer("resize", {id, dw: dx});
-                    setMousePosition([mouseX, mousePosition[1]]);
-                } else {
-                    setMousePosition([mouseX, mousePosition[1]]);
+                if (dx !== 0) {
+                    if (direction.includes('l')) {
+                        gridReducer("move", {id, dx});
+                        gridReducer("resize", {id, dw: -dx});
+                    }
+                    else if (direction.includes('r')) {
+                        gridReducer("resize", {id, dw: dx});
+                    }
+                    setSavedMousePosition([mousePosition[0], savedMousePosition[1]]);
                 }
             }
         },
-        [mousePosition, setMousePosition, mouseX, mouseY, resizingElement, gridReducer]
+        [savedMousePosition, setSavedMousePosition, mousePosition, resizingElement, gridReducer]
     )
 
     const gridElements = {...characterData.gridElements};

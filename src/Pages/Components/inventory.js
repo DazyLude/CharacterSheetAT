@@ -5,7 +5,7 @@ import { useContext } from "react";
 import { AppContext } from "./appContext";
 
 export default function Inventory({characterData, characterDispatch, id}) {
-    const skills = characterData.primarySkills;
+    const str = characterData.primarySkills.str;
     const data = characterData.gridElements[id];
     const dispatcher = (args) => {characterDispatch({id: id, ...args})}; // operation type is defined later
 
@@ -58,7 +58,7 @@ export default function Inventory({characterData, characterDispatch, id}) {
                     Carried: {carriedWeight} lb
                 </span>
                 <span className="sheet-subscript">
-                    Encumbered: {skills.str * 15} lb
+                    Encumbered: {str * 15} lb
                 </span>
                 { isEditingElements ?
                 <UseEffectButton style={{height: "18px", width: "300px", padding: "0px 5px 2px"}} title="add element" action={() => {incrementCount(); addItem();}}/>

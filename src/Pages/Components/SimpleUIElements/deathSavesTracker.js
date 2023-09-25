@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { AppContext } from "./appContext";
+import { AppContext } from "../appContext";
 
 export default function DeathSavesTracker({characterData, characterDispatch}) {
     const successes = characterData.deathSavingThrows.successes;

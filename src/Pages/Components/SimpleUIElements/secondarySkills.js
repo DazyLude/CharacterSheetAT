@@ -1,5 +1,5 @@
-import { getStatMod } from "../Utils";
-import { Checkbox } from "./CommonFormElements/checkbox";
+import { getStatMod } from "../../Utils";
+import { Checkbox } from "../CommonFormElements/checkbox";
 
 export default function SecondarySkills({characterData, characterDispatch}) {
     const {primarySkills, proficiencies, proficiencyModifier} = characterData;

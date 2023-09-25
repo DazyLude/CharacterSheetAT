@@ -1,5 +1,5 @@
 import { useContext, useState } from "react";
-import { AppContext } from "./appContext";
+import { AppContext } from "../appContext";
 
 export default function AbilitySaveDC({characterData, characterDispatch}) {
     const {isEditingElements} = useContext(AppContext);

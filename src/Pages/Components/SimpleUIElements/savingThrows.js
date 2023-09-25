@@ -1,6 +1,6 @@
-import { getStatMod } from "../Utils";
-import TextFieldInput from "./CommonFormElements/textFieldInput";
-import { Checkbox } from "./CommonFormElements/checkbox";
+import { getStatMod } from "../../Utils";
+import TextFieldInput from "../CommonFormElements/textFieldInput";
+import { Checkbox } from "../CommonFormElements/checkbox";
 
 export default function SavingThrows({characterData, characterDispatch}) {
     const {proficiencies, primarySkills, proficiencyModifier, savingThrowsModifiers} = characterData;
