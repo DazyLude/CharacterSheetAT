@@ -1,5 +1,5 @@
 import { useReducer, useEffect, useState, useCallback, createElement } from "react";
-import { characterReducer, characterDataValidation } from "./Utils";
+import { characterReducer, characterDataValidation, funnyConstants } from "./Utils";
 
 import GridElement from "./Components/Grid/gridElement";
 import { GridContext, GridContextReducer, MousePositionContext } from "./Components/Grid/gridContext";
@@ -25,14 +25,8 @@ import SpellList from "./Components/spellList";
 export default function CharacterSheet() {
     const [characterData, characterDispatch] = useReducer( characterReducer, {}, characterDataValidation );
     const [mousePosition, setMousePosition] = useState([0, 0]);
-    const [savedMousePosition, setSavedMousePosition] = useState([0, 0]);
-    const [movingElement, setMovingElement] = useState(undefined);
-    const [resizingElement, setResizingElement] = useState({id: undefined, direction: undefined});
 
-    const columnWidth = 65; // columns are 65px wide
-    const columnGap = 10;
-    const rowHeight = 25; // rows are 25px high
-    const rowGap = 10;
+    const {columnGap, columnWidth, rowGap, rowHeight} = funnyConstants;
 
     useEffect(() => { // attempts to load character data from local storage
         const loadData = localStorage.getItem('characterData');
@@ -52,7 +46,7 @@ export default function CharacterSheet() {
 
 
     useEffect(
-        () => { // tracks cursor position at all times
+        () => { // tracks cursor position at all times and sends it to other components through context
             const update = (e) => {
                 setMousePosition([e.x, e.y]);
             }
@@ -92,75 +86,6 @@ export default function CharacterSheet() {
         }
     }, [characterData.gridData]);
 
-    const gridEventHandler = (type, action) => {
-        const {id} = action ?? {};
-        switch(type) {
-            case ("resizeStart"):
-                let {direction} = action;
-                setSavedMousePosition(mousePosition);
-                setResizingElement({id, direction});
-            break;
-            case ("moveStart"):
-                setSavedMousePosition(mousePosition);
-                setMovingElement(id);
-            break;
-            case ("release"):
-                setMovingElement(undefined);
-                setResizingElement({id: undefined, direction: undefined});
-            break;
-            default:
-        }
-    }
-
-    useEffect( // moves the clicked-on element
-        () => {
-            if (movingElement !== undefined) {
-                const dx = Math.trunc((mousePosition[0] - savedMousePosition[0]) / (columnGap + columnWidth));
-                const dy = Math.trunc((mousePosition[1] - savedMousePosition[1]) / (rowGap + rowHeight));
-                if (dx !== 0) {
-                    gridReducer("move", {id: movingElement, dx});
-                    setSavedMousePosition([mousePosition[0], savedMousePosition[1]]);
-                }
-                if (dy !== 0) {
-                    gridReducer("move", {id: movingElement, dy});
-                    setSavedMousePosition([savedMousePosition[0], mousePosition[1]]);
-                }
-            }
-        },
-        [savedMousePosition, setSavedMousePosition, mousePosition, movingElement, gridReducer]
-    )
-
-    useEffect( // resizes provided (by id) grid element by delta in a provided direction (l(eft)/r(ight)/u(p)/d(down))
-        () => {
-            const {id, direction} = resizingElement;
-            if (id !== undefined) {
-                const dx = Math.trunc((mousePosition[0] - savedMousePosition[0]) / (columnGap + columnWidth));
-                const dy = Math.trunc((mousePosition[1] - savedMousePosition[1]) / (rowGap + rowHeight));
-                if (dy !== 0) {
-                    if (direction.includes('u')) {
-                        gridReducer("move", {id, dy});
-                        gridReducer("resize", {id, dh: -dy});
-                    }
-                    else if (direction.includes('d')) {
-                        gridReducer("resize", {id, dh: dy});
-                    }
-                    setSavedMousePosition([savedMousePosition[0], mousePosition[1]]);
-                }
-                if (dx !== 0) {
-                    if (direction.includes('l')) {
-                        gridReducer("move", {id, dx});
-                        gridReducer("resize", {id, dw: -dx});
-                    }
-                    else if (direction.includes('r')) {
-                        gridReducer("resize", {id, dw: dx});
-                    }
-                    setSavedMousePosition([mousePosition[0], savedMousePosition[1]]);
-                }
-            }
-        },
-        [savedMousePosition, setSavedMousePosition, mousePosition, resizingElement, gridReducer]
-    )
-
     const gridElements = {...characterData.gridElements};
     const getClassFromString = (typeString) => {
         const classLibrary = {
@@ -195,7 +120,8 @@ export default function CharacterSheet() {
 
     return (
         <GridContext.Provider value={{...characterData.gridData}}>
-            <GridContextReducer.Provider value={gridEventHandler}>
+            <GridContextReducer.Provider value={gridReducer}>
+                <MousePositionContext.Provider value={mousePosition}>
                 <div style={{
                     display: "grid",
                     gridTemplateColumns: "1fr 890px 1fr",
@@ -218,6 +144,7 @@ export default function CharacterSheet() {
                         {gridElementsList}
                     </div>
                 </div>
+                </MousePositionContext.Provider>
             </GridContextReducer.Provider>
         </GridContext.Provider>
     );

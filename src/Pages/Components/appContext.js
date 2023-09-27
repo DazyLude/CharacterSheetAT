@@ -20,6 +20,7 @@ export function contextReducer(state, action) {
             break;
         case "elementEdit-switch":
             newState.isEditingElements = !state.isEditingElements;
+            break;
         default:
             break;
     }

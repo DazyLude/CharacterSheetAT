@@ -111,12 +111,12 @@ function SecondarySkillRow(props) {
                 style={{
                     "display": "grid",
                     "height": "22px",
-                    "gridTemplateColumns": "35px 60px auto 40px auto",
+                    "gridTemplateColumns": "1fr 100px 2fr 10px 2fr",
                     "background": "#e0e0e0",
                     "paddingTop": "5px",
                 }}>
                 <span>{modifier}</span>
-                = PM *
+                = SM + PM *
                 <NumberInput
                     style={{width: "100%"}}
                     value={proficiency.mul ?? (proficiency ? 1 : 0)}

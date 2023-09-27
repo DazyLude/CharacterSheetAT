@@ -193,3 +193,10 @@ export function characterDataValidation(characterData) {
 
     return validatedData;
 }
+
+export const funnyConstants = {
+    columnWidth: 65, // columns are 65px wide
+    columnGap: 10,
+    rowHeight: 25, // rows are 25px high
+    rowGap: 10,
+}
