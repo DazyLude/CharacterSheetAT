@@ -72,7 +72,7 @@ export default function CharacterSheet() {
                 newY = newY < 0 ? 0 : newY;
                 characterDispatch({type: "change-grid-data", id, merge: {x: newX, y: newY}});
             break;
-            case ("resize"):
+            case ("resize"): // changes elements size (by id)
                 const {dh, dw} = action;
                 const {h, w} = characterData.gridData[id];
                 let newH = h + (dh ?? 0);

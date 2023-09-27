@@ -1,6 +1,6 @@
 import { useContext } from "react";
 import { getStatMod } from "../../Utils";
-import { Checkbox } from "../CommonFormElements/checkbox";
+import Checkbox from "../CommonFormElements/checkbox";
 import NumberInput from "../CommonFormElements/numberInput";
 import { AppContext } from "../appContext";
 
@@ -132,6 +132,7 @@ function SecondarySkillRow(props) {
                         skill.changeHandler({...proficiency, add: value})}
                     }
                 />
+
             </div>
         );
     }   // end of isEditingElements == true

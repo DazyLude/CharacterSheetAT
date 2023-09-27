@@ -1,11 +1,11 @@
 import UseEffectButton from "./useEffectButton";
-import TextInput from "./CommonFormElements/textInput";
-import { useContext } from "react";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { AppContext } from "./appContext";
 import { getStatModNumeric, getStatMod } from "../Utils";
 import TextFieldInput from "./CommonFormElements/textFieldInput";
-import { Checkbox } from "./CommonFormElements/checkbox";
+import TextInput from "./CommonFormElements/textInput";
+import { ControlledSpoiler } from "./CommonFormElements/spoiler";
+import Checkbox from "./CommonFormElements/checkbox";
 
 export default function SpellList({characterData, characterDispatch, id}) {
     const skills = characterData.primarySkills;
@@ -15,7 +15,8 @@ export default function SpellList({characterData, characterDispatch, id}) {
 
     const entriesCount = data.count;
     const spellListContents = data.dataSet;
-    const {isEditingElements} = useContext(AppContext);
+    const { isEditingElements } = useContext(AppContext)
+    const [openedSpoiler, setOpenedSpoiler] = useState("")
 
     const spellCastingAbility = data.spellCastingAbility ?? "cha";
     const spellSavingThrow = getStatModNumeric(skills[spellCastingAbility], 8 + proficiencyModifier);
@@ -23,8 +24,16 @@ export default function SpellList({characterData, characterDispatch, id}) {
 
     const displayEntries = Object.entries(spellListContents).map(([id, entry]) => {
         entry ??= {};
+        const isOpenIfSpoilered = openedSpoiler === id;
         return (
-            <SpellListItem key={id} entry={entry} editItem={(val) => {editItem(id, val)}} removeItem={() => {removeItem(id)}} />
+            <SpellListItem
+                key={id}
+                entry={entry}
+                editItem={(val) => {editItem(id, val)}}
+                removeItem={() => {removeItem(id)}}
+                isOpen={isOpenIfSpoilered}
+                spoilerStateHandler={() => {setOpenedSpoiler(isOpenIfSpoilered ? "" : id)}}
+            />
         );
     });
 
@@ -128,7 +137,7 @@ function SpellListHead() {
     );
 }
 
-function SpellListItem({entry, editItem, removeItem}) {
+function SpellListItem({entry, editItem, removeItem, isOpen, spoilerStateHandler}) {
     const {isEditingElements} = useContext(AppContext);
     const longDescription = entry.isLong;
     const isPrepared = entry.isPrepared;
@@ -144,16 +153,26 @@ function SpellListItem({entry, editItem, removeItem}) {
                         isChecked={longDescription}
                         changeHandler={spoilerHandler}
                     />
-                    <button style={{padding: "5px 10px"}} onClick={() => {removeItem()}}> - </button>
+                    <button style={{padding: "5px 10px"}} onClick={removeItem}> - </button>
                 </span>
             );
         }
         else if (longDescription) {
             return(
-                <SpoileredDescription
-                    text={entry.text}
-                    onChange={textHandler}
-                />
+                <ControlledSpoiler
+                    isOpen={isOpen}
+                    stateHandler={spoilerStateHandler}
+                    preview={<TextInput style={{width: "69%"}} value={entry.text} onChange={textHandler}/>}
+                >
+                    <TextFieldInput
+                        size={{
+                            height: "100px",
+                            width: "100%",
+                        }}
+                        value={entry.text}
+                        onChange={textHandler}
+                    />
+                </ControlledSpoiler>
             );
         }
         else return(
@@ -179,13 +198,13 @@ function SpellListItem({entry, editItem, removeItem}) {
                 value={entry.name}
                 onChange={(value) => {editItem({...entry, name: value})}}
             />
-            {/* name */}
+            {/* source */}
             <TextInput
                 style={{width: "99%"}}
                 value={entry.source}
                 onChange={(value) => {editItem({...entry, source: value})}}
             />
-            {/* name */}
+            {/* save/atk info */}
             { isEditingElements ?
                 <select style={{padding: "5px 10px"}} value={entry.save_atk} onChange={(e) => {editItem({...entry, save_atk: e.target.value})}}>
                     <option value="">---</option>
@@ -228,35 +247,4 @@ function SpellListItem({entry, editItem, removeItem}) {
             {description(isEditingElements, longDescription, entry, editItem, removeItem)}
         </>
     );
-}
-
-function SpoileredDescription({text, onChange}) {
-    let [isOpen, setIsOpen] = useState(false);
-    if (isOpen) {
-        return (
-            <div style={{height: "30px"}}>
-                <div style={{
-                    position: "absolute",
-                }}>
-                    <TextFieldInput
-                        size={{
-                            height: "100px",
-                            width: "100%",
-                        }}
-                        value={text}
-                        onChange={onChange}
-                    />
-                    <button onClick={() => {setIsOpen(false)}}> hide </button>
-                </div>
-            </div>
-        );
-    }
-    else {
-        return (
-            <div style={{height: "30px"}}>
-                <TextInput style={{width: "69%"}} value={text} onChange={onChange}/>
-                <button style={{padding: "5px 10px", width: "30%"}} onClick={() => {setIsOpen(true)}}> more </button>
-            </div>
-        );
-    }
 }
