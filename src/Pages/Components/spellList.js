@@ -1,11 +1,11 @@
-import UseEffectButton from "./useEffectButton";
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import { AppContext } from "./appContext";
 import { getStatModNumeric, getStatMod } from "../Utils";
 import TextFieldInput from "./CommonFormElements/textFieldInput";
 import TextInput from "./CommonFormElements/textInput";
 import { ControlledSpoiler } from "./CommonFormElements/spoiler";
 import Checkbox from "./CommonFormElements/checkbox";
+import Table from "./CommonFormElements/table";
 
 export default function SpellList({characterData, characterDispatch, id}) {
     const skills = characterData.primarySkills;
@@ -13,112 +13,74 @@ export default function SpellList({characterData, characterDispatch, id}) {
     const data = characterData.gridElements[id];
     const dispatcher = (args) => {characterDispatch({id: id, ...args})}; // operation type is defined later
 
-    const entriesCount = data.count;
-    const spellListContents = data.dataSet;
     const { isEditingElements } = useContext(AppContext)
-    const [openedSpoiler, setOpenedSpoiler] = useState("")
 
     const spellCastingAbility = data.spellCastingAbility ?? "cha";
     const spellSavingThrow = getStatModNumeric(skills[spellCastingAbility], 8 + proficiencyModifier);
     const spellAttackBonus = getStatMod(skills[spellCastingAbility], proficiencyModifier + data.weaponBonus);
 
-    const displayEntries = Object.entries(spellListContents).map(([id, entry]) => {
-        entry ??= {};
-        const isOpenIfSpoilered = openedSpoiler === id;
-        return (
-            <SpellListItem
-                key={id}
-                entry={entry}
-                editItem={(val) => {editItem(id, val)}}
-                removeItem={() => {removeItem(id)}}
-                isOpen={isOpenIfSpoilered}
-                spoilerStateHandler={() => {setOpenedSpoiler(isOpenIfSpoilered ? "" : id)}}
-            />
-        );
-    });
-
-    const incrementCount = () => {
-        dispatcher({type: "change-grid-element", merge: {count: entriesCount + 1}});
-    }
-
-    const addItem = () => {
-        const newItem = {
-            isPrepared: false,
-            name: "",
-            source: "",
-            save_atk: "",
-            cast_time: "",
-            range: "",
-            duration: "",
-            text: "",
-        }
-        dispatcher({type: "add-set-item", itemId: entriesCount + 1, item: newItem});
-    }
-
-    const removeItem = (removedItemId) => {
-        dispatcher({
-            type: "remove-set-item",
-            itemId: removedItemId,
-        })
-    }
-    const editItem = (replacedItemId, replacement) => {
-        dispatcher({
-            type: "replace-set-item",
-            itemId: replacedItemId,
-            replacement: replacement,
-        })
+    const defaultSpell = {
+        isPrepared: false,
+        name: "",
+        source: "",
+        save_atk: "",
+        cast_time: "",
+        range: "",
+        duration: "",
+        text: "",
     }
 
     const changeSpellCastingAbility = (val) => {
         dispatcher({type: "change-grid-element", merge: {spellCastingAbility: val}});
     }
 
-    return (
-        <>
-            <div style={{height: "30px", display: "flex", justifyContent: "space-around"}}>
-
-                { isEditingElements ?
-                <>
+    const Title = () => {
+        if (isEditingElements) {
+            return (
                     <select style={{padding: "2px 10px"}} value={spellCastingAbility} onChange={(e) => changeSpellCastingAbility(e.target.value)}>
                         <option value="int">intelligence</option>
                         <option value="wis">wisdom</option>
                         <option value="cha">charisma</option>
                     </select>
-                    <UseEffectButton style={{height: "18px", width: "300px", padding: "0px 5px 2px"}} title="add element" action={() => {incrementCount(); addItem();}}/>
-                </>
-                :
+            );
+        }
+        else {
+            return (
                 <>
                     <span className="sheet-subscript">
-                        Spellcasting ability: {spellCastingAbility}
-                    </span>
-                    <span className="sheet-subscript">
-                        Spell saving throw: {spellSavingThrow}
-                    </span>
-                    <span className="sheet-subscript">
-                        Spell attack bonus: {spellAttackBonus}
+                            Spellcasting ability: {spellCastingAbility}
+                        </span>
+                        <span className="sheet-subscript">
+                            Spell saving throw: {spellSavingThrow}
+                        </span>
+                        <span className="sheet-subscript">
+                            Spell attack bonus: {spellAttackBonus}
                     </span>
                 </>
-                }
-            </div>
-            <div style={{height: "90%"}}>
-                <div style={{position: "relative", zIndex: "1"}}>
-                    <div
-                        className="form-subscript"
-                        style={{
-                            display: 'grid',
-                            gridTemplateColumns: '40px 170px 60px 80px 80px 80px 60px 90px auto',
-                            gridTemplateRows: '30px',
-                            rowGap: "3px",
-                            alignItems: "center"
-                        }}
-                    >
-                        <SpellListHead />
-                        {displayEntries}
-                    </div>
-                </div>
-            </div>
-        </>
-    );
+            );
+        }
+    }
+
+    const columnStyle = {
+            width: "90%",
+            display: 'grid',
+            gridTemplateColumns: '40px 170px 60px 80px 80px 80px 60px 90px auto',
+            rowGap: "3px",
+            alignItems: "center"
+    }
+
+    return (
+        <Table
+            title={<Title />}
+            head={<SpellListHead />}
+            columnStyle={columnStyle}
+            columns={1}
+            data={{count: data.count, dataSet: data.dataSet}}
+            itemElement={Spell}
+            defaultItemObject={defaultSpell}
+            dispatcher={dispatcher}
+        />
+    )
 }
 
 function SpellListHead() {
@@ -137,7 +99,7 @@ function SpellListHead() {
     );
 }
 
-function SpellListItem({entry, editItem, removeItem, isOpen, spoilerStateHandler}) {
+function Spell({entry, editItem, removeItem, isOpen, spoilerStateHandler}) {
     const {isEditingElements} = useContext(AppContext);
     const longDescription = entry.isLong;
     const isPrepared = entry.isPrepared;
@@ -147,7 +109,7 @@ function SpellListItem({entry, editItem, removeItem, isOpen, spoilerStateHandler
         const spoilerHandler = (value) => {editItem({...entry, isLong: value})};
         if (isEditingElements) {
             return (
-                <span style={{heigth: "30px", width: "99%"}}>
+                <span style={{height: "30px", width: "99%"}}>
                     Long description
                     <Checkbox
                         isChecked={longDescription}
@@ -162,7 +124,7 @@ function SpellListItem({entry, editItem, removeItem, isOpen, spoilerStateHandler
                 <ControlledSpoiler
                     isOpen={isOpen}
                     stateHandler={spoilerStateHandler}
-                    preview={<TextInput style={{width: "69%"}} value={entry.text} onChange={textHandler}/>}
+                    preview={<TextInput style={{height: "30px", width: "69%"}} value={entry.text} onChange={textHandler}/>}
                 >
                     <TextFieldInput
                         size={{
@@ -177,7 +139,7 @@ function SpellListItem({entry, editItem, removeItem, isOpen, spoilerStateHandler
         }
         else return(
             <TextInput
-                style={{width: "90%", height: "20px", padding: "5px"}}
+                style={{width: "90%", height: "30px"}}
                 value={entry.text}
                 onChange={textHandler}
             />
@@ -194,13 +156,13 @@ function SpellListItem({entry, editItem, removeItem, isOpen, spoilerStateHandler
             />
             {/* name */}
             <TextInput
-                style={{width: "99%"}}
+                style={{width: "99%", height: "30px"}}
                 value={entry.name}
                 onChange={(value) => {editItem({...entry, name: value})}}
             />
             {/* source */}
             <TextInput
-                style={{width: "99%"}}
+                style={{width: "99%", height: "30px"}}
                 value={entry.source}
                 onChange={(value) => {editItem({...entry, source: value})}}
             />
@@ -221,25 +183,25 @@ function SpellListItem({entry, editItem, removeItem, isOpen, spoilerStateHandler
             }
             {/* cast time */}
             <TextInput
-                style={{width: "99%"}}
+                style={{width: "99%", height: "30px"}}
                 value={entry.cast_time}
                 onChange={(value) => {editItem({...entry, cast_time: value})}}
             />
             {/* range */}
             <TextInput
-                style={{width: "99%"}}
+                style={{width: "99%", height: "30px"}}
                 value={entry.range}
                 onChange={(value) => {editItem({...entry, range: value})}}
             />
             {/* spell components */}
             <TextInput
-                style={{width: "99%"}}
+                style={{width: "99%", height: "30px"}}
                 value={entry.components}
                 onChange={(value) => {editItem({...entry, components: value})}}
             />
             {/* spell duration */}
             <TextInput
-                style={{width: "99%"}}
+                style={{width: "99%", height: "30px"}}
                 value={entry.duration}
                 onChange={(value) => {editItem({...entry, duration: value})}}
             />

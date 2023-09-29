@@ -98,7 +98,7 @@ export default function GridElement({id, children}) {
             {isLayoutLocked ? null :
                 <>
                     <div style={{
-                        zIndex: "2",
+                        zIndex: "3",
                         width: "100%",
                         height: "100%",
                         position: "absolute",
@@ -110,6 +110,7 @@ export default function GridElement({id, children}) {
                         textAlign: "center",
                         }}
                         className="form-subscript"
+                        title={id}
                     >
                         {/* top left */}
                         <div
@@ -142,8 +143,9 @@ export default function GridElement({id, children}) {
                         {/* center */}
                         <div
                             onMouseDown={() => {move()}}
-                            style={{display: "flex", justifyContent: "center", alignItems: "center", background: "gray", width: "100%", height: "100%", cursor: "move"}}
+                            style={{display: "flex", flexDirection: "column", justifyContent: "space-around", background: "gray", width: "100%", height: "100%", cursor: "move"}}
                         >
+                            <div style={{height: "40px", textOverflow:"ellipsis", overflow: "hidden"}}>id: {id}</div>
                             <FontAwesomeIcon icon={faUpDownLeftRight} />
                         </div>
                         {/* chaotic neutral */}

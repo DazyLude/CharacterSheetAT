@@ -3,6 +3,7 @@ import { getStatMod } from "../../Utils";
 import Checkbox from "../CommonFormElements/checkbox";
 import NumberInput from "../CommonFormElements/numberInput";
 import { AppContext } from "../appContext";
+import { Spoiler } from "../CommonFormElements/spoiler";
 
 export default function SecondarySkills({characterData, characterDispatch}) {
     const {primarySkills, proficiencies, proficiencyModifier} = characterData;
@@ -104,34 +105,78 @@ function SecondarySkillRow(props) {
     const modifier = skill.mod ?? 0;
     const skillName = skill.name ?? "skill";
     const mainSkill = skill.dep ?? "str";
+
+    const setProficient = (val) => {
+        setCustom({mul: val ? 1 : 0, add: 0});
+    }
+    const setExpert = (val) => {
+        setCustom({mul: val ? 2 : 0, add: 0});
+    }
+    const setCustom = ({add, mul}) => {
+        skill.changeHandler({
+            add: add ?? proficiency.add ?? 0,
+            mul: mul ?? proficiency.mul ?? 0,
+        });
+    }
+
     if (isEditingElements) {
         return (
             <div
-                className={(isEditingElements ? "sheet-subscript" : "sheet-text")}
+                className={"sheet-subscript"}
                 style={{
                     "display": "grid",
-                    "height": "22px",
-                    "gridTemplateColumns": "1fr 100px 2fr 10px 2fr",
+                    "height": "27px",
                     "background": "#e0e0e0",
-                    "paddingTop": "5px",
                 }}>
-                <span>{modifier}</span>
-                = SM + PM *
-                <NumberInput
-                    style={{width: "100%"}}
-                    value={proficiency.mul ?? (proficiency ? 1 : 0)}
-                    onChange={(value) => {
-                        skill.changeHandler({...proficiency, mul: value})}
-                    }
-                />
-                +
-                <NumberInput
-                    style={{width: "100%"}}
-                    value={proficiency.add ?? 0}
-                    onChange={(value) => {
-                        skill.changeHandler({...proficiency, add: value})}
-                    }
-                />
+                <Spoiler
+                    preview={skillName}
+                    showText={"advanced"}
+                    hideText={"hide advanced"}
+                >
+                    <div style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        height: "110px",
+                        background: "LightGray"
+                    }}>
+                        <div>
+                            set proficiency:
+                            <Checkbox
+                                isChecked={proficiency===true || (proficiency.mul === 1 && (proficiency.add ?? 0) === 0)}
+                                changeHandler={(val) => {setProficient(val)}}
+                            />
+                        </div>
+                        <div>
+                            set expertise:
+                            <Checkbox
+                                isChecked={proficiency.mul === 2 && (proficiency.add ?? 0) === 0}
+                                changeHandler={(val) => {setExpert(val)}}
+                            />
+                        </div>
+                        or set custom modifier formula:
+                        <div style={{
+                            display: "flex",
+                            justifyContent: "space-evenly"
+                        }}>
+                            {modifier} = PM *
+                            <NumberInput
+                                style={{width: "40px"}}
+                                value={proficiency.mul ?? (proficiency === true ? 1 : 0)}
+                                onChange={(value) => {
+                                    setCustom({mul: value});
+                                }}
+                            />
+                            +
+                            <NumberInput
+                                style={{width: "40px"}}
+                                value={proficiency.add ?? 0}
+                                onChange={(value) => {
+                                    setCustom({add: value});
+                                }}
+                            />
+                        </div>
+                    </div>
+                </Spoiler>
 
             </div>
         );
@@ -139,13 +184,13 @@ function SecondarySkillRow(props) {
     else {
         return(
             <div
-                className={(isEditingElements ? "sheet-subscript" : "sheet-text")}
+                className={"sheet-text"}
                 style={{
                     "display": "grid",
                     "height": "22px",
                     "gridTemplateColumns": "21px 30px auto 40px 3px",
                     "background": "#e0e0e0",
-                    "paddingTop": "5px",
+                    "paddingTop": "3px",
                 }}
             >
                 <Checkbox

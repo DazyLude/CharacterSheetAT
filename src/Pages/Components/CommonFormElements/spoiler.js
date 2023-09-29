@@ -22,9 +22,10 @@ export function ControlledSpoiler({children, preview, hideText, showText, isOpen
 
     if (isOpen) {
         return (
-            <div style={{height: "30px"}}>
+            <div>
                 <div style={{
                     position: "absolute",
+                    zIndex: "2",
                 }}>
                     {children}
                     <button onClick={() => {stateHandler()}}> {hideText} </button>
@@ -34,9 +35,13 @@ export function ControlledSpoiler({children, preview, hideText, showText, isOpen
     }
     else {
         return (
-            <div style={{height: "30px"}}>
+            <div style= {{
+                width: "100%",
+                display: "flex",
+                justifyContent: "space-between",
+            }}>
                 {preview}
-                <button style={{padding: "5px 10px", width: "30%"}} onClick={() => {stateHandler()}}> {showText} </button>
+                <button style={{padding: "5px 10px"}} onClick={() => {stateHandler()}}> {showText} </button>
             </div>
         );
     }
