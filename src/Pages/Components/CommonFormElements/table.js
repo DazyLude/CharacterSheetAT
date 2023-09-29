@@ -23,7 +23,7 @@ import { AppContext } from "../appContext";
 // > defaultItemObject - js object that has all the default fields an entry should have.
 // > dispatcher - function to manipulate character data aka character dispatch
 
-export default function Table({title, data, itemElement, defaultItemObject, dispatcher, ...columnProps}) {
+export default function Table({data, itemElement, defaultItemObject, dispatcher, children, columns, columnStyle, Head}) {
     const [openedSpoiler, setOpenedSpoiler] = useState("");
     const { isEditingElements } = useContext(AppContext);
     const count = data.count ?? 0;
@@ -54,6 +54,14 @@ export default function Table({title, data, itemElement, defaultItemObject, disp
         })
     }
 
+    const setItemPosition = (displacedItem, position) => {
+        dispatcher({
+            type: "merge-set-item",
+            itemId: displacedItem,
+            merge: position,
+        })
+    }
+
     const displayItems = Object.entries(dataSet).map(([id, entry]) => {
         entry ??= {};
         const isOpenIfSpoilered = openedSpoiler === id;
@@ -74,7 +82,7 @@ export default function Table({title, data, itemElement, defaultItemObject, disp
     return(
         <>
             <div style={{height: "30px", display: "flex", justifyContent: "space-around"}}>
-                {title}
+                {children}
                 {
                     isEditingElements ?
                     <UseEffectButton
@@ -97,33 +105,54 @@ export default function Table({title, data, itemElement, defaultItemObject, disp
                 style={{
                     display: "grid",
                     width: "100%",
-                    gridTemplateColumns: `repeat(${1}, 1fr)`,
-                    columnGap: "10px",
-                    rowGap: "5px",
-                    margin:"20px"
+                    gridTemplateColumns: `repeat(${columns}, 1fr)`,
+                    columnGap: "20px",
+                    margin: "10px"
                 }}>
-                <Columns props={{...columnProps, displayItems}}/>
+                <TableColumns Head={Head} columnStyle={columnStyle} columns={columns} displayItems={displayItems} setItemPosition={setItemPosition}/>
             </div>
         </>
     );
 }
 
-function Columns({columns, columnStyle, head, displayItems}) {
+function TableColumns({columns, columnStyle, Head, displayItems, setItemPosition}) {
+    columns ??= 1;
+    Head ??= <></>;
+
+    // sorting items on per column basis
+    const columnItems = [];
+    for (let i = 0; i < columns; i++) {
+        columnItems.push([]);
+    }
+
+    displayItems.forEach(item => {
+        const tablePosition = item.props.entry.tablePosition ?? [0, 0];
+        columnItems[tablePosition[0] ?? 0].push(item);
+    });
+
+    columnItems.forEach(arrayOfItems => {
+        const cmpFn = (itemA, itemB) => {
+            const tablePositionA = itemA.props.entry.tablePosition ?? [0, 0];
+            const tablePositionB = itemB.props.entry.tablePosition ?? [0, 0];
+            const rowA = tablePositionA[1] ?? 0;
+            const rowB = tablePositionB[1] ?? 1;
+            return rowA - rowB;
+        }
+        arrayOfItems.sort(cmpFn);
+    });
+
     const displayColumns = [];
     for (let i = 0; i < columns; i++) {
         displayColumns.push(
-            <div key={i}>
-                {head}
-                {displayItems}
+            <div
+                className="form-subscript"
+                style={{...columnStyle, alignItems: 'start'}}
+                key={i}
+            >
+                <Head/>
+                {columnItems[i]}
             </div>
         )
     }
-    return (
-        <div
-            className="form-subscript"
-            style={{...columnStyle}}
-        >
-            {displayColumns}
-        </div>
-    )
+    return displayColumns;
 }

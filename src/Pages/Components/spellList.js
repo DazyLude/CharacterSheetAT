@@ -13,8 +13,6 @@ export default function SpellList({characterData, characterDispatch, id}) {
     const data = characterData.gridElements[id];
     const dispatcher = (args) => {characterDispatch({id: id, ...args})}; // operation type is defined later
 
-    const { isEditingElements } = useContext(AppContext)
-
     const spellCastingAbility = data.spellCastingAbility ?? "cha";
     const spellSavingThrow = getStatModNumeric(skills[spellCastingAbility], 8 + proficiencyModifier);
     const spellAttackBonus = getStatMod(skills[spellCastingAbility], proficiencyModifier + data.weaponBonus);
@@ -34,53 +32,61 @@ export default function SpellList({characterData, characterDispatch, id}) {
         dispatcher({type: "change-grid-element", merge: {spellCastingAbility: val}});
     }
 
-    const Title = () => {
-        if (isEditingElements) {
-            return (
-                    <select style={{padding: "2px 10px"}} value={spellCastingAbility} onChange={(e) => changeSpellCastingAbility(e.target.value)}>
-                        <option value="int">intelligence</option>
-                        <option value="wis">wisdom</option>
-                        <option value="cha">charisma</option>
-                    </select>
-            );
-        }
-        else {
-            return (
-                <>
-                    <span className="sheet-subscript">
-                            Spellcasting ability: {spellCastingAbility}
-                        </span>
-                        <span className="sheet-subscript">
-                            Spell saving throw: {spellSavingThrow}
-                        </span>
-                        <span className="sheet-subscript">
-                            Spell attack bonus: {spellAttackBonus}
-                    </span>
-                </>
-            );
-        }
-    }
-
     const columnStyle = {
-            width: "90%",
+            width: "98%",
             display: 'grid',
-            gridTemplateColumns: '40px 170px 60px 80px 80px 80px 60px 90px auto',
+            gridTemplateColumns: '30px 170px 60px 80px 80px 80px 60px 90px auto',
+            gridTemplateRows: '30px',
             rowGap: "3px",
             alignItems: "center"
     }
 
     return (
         <Table
-            title={<Title />}
-            head={<SpellListHead />}
+            Head={SpellListHead}
             columnStyle={columnStyle}
             columns={1}
             data={{count: data.count, dataSet: data.dataSet}}
             itemElement={Spell}
             defaultItemObject={defaultSpell}
             dispatcher={dispatcher}
-        />
+        >
+            <Title
+                spellCastingAbility={spellCastingAbility}
+                changeSpellCastingAbility={changeSpellCastingAbility}
+                spellSavingThrow={spellSavingThrow}
+                spellAttackBonus={spellAttackBonus}
+            />
+        </Table>
     )
+}
+
+function Title({ spellCastingAbility, changeSpellCastingAbility, spellSavingThrow, spellAttackBonus}) {
+    const { isEditingElements } = useContext(AppContext);
+    if (isEditingElements) {
+        return (
+                <select style={{padding: "2px 10px"}} value={spellCastingAbility} onChange={(e) => changeSpellCastingAbility(e.target.value)}>
+                    <option value="int">intelligence</option>
+                    <option value="wis">wisdom</option>
+                    <option value="cha">charisma</option>
+                </select>
+        );
+    }
+    else {
+        return (
+            <>
+                <span className="sheet-subscript">
+                        Spellcasting ability: {spellCastingAbility}
+                    </span>
+                    <span className="sheet-subscript">
+                        Spell saving throw: {spellSavingThrow}
+                    </span>
+                    <span className="sheet-subscript">
+                        Spell attack bonus: {spellAttackBonus}
+                </span>
+            </>
+        );
+    }
 }
 
 function SpellListHead() {

@@ -62,11 +62,21 @@ export function characterReducer(oldData, action) {
         case "replace-set-item":
             newData = replaceInSet(oldData, action.id, action.itemId, action.replacement);
             break;
+        case "merge-set-item":
+            newData = mergeInSet(oldData, action.id, action.itemId, action.replacement);
+            break;
         default:
             console.error("incorrect action type passed to characterReducer: " + action.type);
             break;
     }
     localStorage.setItem("characterData", JSON.stringify(newData));
+    return newData;
+}
+
+function mergeInSet(oldData, id, itemId, merge) {
+    const newData = {...oldData};
+    const newItemData = {...newData.gridElements[id].dataSet[itemId]}
+    newData.gridElements[id].dataSet[itemId] = {...newItemData, ...merge};
     return newData;
 }
 
