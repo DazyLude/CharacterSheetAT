@@ -1,7 +1,7 @@
 import { useReducer, useEffect, useState, useCallback, createElement } from "react";
 import { characterReducer, characterDataValidation, funnyConstants } from "./Utils";
 
-import GridElement from "./Components/Grid/gridElement";
+import { GridController, GridElementMemo } from "./Components/Grid/gridElement";
 import { GridContext, GridContextReducer, MousePositionContext } from "./Components/Grid/gridContext";
 
 import CustomTextField from "./Components/customTextField";
@@ -112,9 +112,9 @@ export default function CharacterSheet() {
         const typeString = val.type;
 
         return (
-            <GridElement key={id} id={id}>
+            <GridElementMemo key={id} id={id}>
                 {createElement(getClassFromString(typeString), {characterDispatch, characterData, id})}
-            </GridElement>
+            </GridElementMemo>
         );
     });
 
@@ -141,7 +141,9 @@ export default function CharacterSheet() {
                             "rowGap": `${rowGap}px`,
                             "gridAutoFlow": "column"
                         }}>
-                        {gridElementsList}
+                            <GridController>
+                                {gridElementsList}
+                            </GridController>
                     </div>
                 </div>
                 </MousePositionContext.Provider>
