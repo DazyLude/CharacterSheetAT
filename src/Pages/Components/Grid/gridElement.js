@@ -257,7 +257,7 @@ function ResizingController({id, direction, releaseCallback}) {
                 setSavedMousePosition([mousePosition[0], savedMousePosition[1]]);
             }
         },
-        [id, dx, dy, savedMousePosition, mousePosition, gridReducer]
+        [id, dx, dy, savedMousePosition, mousePosition, gridReducer, direction]
     );
 
     return <></>;

@@ -48,18 +48,20 @@ export default function CharacterSheet() {
     useEffect(
         () => { // tracks cursor position at all times and sends it to other components through context
             const update = (e) => {
-                setMousePosition([e.x, e.y]);
+                setMousePosition([e.pageX, e.pageY]);
             }
-            window.addEventListener('mousemove', update);
-            window.addEventListener('touchmove', update);
+            const root = document.getElementById("root");
+            root.addEventListener('mousemove', update);
+            root.addEventListener('touchmove', update);
 
             return () => {
-                window.removeEventListener('mousemove', update);
-                window.removeEventListener('touchmove', update);
+                root.removeEventListener('mousemove', update);
+                root.removeEventListener('touchmove', update);
             }
         },
         [setMousePosition]
     )
+
     const gridReducer = useCallback((type, action) => {
         const {id} = action;
         switch (type) {
