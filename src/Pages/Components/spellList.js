@@ -1,11 +1,12 @@
-import { useContext } from "react";
+import { createElement, useContext } from "react";
 import { AppContext } from "./appContext";
 import { getStatModNumeric, getStatMod } from "../Utils";
 import TextFieldInput from "./CommonFormElements/textFieldInput";
 import TextInput from "./CommonFormElements/textInput";
 import { ControlledSpoiler } from "./CommonFormElements/spoiler";
 import Checkbox from "./CommonFormElements/checkbox";
-import Table from "./CommonFormElements/table";
+import { Table } from "./CommonFormElements/table";
+import NumberInput from "./CommonFormElements/numberInput";
 
 export default function SpellList({characterData, characterDispatch, id}) {
     const skills = characterData.primarySkills;
@@ -36,7 +37,7 @@ export default function SpellList({characterData, characterDispatch, id}) {
             width: "98%",
             display: 'grid',
             gridTemplateColumns: '30px 170px 60px 80px 80px 80px 60px 90px auto',
-            gridTemplateRows: '30px',
+            gridAutoRows: '30px',
             rowGap: "3px",
             alignItems: "center"
     }
@@ -90,6 +91,7 @@ function Title({ spellCastingAbility, changeSpellCastingAbility, spellSavingThro
 }
 
 function SpellListHead() {
+    const {isEditingElements} = useContext(AppContext);
     return (
         <>
             <span>Prep</span>
@@ -98,8 +100,16 @@ function SpellListHead() {
             <span>Save/Atk</span>
             <span>Time</span>
             <span>Range</span>
-            <span>Comp</span>
-            <span>Duration</span>
+            {isEditingElements ?
+            <>
+                <span style={{gridColumn: "7/9"}}>Priority</span>
+            </>
+                :
+            <>
+                <span>Comp</span>
+                <span>Duration</span>
+            </>
+            }
             <span>Notes</span>
         </>
     );
@@ -108,49 +118,12 @@ function SpellListHead() {
 function Spell({entry, editItem, removeItem, isOpen, spoilerStateHandler}) {
     const {isEditingElements} = useContext(AppContext);
     const longDescription = entry.isLong;
+    const text = entry.text;
     const isPrepared = entry.isPrepared;
+    const placement = entry.placement ?? [0, 0];
 
-    const description = (isEditingElements, longDescription, entry, editItem, removeItem) => {
-        const textHandler = (value) => {editItem({...entry, text: value})};
-        const spoilerHandler = (value) => {editItem({...entry, isLong: value})};
-        if (isEditingElements) {
-            return (
-                <span style={{height: "30px", width: "99%"}}>
-                    Long description
-                    <Checkbox
-                        isChecked={longDescription}
-                        changeHandler={spoilerHandler}
-                    />
-                    <button style={{padding: "5px 10px"}} onClick={removeItem}> - </button>
-                </span>
-            );
-        }
-        else if (longDescription) {
-            return(
-                <ControlledSpoiler
-                    isOpen={isOpen}
-                    stateHandler={spoilerStateHandler}
-                    preview={<TextInput style={{height: "30px", width: "69%"}} value={entry.text} onChange={textHandler}/>}
-                >
-                    <TextFieldInput
-                        size={{
-                            height: "100px",
-                            width: "100%",
-                        }}
-                        value={entry.text}
-                        onChange={textHandler}
-                    />
-                </ControlledSpoiler>
-            );
-        }
-        else return(
-            <TextInput
-                style={{width: "90%", height: "30px"}}
-                value={entry.text}
-                onChange={textHandler}
-            />
-        );
-    };
+    const setPriority = (value) => {editItem({placement: [placement[0], value]})};
+    const description = createElement(SpellDescription, {longDescription, text, editItem, removeItem, isOpen, spoilerStateHandler});
 
     return(
         <>
@@ -158,23 +131,23 @@ function Spell({entry, editItem, removeItem, isOpen, spoilerStateHandler}) {
             <Checkbox
                 style={{width: "99%"}}
                 isChecked={isPrepared}
-                changeHandler={(value) => {editItem({...entry, isPrepared: value})}}
+                changeHandler={(value) => {editItem({isPrepared: value})}}
             />
             {/* name */}
             <TextInput
                 style={{width: "99%", height: "30px"}}
                 value={entry.name}
-                onChange={(value) => {editItem({...entry, name: value})}}
+                onChange={(value) => {editItem({name: value})}}
             />
             {/* source */}
             <TextInput
                 style={{width: "99%", height: "30px"}}
                 value={entry.source}
-                onChange={(value) => {editItem({...entry, source: value})}}
+                onChange={(value) => {editItem({source: value})}}
             />
             {/* save/atk info */}
             { isEditingElements ?
-                <select style={{padding: "5px 10px"}} value={entry.save_atk} onChange={(e) => {editItem({...entry, save_atk: e.target.value})}}>
+                <select style={{padding: "5px 10px"}} value={entry.save_atk} onChange={(e) => {editItem({save_atk: e.target.value})}}>
                     <option value="">---</option>
                     <option value="atk">atk</option>
                     <option value="str">str</option>
@@ -191,28 +164,87 @@ function Spell({entry, editItem, removeItem, isOpen, spoilerStateHandler}) {
             <TextInput
                 style={{width: "99%", height: "30px"}}
                 value={entry.cast_time}
-                onChange={(value) => {editItem({...entry, cast_time: value})}}
+                onChange={(value) => {editItem({cast_time: value})}}
             />
             {/* range */}
             <TextInput
                 style={{width: "99%", height: "30px"}}
                 value={entry.range}
-                onChange={(value) => {editItem({...entry, range: value})}}
+                onChange={(value) => {editItem({range: value})}}
             />
-            {/* spell components */}
-            <TextInput
-                style={{width: "99%", height: "30px"}}
-                value={entry.components}
-                onChange={(value) => {editItem({...entry, components: value})}}
-            />
-            {/* spell duration */}
-            <TextInput
-                style={{width: "99%", height: "30px"}}
-                value={entry.duration}
-                onChange={(value) => {editItem({...entry, duration: value})}}
-            />
+            {isEditingElements ?
+                <div style={{gridColumn: "7/9"}}>
+                    <NumberInput
+                        style={{
+                            width: "22%",
+                            textAlign: "center",
+                        }}
+                        value={placement[1]}
+                        onChange={value => setPriority(value)}
+                    />
+                </div>
+                :
+                <>
+                    {/* spell components */}
+                    <TextInput
+                        style={{width: "99%", height: "30px"}}
+                        value={entry.components}
+                        onChange={(value) => {editItem({components: value})}}
+                    />
+                    {/* spell duration */}
+                    <TextInput
+                        style={{width: "99%", height: "30px"}}
+                        value={entry.duration}
+                        onChange={(value) => {editItem({duration: value})}}
+                    />
+                </>
+            }
             {/* spell description */}
-            {description(isEditingElements, longDescription, entry, editItem, removeItem)}
+            {description}
         </>
     );
 }
+
+function SpellDescription({longDescription, text, editItem, removeItem, spoilerStateHandler, isOpen}) {
+    const { isEditingElements } = useContext(AppContext);
+    const textHandler = (value) => {editItem({text: value})};
+    const spoilerHandler = (value) => {editItem({isLong: value})};
+
+    if (isEditingElements) {
+        return (
+            <span style={{height: "30px", width: "99%"}}>
+                Long description
+                <Checkbox
+                    isChecked={longDescription}
+                    changeHandler={spoilerHandler}
+                />
+                <button style={{padding: "5px 10px"}} onClick={removeItem}> - </button>
+            </span>
+        );
+    }
+    else if (longDescription) {
+        return(
+            <ControlledSpoiler
+                isOpen={isOpen}
+                stateHandler={spoilerStateHandler}
+                preview={<TextInput style={{height: "30px", width: "69%"}} value={text} onChange={textHandler}/>}
+            >
+                <TextFieldInput
+                    size={{
+                        height: "100px",
+                        width: "100%",
+                    }}
+                    value={text}
+                    onChange={textHandler}
+                />
+            </ControlledSpoiler>
+        );
+    }
+    else return(
+        <TextInput
+            style={{width: "90%", height: "30px"}}
+            value={text}
+            onChange={textHandler}
+        />
+    );
+};

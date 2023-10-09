@@ -1,4 +1,4 @@
-import { createElement, useState } from "react";
+import { createElement, useCallback, useState, createContext } from "react";
 import UseEffectButton from "../useEffectButton";
 import { useContext } from "react";
 import { AppContext } from "../appContext";
@@ -13,7 +13,7 @@ import { AppContext } from "../appContext";
 //      | count - the last issued entryId
 //      both fields are assigned default values if not found
 // > columnStyle - css inline style object with widths
-// > column - number of columns.
+// > columns - number of columns. Must be a Number type
 // > itemElement - jsx element that displays entries, can have the following props:
 //      | entry - displayed data
 //      | editItem - callback function that accepts changed entry object, should be called when changes are made to the entry
@@ -23,12 +23,59 @@ import { AppContext } from "../appContext";
 // > defaultItemObject - js object that has all the default fields an entry should have.
 // > dispatcher - function to manipulate character data aka character dispatch
 
-export default function Table({data, itemElement, defaultItemObject, dispatcher, children, columns, columnStyle, Head}) {
-    const [openedSpoiler, setOpenedSpoiler] = useState("");
+export function Table({data, itemElement, defaultItemObject, dispatcher, children, columns, columnStyle, Head}) {
+    const [ openedSpoilerId, setOpenedSpoilerId ] = useState("");
     const { isEditingElements } = useContext(AppContext);
+    const tableEntries = Object.entries(data.dataSet ?? {});
     const count = data.count ?? 0;
-    const dataSet = data.dataSet ?? {};
 
+    const columnPopulation = Array(columns);
+
+    for (let index = 0; index < columns; index++) {
+        columnPopulation[index] = 0;
+    }
+
+    const openedSpoilerIdHandler = useCallback(
+        (callerId) => {
+            if (callerId === openedSpoilerId) {
+                setOpenedSpoilerId("")
+            } else {
+                setOpenedSpoilerId(callerId);
+            }
+        },
+        [openedSpoilerId, setOpenedSpoilerId]
+    )
+
+    tableEntries.forEach(([_, entry]) => {
+        columnPopulation[(entry.placement ?? [0])[0] % columns] += 1;
+    });
+
+    const smallestPopulation = columnPopulation.reduce(
+        (leastSoFar, current) => {
+            leastSoFar ??= current;
+            if (current < leastSoFar) {
+                return current;
+            }
+            return leastSoFar;
+        },
+        undefined
+    );
+
+    const leastPopulatedColumn = columnPopulation.indexOf(smallestPopulation);
+    const lowestPriority = tableEntries.reduce(
+        (leastSoFar, [_, entry]) => {
+            const [currentColumn, currentPriority] = entry.placement ?? [0,0];
+            if (currentColumn % columns !== leastPopulatedColumn) {
+                return leastSoFar;
+            }
+            leastSoFar ??= currentPriority;
+            if (currentPriority < leastSoFar) {
+                return currentPriority;
+            }
+            return leastSoFar;
+        },
+        undefined
+    ) ?? 0;
 
     const incrementCount = () => {
         dispatcher({type: "change-grid-element", merge: {count: count + 1}});
@@ -36,7 +83,14 @@ export default function Table({data, itemElement, defaultItemObject, dispatcher,
 
     const addItem = () => {
         const newItem = defaultItemObject;
-        dispatcher({type: "add-set-item", itemId: count + 1, item: newItem});
+        dispatcher({
+            type: "add-set-item",
+            itemId: count + 1,
+            item: {
+                ...newItem,
+                placement: [leastPopulatedColumn, lowestPriority]
+            }
+        });
     }
 
     const removeItem = (removedItemId) => {
@@ -48,32 +102,22 @@ export default function Table({data, itemElement, defaultItemObject, dispatcher,
 
     const editItem = (replacedItemId, replacement) => {
         dispatcher({
-            type: "replace-set-item",
+            type: "merge-set-item",
             itemId: replacedItemId,
             replacement: replacement,
         })
     }
-
-    const setItemPosition = (displacedItem, position) => {
-        dispatcher({
-            type: "merge-set-item",
-            itemId: displacedItem,
-            merge: position,
-        })
-    }
-
-    const displayItems = Object.entries(dataSet).map(([id, entry]) => {
+    const displayItems = tableEntries.map(([id, entry]) => {
         entry ??= {};
-        const isOpenIfSpoilered = openedSpoiler === id;
         return createElement(
                 itemElement,
                 {
                     key: id,
                     entry,
-                    editItem: (entry) => {editItem(id, entry)},
+                    editItem: (merge) => {editItem(id, merge)},
                     removeItem: () => {removeItem(id)},
-                    isOpen: isOpenIfSpoilered,
-                    spoilerStateHandler: () => {setOpenedSpoiler(isOpenIfSpoilered ? "" : id)},
+                    isOpen: (id === openedSpoilerId),
+                    spoilerStateHandler: () => {openedSpoilerIdHandler(id)}
                 }
             )
         }
@@ -108,14 +152,15 @@ export default function Table({data, itemElement, defaultItemObject, dispatcher,
                     gridTemplateColumns: `repeat(${columns}, 1fr)`,
                     columnGap: "20px",
                     margin: "10px"
-                }}>
-                <TableColumns Head={Head} columnStyle={columnStyle} columns={columns} displayItems={displayItems} setItemPosition={setItemPosition}/>
+                }}
+            >
+                <TableColumns Head={Head} columnStyle={columnStyle} columns={columns} displayItems={displayItems}/>
             </div>
         </>
     );
 }
 
-function TableColumns({columns, columnStyle, Head, displayItems, setItemPosition}) {
+function TableColumns({columns, columnStyle, Head, displayItems}) {
     columns ??= 1;
     Head ??= <></>;
 
@@ -125,18 +170,26 @@ function TableColumns({columns, columnStyle, Head, displayItems, setItemPosition
         columnItems.push([]);
     }
 
+
     displayItems.forEach(item => {
-        const tablePosition = item.props.entry.tablePosition ?? [0, 0];
-        columnItems[tablePosition[0] ?? 0].push(item);
+        let tablePosition = item.props.entry.placement;
+        if (typeof(tablePosition) === 'undefined') {
+            tablePosition = [0, 0];
+        }
+        let column = (tablePosition[0] ?? 0) % columns;
+        if (columnItems[column] === undefined) {
+            column = 0;
+        }
+        columnItems[column].push(item);
     });
 
     columnItems.forEach(arrayOfItems => {
         const cmpFn = (itemA, itemB) => {
-            const tablePositionA = itemA.props.entry.tablePosition ?? [0, 0];
-            const tablePositionB = itemB.props.entry.tablePosition ?? [0, 0];
-            const rowA = tablePositionA[1] ?? 0;
-            const rowB = tablePositionB[1] ?? 1;
-            return rowA - rowB;
+            const tablePositionA = itemA.props.entry.placement ?? [0, 0];
+            const tablePositionB = itemB.props.entry.placement ?? [0, 0];
+            const priorityA = tablePositionA[1] ?? 0;
+            const priorityB = tablePositionB[1] ?? 1;
+            return priorityB - priorityA;
         }
         arrayOfItems.sort(cmpFn);
     });
@@ -154,5 +207,5 @@ function TableColumns({columns, columnStyle, Head, displayItems, setItemPosition
             </div>
         )
     }
-    return displayColumns;
+    return(<>{displayColumns}</>);
 }

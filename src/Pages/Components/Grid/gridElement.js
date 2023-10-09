@@ -9,6 +9,11 @@ import { funnyConstants } from "../../Utils";
 
 const GridControllerContext = createContext(() => {});
 
+
+// memoized version of gridElement
+// prevents rerenders when parents are updated
+export const GridElementMemo = memo(GridElement);
+
 export function GridElement({id, children}) {
     const gridControllerCallback = useContext(GridControllerContext);
     const { isLayoutLocked } = useContext(AppContext);
@@ -263,9 +268,6 @@ function ResizingController({id, direction, releaseCallback}) {
     return <></>;
 }
 
-// memoized version of gridElement
-// prevents rerenders when parents are updated
-export const GridElementMemo = memo(GridElement);
 
 function ArrEq(array1, array2) {
     if (!Array.isArray(array1) || !Array.isArray(array2)) {

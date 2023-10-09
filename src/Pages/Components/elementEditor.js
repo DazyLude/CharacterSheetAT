@@ -64,7 +64,7 @@ const constructibleElements = {
         defaultSize: {w: 2, h: 3}
     },
     "abilitySaveDC": {
-        data: {},
+        data: {stat: "str"},
         idCode: "ability save",
         defaultSize: {w: 2, h: 3}
     },

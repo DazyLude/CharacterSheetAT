@@ -1,4 +1,4 @@
-import { useReducer, useEffect, useState, useCallback, createElement } from "react";
+import { useReducer, useEffect, useState, useCallback, useMemo, createElement } from "react";
 import { characterReducer, characterDataValidation, funnyConstants } from "./Utils";
 
 import { GridController, GridElementMemo } from "./Components/Grid/gridElement";
@@ -88,40 +88,52 @@ export default function CharacterSheet() {
         }
     }, [characterData.gridData]);
 
-    const gridElements = {...characterData.gridElements};
-    const getClassFromString = (typeString) => {
-        const classLibrary = {
-            "generalInfo" : GeneralInfo,
-            "primarySkills" : PrimarySkills,
-            "secondarySkills" : SecondarySkills,
-            "battleStats" : BattleStats,
-            "healthStats": HealthStats,
-            "deathSavesTracker": DeathSavesTracker,
-            "hitdiceTracker": HitdiceTracker,
-            "exhaustionTracker": ExhaustionTracker,
-            "savingThrowsStats": SavingThrows,
-            "proficiencyModifierTracker": ProficiencyModifier,
-            "abilitySaveDC": AbilitySaveDC,
-            "sensesStats": Senses,
-            "customTextField": CustomTextField,
-            "inventory": Inventory,
-            "spellList": SpellList,
-        }
-        return classLibrary[typeString] ?? "div";
-    };
-    const gridElementsList = Object.entries(gridElements).map(([key, val]) => {
-        const id = key;
-        const typeString = val.type;
+    const getClassFromString = useCallback(
+        (typeString) => {
+            const classLibrary = {
+                "generalInfo" : GeneralInfo,
+                "primarySkills" : PrimarySkills,
+                "secondarySkills" : SecondarySkills,
+                "battleStats" : BattleStats,
+                "healthStats": HealthStats,
+                "deathSavesTracker": DeathSavesTracker,
+                "hitdiceTracker": HitdiceTracker,
+                "exhaustionTracker": ExhaustionTracker,
+                "savingThrowsStats": SavingThrows,
+                "proficiencyModifierTracker": ProficiencyModifier,
+                "abilitySaveDC": AbilitySaveDC,
+                "sensesStats": Senses,
+                "customTextField": CustomTextField,
+                "inventory": Inventory,
+                "spellList": SpellList,
+            }
+            return classLibrary[typeString] ?? "div";
+        },
+        []
+    );
 
-        return (
-            <GridElementMemo key={id} id={id}>
-                {createElement(getClassFromString(typeString), {characterDispatch, characterData, id})}
-            </GridElementMemo>
-        );
-    });
+    const gridElementsList = useMemo(
+        () => {
+            return Object.entries(characterData.gridElements).map(
+                ([key, val]) => {
+                    const id = key;
+                    const typeString = val.type;
+
+                    return (
+                        <GridElementMemo key={id} id={id}>
+                            {createElement(getClassFromString(typeString), {characterDispatch, characterData, id})}
+                        </GridElementMemo>
+                    );
+                }
+            );
+        },
+        [characterDispatch, characterData, getClassFromString]
+    );
+
+
 
     return (
-        <GridContext.Provider value={{...characterData.gridData}}>
+        <GridContext.Provider value={characterData.gridData}>
             <GridContextReducer.Provider value={gridReducer}>
                 <MousePositionContext.Provider value={mousePosition}>
                 <div style={{
