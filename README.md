@@ -13,16 +13,28 @@ A small open source SPA that can be used to manage your DND5e character and shar
 ## how-to's
 ###
 
-### chaging values
+### changing values
 - most ability throw, skill check and saving throw modifiers are calculated automatically from provided **ability scores** and proficiency bonus(es).
 - to change a value you need to click (tap) on a checkbox, death-saves tracker or a text-field. Using tab to cycle through different fields works as well.
+- there is a readonly mode that you can turn off to prevent unwanted changes
+- to set custom formula for a skill modifier calculation, or to set an expertise in a skill, switch to "element editing mode" and click on the "advanced" button for the skill you want to change
+
+### changing layout of the page
+- switch layout editing mode and the drag the center of layout elements to move them, or borders to resize them.
+
+### changing table items' positions
+- switch element editing mode, then click on the buttons with "<" and ">" symbols to change the item's column
+- to change the ordering within the column, change the items priority in the "priority" column
+- items with highest priority are sorted to the top, items within the same priority are sorted by the order of adding the items to the table
+- newest items are added to the least populated column at the bottom.
 
 ### sharing a .pdf
 you can print character sheet to a .pdf file using built-in browser features. Pressing ctrl+p opens a printing interface, where you can select "Save to PDF" in most browsers.
 
 ## planned features in no particular order
+- using external resourses, such as images, from web or local machine, on the character sheet
+- changing the color scheme of the character sheet
 - multiple character sheets opened at once, for your DM'ing needs
-- ability to set an expertise in a skill
 - quick new character sheet creation using various templates
 - enhancing layout editor UI/UX
 - configuring custom fonts and templates
