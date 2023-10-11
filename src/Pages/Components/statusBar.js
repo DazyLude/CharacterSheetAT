@@ -3,7 +3,7 @@ import { useContext, useState } from "react";
 import FileManipulation from "./fileManipulation";
 import ElementEditor from "./elementEditor";
 
-import UseEffectButton from "./useEffectButton";
+import { UseEffectButton } from "./CommonFormElements";
 
 import { AppContext, AppDispatchContext } from "./appContext";
 

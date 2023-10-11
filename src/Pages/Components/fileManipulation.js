@@ -1,4 +1,4 @@
-import UseEffectButton from "./useEffectButton";
+import { UseEffectButton } from "./CommonFormElements";
 import { useEffect, useState } from "react";
 
 export default function FileManipulation({characterDispatch, characterData}) {

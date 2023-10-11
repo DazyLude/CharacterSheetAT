@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import { GridContext } from "./Grid/gridContext";
-import UseEffectButton from "./useEffectButton";
+import { UseEffectButton } from "./CommonFormElements";
 
 const constructibleElements = {
     "none": { // an example element

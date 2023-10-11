@@ -1,5 +1,5 @@
 import { getStatMod } from "../../Utils";
-import NumberInput from "../CommonFormElements/numberInput";
+import { NumberInput } from "../CommonFormElements";
 
 export default function PrimarySkills({characterDispatch, characterData}) {
     const { primarySkills } = characterData;

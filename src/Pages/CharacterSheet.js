@@ -4,23 +4,10 @@ import { characterReducer, characterDataValidation, funnyConstants } from "./Uti
 import { GridController, GridElementMemo } from "./Components/Grid/gridElement";
 import { GridContext, GridContextReducer, MousePositionContext } from "./Components/Grid/gridContext";
 
-import CustomTextField from "./Components/customTextField";
+import { getUIElementFromString } from "./Components/UIElements";
 import StatusBar from "./Components/statusBar";
 
-import GeneralInfo from "./Components/SimpleUIElements/generalInfo";
-import PrimarySkills from "./Components/SimpleUIElements/primarySkills";
-import SecondarySkills from "./Components/SimpleUIElements/secondarySkills";
-import BattleStats from "./Components/SimpleUIElements/battleStats";
-import HealthStats from "./Components/SimpleUIElements/healthStats";
-import DeathSavesTracker from "./Components/SimpleUIElements/deathSavesTracker";
-import HitdiceTracker from "./Components/SimpleUIElements/hitdiceTracker";
-import ExhaustionTracker from "./Components/SimpleUIElements/exhaustionTracker";
-import ProficiencyModifier from "./Components/SimpleUIElements/proficiencyModifier";
-import AbilitySaveDC from "./Components/SimpleUIElements/abilitySaveDC";
-import Senses from "./Components/SimpleUIElements/senses";
-import SavingThrows from "./Components/SimpleUIElements/savingThrows";
-import Inventory from "./Components/inventory";
-import SpellList from "./Components/spellList";
+
 
 export default function CharacterSheet() {
     const [characterData, characterDispatch] = useReducer( characterReducer, {}, characterDataValidation );
@@ -88,30 +75,6 @@ export default function CharacterSheet() {
         }
     }, [characterData.gridData]);
 
-    const getClassFromString = useCallback(
-        (typeString) => {
-            const classLibrary = {
-                "generalInfo" : GeneralInfo,
-                "primarySkills" : PrimarySkills,
-                "secondarySkills" : SecondarySkills,
-                "battleStats" : BattleStats,
-                "healthStats": HealthStats,
-                "deathSavesTracker": DeathSavesTracker,
-                "hitdiceTracker": HitdiceTracker,
-                "exhaustionTracker": ExhaustionTracker,
-                "savingThrowsStats": SavingThrows,
-                "proficiencyModifierTracker": ProficiencyModifier,
-                "abilitySaveDC": AbilitySaveDC,
-                "sensesStats": Senses,
-                "customTextField": CustomTextField,
-                "inventory": Inventory,
-                "spellList": SpellList,
-            }
-            return classLibrary[typeString] ?? "div";
-        },
-        []
-    );
-
     const gridElementsList = useMemo(
         () => {
             return Object.entries(characterData.gridElements).map(
@@ -121,13 +84,13 @@ export default function CharacterSheet() {
 
                     return (
                         <GridElementMemo key={id} id={id}>
-                            {createElement(getClassFromString(typeString), {characterDispatch, characterData, id})}
+                            {createElement(getUIElementFromString(typeString), {characterDispatch, characterData, id})}
                         </GridElementMemo>
                     );
                 }
             );
         },
-        [characterDispatch, characterData, getClassFromString]
+        [characterDispatch, characterData]
     );
 
 

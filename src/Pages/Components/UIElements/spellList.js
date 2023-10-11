@@ -1,12 +1,7 @@
 import { createElement, useContext } from "react";
-import { AppContext } from "./appContext";
-import { getStatModNumeric, getStatMod } from "../Utils";
-import TextFieldInput from "./CommonFormElements/textFieldInput";
-import TextInput from "./CommonFormElements/textInput";
-import { ControlledSpoiler } from "./CommonFormElements/spoiler";
-import Checkbox from "./CommonFormElements/checkbox";
-import { Table } from "./CommonFormElements/table";
-import NumberInput from "./CommonFormElements/numberInput";
+import { AppContext } from "../appContext";
+import { getStatModNumeric, getStatMod } from "../../Utils";
+import { TextFieldInput, TextInput, ControlledSpoiler, Checkbox, Table, NumberInput} from "../CommonFormElements";
 
 export default function SpellList({characterData, characterDispatch, id}) {
     const skills = characterData.primarySkills;

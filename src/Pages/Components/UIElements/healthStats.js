@@ -1,4 +1,4 @@
-import NumberInput from "../CommonFormElements/numberInput";
+import { NumberInput } from "../CommonFormElements";
 
 export default function HealthStats({characterData, characterDispatch}) {
     const {health} = characterData;

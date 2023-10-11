@@ -1,5 +1,5 @@
 import { createElement, useCallback, useState } from "react";
-import UseEffectButton from "../useEffectButton";
+import UseEffectButton from "./useEffectButton";
 import { useContext } from "react";
 import { AppContext } from "../appContext";
 

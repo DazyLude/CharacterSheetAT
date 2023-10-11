@@ -1,5 +1,4 @@
-import TextInput from "./CommonFormElements/textInput";
-import TextFieldInput from "./CommonFormElements/textFieldInput";
+import { TextFieldInput, TextInput } from "../CommonFormElements";
 
 export default function CustomTextField({characterData, characterDispatch, id}) {
     const bodyText = characterData.gridElements[id].bodyText;

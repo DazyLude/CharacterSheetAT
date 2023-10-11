@@ -1,4 +1,4 @@
-import TextInput from "../CommonFormElements/textInput";
+import { TextInput } from "../CommonFormElements";
 
 export default function HitdiceTracker({characterData, characterDispatch}) {
     const { hitDice, hitDiceTotal } = characterData;
