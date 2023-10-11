@@ -28,10 +28,10 @@ export default function CharacterSheet() {
             }
             finally {
                 characterDispatch({type: "load-from-disk", data: parsedData});
+                console.log("loaded file from local storage");
             }
         }
     }, [characterDispatch]);
-
 
     useEffect(
         () => { // tracks cursor position at all times and sends it to other components through context

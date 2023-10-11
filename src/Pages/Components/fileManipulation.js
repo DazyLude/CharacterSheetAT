@@ -1,14 +1,9 @@
 import { UseEffectButton } from "./CommonFormElements";
-import { useEffect, useState } from "react";
+
+import { invoke } from "@tauri-apps/api";
+import { listen } from '@tauri-apps/api/event';
 
 export default function FileManipulation({characterDispatch, characterData}) {
-    const [submitCounter, setSubmitCounter] = useState(0);
-    useEffect(() => {
-        if (submitCounter === 0) {
-            return;
-        }
-        pickCharacterFile(characterDispatch); // eslint-disable-next-line
-    }, [submitCounter])
     return (
         <div style={{
             position: "absolute",
@@ -17,33 +12,9 @@ export default function FileManipulation({characterDispatch, characterData}) {
         }}>
             <UseEffectButton title={"clear local storage"} action={() => {localStorage.clear()}} />
             <UseEffectButton title={"save character sheet"} action={() => {saveCharacterToFile(characterData)}} />
-            <input type="file" id="file-selector" onChange={() => {setSubmitCounter(submitCounter + 1)}} accept="application/json" style={{display:"none"}}/>
-            <UseEffectButton
-                title={"load character sheet"}
-                action={() => {
-                    document.getElementById("file-selector").click();
-                }}
-            />
+            <UseEffectButton title={"load character sheet"} action={() => {getDataFromTauri(characterDispatch)}} />
         </div>
     );
-}
-
-function pickCharacterFile(characterDispatch) {
-    const selectedFile = document.getElementById("file-selector").files[0];
-    if (selectedFile === undefined) {
-        return;
-    }
-    const reader = new FileReader();
-    reader.addEventListener(
-        "load",
-        () => {
-            console.log(reader.result);
-            localStorage.setItem("characterData", reader.result);
-            characterDispatch({type: "load-from-disk", data: JSON.parse(reader.result)});
-        },
-        false
-    );
-    reader.readAsText(selectedFile);
 }
 
 function saveCharacterToFile(data) {
@@ -52,4 +23,16 @@ function saveCharacterToFile(data) {
     a.setAttribute('download', 'characterData.json');
     a.click();
     return () => {a.remove();};
+}
+
+function getDataFromTauri(characterDispatch) {
+    invoke('get_character_sheet');
+    const onLoad = (e) => {
+        const data = e.payload.message;
+        if (data !== undefined) {
+            localStorage.setItem("characterData", JSON.stringify(data));
+            characterDispatch({type: "load-from-disk", data: data});
+        }
+    }
+    return listen("new_character_sheet", onLoad);
 }

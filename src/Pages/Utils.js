@@ -49,7 +49,6 @@ export function characterReducer(oldData, action) {
             newData = changeGridElement(oldData, action.merge, action.id);
             break;
         case "load-from-disk":
-            console.log("loaded file from local storage");
             newData = characterDataValidation(action.data);
             break;
         case "add-set-item":
