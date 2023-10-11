@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from "react";
-import { GridContext } from "./Grid/gridContext";
+import { GridContext } from "./Systems/grid";
 import { UseEffectButton } from "./CommonFormElements";
 
 const constructibleElements = {

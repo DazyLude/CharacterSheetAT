@@ -1,5 +1,5 @@
 import { createElement, useContext } from "react";
-import { AppContext } from "../appContext";
+import { AppContext } from "../Systems/appContext";
 import { getStatModNumeric, getStatMod } from "../../Utils";
 import { TextFieldInput, TextInput, ControlledSpoiler, Checkbox, Table, NumberInput} from "../CommonFormElements";
 

@@ -1,8 +1,9 @@
 import { useReducer, useEffect, useState, useCallback, useMemo, createElement } from "react";
 import { characterReducer, characterDataValidation, funnyConstants } from "./Utils";
 
-import { GridController, GridElementMemo } from "./Components/Grid/gridElement";
-import { GridContext, GridContextReducer, MousePositionContext } from "./Components/Grid/gridContext";
+import { GridController, GridElementMemo } from "./Components/Systems/grid";
+import { GridContext, GridContextReducer } from "./Components/Systems/grid";
+import { MousePositionContext } from "./Components/Systems/mouseTracker";
 
 import { getUIElementFromString } from "./Components/UIElements";
 import StatusBar from "./Components/statusBar";
@@ -83,7 +84,7 @@ export default function CharacterSheet() {
                     const typeString = val.type;
 
                     return (
-                        <GridElementMemo key={id} id={id}>
+                        <GridElementMemo key={id} id={id} position={characterData.gridData[id]}>
                             {createElement(getUIElementFromString(typeString), {characterDispatch, characterData, id})}
                         </GridElementMemo>
                     );

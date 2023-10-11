@@ -1,6 +1,6 @@
 import { TextInput, NumberInput, Table, UseEffectButton } from "../CommonFormElements";
 import { useContext } from "react";
-import { AppContext } from "../appContext";
+import { AppContext } from "../Systems/appContext";
 
 export default function Inventory({characterData, characterDispatch, id}) {
     const str = characterData.primarySkills.str;

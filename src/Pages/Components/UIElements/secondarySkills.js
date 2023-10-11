@@ -1,7 +1,7 @@
 import { useContext } from "react";
 import { getStatMod } from "../../Utils";
 import { Checkbox, NumberInput, Spoiler } from "../CommonFormElements";
-import { AppContext } from "../appContext";
+import { AppContext } from "../Systems/appContext";
 
 export default function SecondarySkills({characterData, characterDispatch}) {
     const {primarySkills, proficiencies, proficiencyModifier} = characterData;

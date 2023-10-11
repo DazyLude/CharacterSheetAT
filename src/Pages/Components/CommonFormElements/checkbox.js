@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { AppContext } from "../appContext";
+import { AppContext } from "../Systems/appContext";
 
 export default function Checkbox({isChecked, changeHandler, style}) {
     const { readOnly } = useContext(AppContext);

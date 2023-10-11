@@ -1,5 +1,5 @@
 import { memo, useContext, createElement } from "react";
-import { AppContext } from "../appContext";
+import { AppContext } from "../Systems/appContext";
 
 export default function AbilitySaveInterface({characterData, characterDispatch, id}) {
     const ability = characterData.gridElements[id].stat;

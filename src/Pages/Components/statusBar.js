@@ -5,7 +5,7 @@ import ElementEditor from "./elementEditor";
 
 import { UseEffectButton } from "./CommonFormElements";
 
-import { AppContext, AppDispatchContext } from "./appContext";
+import { AppContext, AppDispatchContext } from "./Systems/appContext";
 
 
 export default function StatusBar({characterData, characterDispatch}) {

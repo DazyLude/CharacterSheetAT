@@ -3,7 +3,7 @@ import { HashRouter, Route, Routes } from 'react-router-dom';
 import CharacterSheet from './Pages/CharacterSheet';
 import ConfigPage from './Pages/ConfigPage';
 
-import { AppContext, AppDispatchContext, contextReducer, initialContext } from './Pages/Components/appContext';
+import { AppContext, AppDispatchContext, contextReducer, initialContext } from './Pages/Components/Systems/appContext';
 import { useReducer } from 'react';
 
 function App() {

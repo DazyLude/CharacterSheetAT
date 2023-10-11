@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { AppContext } from "../appContext";
+import { AppContext } from "../Systems/appContext";
 
 export default function TextInput(props) {
     const value = props.value ?? "";

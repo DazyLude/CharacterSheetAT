@@ -1,13 +1,11 @@
 import { createContext } from 'react';
 
-export const AppContext = createContext(null)
-export const AppDispatchContext = createContext(null)
-
 export const initialContext = {
     readOnly: false,
     isLayoutLocked: true,
     isEditingElements: false,
 }
+
 
 export function contextReducer(state, action) {
     const newState = {...state};
@@ -26,3 +24,6 @@ export function contextReducer(state, action) {
     }
     return newState;
 }
+
+export const AppContext = createContext(null);
+export const AppDispatchContext = createContext(null);

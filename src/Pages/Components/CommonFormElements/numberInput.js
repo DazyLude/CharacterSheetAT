@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { AppContext } from "../appContext";
+import { AppContext } from "../Systems/appContext";
 
 export default function NumberInput({style, onChange, value}) {
     value = value ?? "";
