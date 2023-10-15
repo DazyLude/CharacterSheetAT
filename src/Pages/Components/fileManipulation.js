@@ -28,7 +28,7 @@ function saveCharacterToFile(data) {
 function getDataFromTauri(characterDispatch) {
     invoke('get_character_sheet');
     const onLoad = (e) => {
-        const data = e.payload.message;
+        const data = e.payload.data;
         if (data !== undefined) {
             localStorage.setItem("characterData", JSON.stringify(data));
             characterDispatch({type: "load-from-disk", data: data});
