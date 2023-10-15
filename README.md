@@ -31,6 +31,13 @@ A small open source SPA that can be used to manage your DND5e character and shar
 ### sharing a .pdf
 you can print character sheet to a .pdf file using built-in browser features. Pressing ctrl+p opens a printing interface, where you can select "Save to PDF" in most browsers.
 
+## planned features for 0.6
+- moving some of the features from React to Tauri, e.g. file manipulation
+- adding commonly used elements creator interface
+- adding shortcuts for implemented features
+- image display element
+- exploring native appdata folders provided by Tauri for storage of, well, app data
+
 ## planned features in no particular order
 - using external resourses, such as images, from web or local machine, on the character sheet
 - changing the color scheme of the character sheet
