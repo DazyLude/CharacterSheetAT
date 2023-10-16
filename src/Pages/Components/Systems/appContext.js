@@ -1,4 +1,4 @@
-import { createContext } from 'react';
+import { createContext, useReducer } from 'react';
 
 export const initialContext = {
     readOnly: false,
@@ -27,3 +27,15 @@ export function contextReducer(state, action) {
 
 export const AppContext = createContext(null);
 export const AppDispatchContext = createContext(null);
+
+export function AppContextProvider({children}) {
+    const [context, contextDispatcher] = useReducer(contextReducer, initialContext);
+
+    return (
+        <AppContext.Provider value={context}>
+            <AppDispatchContext.Provider value={contextDispatcher}>
+                {children}
+            </AppDispatchContext.Provider>
+        </AppContext.Provider>
+    );
+}

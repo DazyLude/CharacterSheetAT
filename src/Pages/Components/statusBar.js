@@ -6,10 +6,12 @@ import ElementEditor from "./elementEditor";
 import { UseEffectButton } from "./CommonFormElements";
 
 import { AppContext, AppDispatchContext } from "./Systems/appContext";
+import { CommanderContext } from "./Systems/command";
 
 
 export default function StatusBar({characterData, characterDispatch}) {
     const contextDispatcher = useContext(AppDispatchContext);
+    const {undo, redo} = useContext(CommanderContext);
     const { readOnly, isLayoutLocked, isEditingElements } = useContext(AppContext);
     const [openedMenu, setOpenedMenu] = useState(0);
     const openMenu = (n) => {if (openedMenu!==n) {setOpenedMenu(n)} else {setOpenedMenu(0)}}
@@ -44,6 +46,14 @@ export default function StatusBar({characterData, characterDispatch}) {
             <UseEffectButton
                 action={() => {contextDispatcher({type: "readOnly-switch"})}}
                 title={"switch readonly mode " + (readOnly ? "off" : "on")}
+            />
+            <UseEffectButton
+                action={() => {undo()}}
+                title={"undo"}
+            />
+            <UseEffectButton
+                action={() => {redo()}}
+                title={"redo"}
             />
         </div>
     );
