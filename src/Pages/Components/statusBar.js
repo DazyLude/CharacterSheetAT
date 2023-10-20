@@ -1,6 +1,5 @@
 import { useContext, useState } from "react";
 
-import FileManipulation from "./fileManipulation";
 import ElementEditor from "./elementEditor";
 
 import { UseEffectButton } from "./CommonFormElements";
@@ -27,9 +26,6 @@ export default function StatusBar({characterData, characterDispatch}) {
                 zIndex: 10,
             }}
         >
-            <SpoilerButton text="file" isOpen={openedMenu===1} clickHandler={() => {openMenu(1)}}>
-                <FileManipulation characterDispatch={characterDispatch} characterData={characterData}/>
-            </SpoilerButton>
             <SpoilerButton text="add/remove element" isOpen={openedMenu===2} clickHandler={() => {openMenu(2)}}>
                 <ElementEditor
                     dispatch={characterDispatch}

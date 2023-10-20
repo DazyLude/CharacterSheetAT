@@ -1,10 +1,11 @@
 import { TextInput } from "../CommonFormElements";
 
 export default function GeneralInfo({characterDispatch, characterData}) {
-    const {characterName, characterClass, characterLevel, characterBackground, characterRace} = characterData;
-    const changeHandler = (merge) => characterDispatch({
-        type: "change-text-field",
-        mergeObject: merge,
+    const {characterName, characterClass, characterLevel, characterBackground, characterRace} = characterData.globals;
+    const changeHandler = (name, merge) => characterDispatch({
+        type: "global",
+        name: name,
+        value: merge,
     });
 
     return (
@@ -26,7 +27,7 @@ export default function GeneralInfo({characterDispatch, characterData}) {
                 <div className="form-big">
                     <TextInput
                         value={characterName}
-                        onChange={(newValue) => changeHandler({"characterName": newValue})}
+                        onChange={(newValue) => changeHandler("characterName", newValue)}
                     />
                 </div>
                 <div className="sheet-subscript">character name</div>
@@ -35,7 +36,7 @@ export default function GeneralInfo({characterDispatch, characterData}) {
                 <div className="form-text">
                     <TextInput
                         value={characterClass}
-                        onChange={(newValue) => changeHandler({"characterClass": newValue})}
+                        onChange={(newValue) => changeHandler("characterClass", newValue)}
                     />
                 </div>
                 <div className="sheet-subscript">class</div>
@@ -44,7 +45,7 @@ export default function GeneralInfo({characterDispatch, characterData}) {
                 <div className="form-text">
                     <TextInput
                         value={characterLevel}
-                        onChange={(newValue) => changeHandler({"characterLevel": newValue})}
+                        onChange={(newValue) => changeHandler("characterLevel", newValue)}
                     />
                 </div>
                 <div className="sheet-subscript">level</div>
@@ -53,7 +54,7 @@ export default function GeneralInfo({characterDispatch, characterData}) {
                 <div className="form-text">
                     <TextInput
                         value={characterBackground}
-                        onChange={(newValue) => changeHandler({"characterBackground": newValue})}
+                        onChange={(newValue) => changeHandler("characterBackground", newValue)}
                     />
                 </div>
                 <div className="sheet-subscript">background</div>
@@ -62,7 +63,7 @@ export default function GeneralInfo({characterDispatch, characterData}) {
                 <div className="form-text">
                     <TextInput
                         value={characterRace}
-                        onChange={(newValue) => changeHandler({"characterRace": newValue})}
+                        onChange={(newValue) => changeHandler("characterRace", newValue)}
                     />
                 </div>
                 <div className="sheet-subscript">race</div>

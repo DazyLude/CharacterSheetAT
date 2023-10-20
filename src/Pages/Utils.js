@@ -1,3 +1,67 @@
+import { invoke } from "@tauri-apps/api";
+
+export function changeGlobal(value_name, new_value) {
+    invoke("change_data", {payload: {value_type: "global", new_value, value_name}})
+        .catch((e) => console.error(e));
+}
+
+export function changeGrid(id, value_name, new_value) {
+    invoke("change_data", {payload: {value_type: "grid", id, new_value, value_name}})
+        .catch((e) => console.error(e));
+}
+
+export function changeElement(id, value_name, new_value) {
+    invoke("change_data", {payload: {value_type: "element", id, new_value, value_name}})
+        .catch((e) => console.error(e));
+}
+
+export function mergeGlobal(value_name, merge_object) {
+    if (typeof(merge_object) !== 'object') {
+        console.error("merge methods accept objects as values only");
+    }
+    invoke("change_data", {payload: {value_type: "global", value_name, merge_object}})
+        .catch((e) => console.error(e));
+}
+
+export function mergeGrid(id, merge_object) {
+    if (typeof(merge_object) !== 'object') {
+        console.error("merge methods accept objects as values only");
+    }
+    invoke("change_data", {payload: {value_type: "grid", id, merge_object}})
+        .catch((e) => console.error(e));
+}
+
+export function mergeElement(id, merge_object) {
+    if (typeof(merge_object) !== 'object') {
+        console.error("merge methods accept objects as values only");
+    }
+    invoke("change_data", {payload: {value_type: "element", id, merge_object}})
+        .catch((e) => console.error(e));
+}
+
+export function mergeWithSet(id, item_name, merge_object) {
+    if (typeof(merge_object) !== 'object') {
+        console.error("merge methods accept objects as values only");
+    }
+    invoke("change_data", {payload: {value_type: "element-set", id, value_name: item_name, merge_object}})
+        .catch((e) => console.error(e));
+}
+
+export function addToSet(id, item_name, new_value) {
+    invoke("change_data", {payload: {value_type: "element-set", id, value_name: item_name, new_value}})
+        .catch((e) => console.error(e));
+}
+
+export function removeFromSet(id, item_name) {
+    invoke("change_data", {payload: {value_type: "remove-set", id, value_name: item_name}})
+        .catch((e) => console.error(e));
+}
+
+export function removeById(id) {
+    invoke("change_data", {payload: {value_type: "remove", id}})
+        .catch((e) => console.error(e));
+}
+
 export function getStatMod(value, otherModifiers = 0) {
     if (typeof(value) !== "number") {
         return 0;
@@ -22,185 +86,6 @@ export function getStatModNumeric(value, otherModifiers) {
     }
     const modifier = Math.floor((value - 10)/2) + otherModifiers;
     return modifier;
-}
-
-export function characterReducer(oldData, action) {
-    let newData;
-    switch (action.type) {
-        case "validate":
-            newData = characterDataValidation(oldData);
-            break;
-        case "change-proficiency":
-            newData = changeProficiency(oldData, action.proficiency, action.newValue);
-            break;
-        case "change-text-field":
-            newData = changeField(oldData, action.mergeObject, action.fieldName);
-            break;
-        case "add-grid-element":
-            newData = addGridElement(oldData, action.elementId, action.elementData, action.elementPlacement);
-            break;
-        case "remove-grid-element":
-            newData = removeGridElement(oldData, action.elementId);
-            break;
-        case "change-grid-data":
-            newData = changeGridData(oldData, action.merge, action.id);
-            break;
-        case "change-grid-element":
-            newData = changeGridElement(oldData, action.merge, action.id);
-            break;
-        case "load-from-disk":
-            newData = characterDataValidation(action.data);
-            break;
-        case "add-set-item":
-            console.log("adding array item")
-            newData = addToSet(oldData, action.id, action.itemId, action.item);
-            break;
-        case "remove-set-item":
-            newData = removeFromSet(oldData, action.id, action.itemId);
-            break;
-        case "replace-set-item":
-            newData = replaceInSet(oldData, action.id, action.itemId, action.replacement);
-            break;
-        case "merge-set-item":
-            newData = mergeInSet(oldData, action.id, action.itemId, action.replacement);
-            break;
-        default:
-            console.error("incorrect action type passed to characterReducer: " + action.type);
-            break;
-    }
-    localStorage.setItem("characterData", JSON.stringify(newData));
-    return newData;
-}
-
-function mergeInSet(oldData, id, itemId, merge) {
-    const newData = {...oldData};
-    const newItemData = {...newData.gridElements[id].dataSet[itemId]}
-    newData.gridElements[id].dataSet[itemId] = {...newItemData, ...merge};
-    return newData;
-}
-
-function replaceInSet(oldData, id, itemId, replacement) {
-    const newData = {...oldData};
-    newData.gridElements[id].dataSet[itemId] = {...replacement};
-    return newData;
-}
-
-function addToSet(oldData, id, itemId, item) {
-    const newData = {...oldData};
-    newData.gridElements[id].dataSet[itemId] = item;
-    return newData;
-}
-
-function removeFromSet(oldData, id, itemId) {
-    const newData = {...oldData};
-    delete newData.gridElements[id].dataSet[itemId];
-    return newData;
-}
-
-function addGridElement(oldData, id, data, placement) {
-    const newData = {...oldData};
-    newData.gridElements[id] ??= {};
-    newData.gridElements[id] = {...newData.gridElements[id], ...data}
-    newData.gridData[id] ??= {x: 1, y: 1, h: 1, w: 1};
-    newData.gridData[id] = {...newData.gridData[id], ...placement};
-    return newData;
-}
-
-function removeGridElement(oldData, id) {
-    const newData = {...oldData};
-    delete newData.gridElements[id];
-    delete newData.gridData[id];
-    return newData;
-}
-
-function changeGridData(oldData, replacementData, gridElementId) {
-    const newData = {...oldData};
-    newData.gridData[gridElementId] = {
-        ...newData.gridData[gridElementId],
-        ...replacementData,
-    }
-    return newData;
-}
-
-function changeGridElement(oldData, replacementData, gridElementId) {
-    const newData = {...oldData};
-    newData.gridElements[gridElementId] = {
-        ...newData.gridElements[gridElementId],
-        ...replacementData,
-    }
-    return newData;
-}
-
-function changeField(oldData, replacementData, fieldName = "") {
-    if (fieldName !== "") {
-        const newData = {
-            ...oldData
-        }
-        newData[fieldName] = {
-            ...newData[fieldName],
-            ...replacementData,
-        }
-        return newData;
-    }
-
-    return {
-        ...oldData,
-        ...replacementData,
-    };
-}
-
-
-function changeProficiency(oldData, proficiency, newValue) {
-    const newData = {...oldData};
-    newData.proficiencies[proficiency] = newValue;
-    return newData;
-}
-
-export function characterDataValidation(characterData) {
-    const validatedData = {...characterData};
-    // General info check
-    validatedData.characterName ??= "Lorem";
-    validatedData.characterClass ??= "Ispum";
-    validatedData.characterLevel ??= "Dolor";
-    validatedData.characterBackground ??= "Sit";
-    validatedData.characterRace ??= "Amet";
-    // Primary skills check
-    const primarySkillNames = ["str", "dex", "con", "int", "wis", "cha"];
-    if (!("primarySkills" in validatedData)) {
-        validatedData["primarySkills"] = {};
-    }
-    primarySkillNames.forEach(
-        ps => {
-            if (!(ps in validatedData["primarySkills"])) {
-                validatedData["primarySkills"][ps] = 10;
-            }
-        }
-    );
-    // Proficiencies
-    if (!("proficiencies" in validatedData)) {
-        validatedData["proficiencies"] = {};
-    }
-    if (!("proficiencyModifier" in validatedData) ||
-        typeof(validatedData["proficiencyModifier"]) !== "number"
-    ) {
-        validatedData["proficiencyModifier"] = 2;
-    }
-    // Death saving throws
-    validatedData.deathSavingThrows ??= {};
-    validatedData.deathSavingThrows.successes ??= 0;
-    validatedData.deathSavingThrows.failures ??= 0;
-    // Battle stats
-    validatedData.armorClass ??= 10;
-    validatedData.intiative ??= "+0";
-    validatedData.hitDice ??= "0d0";
-    validatedData.hitDiceTotal ??= "0";
-    validatedData.exhaustion ??=  0;
-
-    validatedData.gridData ??= {};
-
-    validatedData.gridElements ??= {};
-
-    return validatedData;
 }
 
 export const funnyConstants = {

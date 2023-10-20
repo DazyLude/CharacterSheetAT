@@ -1,11 +1,12 @@
 import { NumberInput } from "../CommonFormElements";
 
 export default function ProficiencyModifier({characterData, characterDispatch}) {
-    const { proficiencyModifier } = characterData;
+    const { proficiencyModifier } = characterData.globals ?? 0;
     const changeHandler = (merge) => {
         characterDispatch({
-            type: "change-text-field",
-            mergeObject: merge,
+            type: "global",
+            name: "proficiencyModifier",
+            value: merge,
         });
     };
 
@@ -16,7 +17,7 @@ export default function ProficiencyModifier({characterData, characterDispatch}) 
                 <div style={{textAlign: "right", userSelect: "none"}}>+</div>
                 <NumberInput
                     value={proficiencyModifier}
-                    onChange={(newValue)=>{changeHandler({"proficiencyModifier": newValue})}}
+                    onChange={(newValue)=>{changeHandler(newValue)}}
                 />
             </div>
         </>

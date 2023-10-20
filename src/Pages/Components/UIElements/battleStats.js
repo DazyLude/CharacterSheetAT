@@ -1,11 +1,14 @@
 import { TextInput, NumberInput } from "../CommonFormElements";
 
 export default function BattleStats({characterData, characterDispatch}) {
-    const {initiative, armorClass} = characterData;
-    const changeHandler = (merge) => {
+    let {initiative, armorClass} = characterData.globals;
+    initiative ??= 0;
+    armorClass ??= 0;
+    const changeHandler = (name, value) => {
         characterDispatch({
-            type: "change-text-field",
-            mergeObject: merge,
+            type: "global",
+            name,
+            value,
         });
     };
     return (
@@ -20,7 +23,7 @@ export default function BattleStats({characterData, characterDispatch}) {
                 <div className="form-big">
                     <TextInput
                         value={initiative}
-                        onChange={(newValue)=>{changeHandler({"initiative": newValue})}}
+                        onChange={(newValue)=>{changeHandler("initiative", newValue)}}
                     />
                 </div>
             </div>
@@ -29,7 +32,7 @@ export default function BattleStats({characterData, characterDispatch}) {
                 <div className="form-big">
                     <NumberInput
                         value={armorClass}
-                        onChange={(newValue)=>{changeHandler({"armorClass": newValue})}}
+                        onChange={(newValue)=>{changeHandler("armorClass", newValue)}}
                     />
                 </div>
                 <div className="sheet-title">class</div>

@@ -2,13 +2,15 @@ import { useContext } from "react";
 import { AppContext } from "../Systems/appContext";
 
 export default function DeathSavesTracker({characterData, characterDispatch}) {
-    const successes = characterData.deathSavingThrows.successes;
-    const failures = characterData.deathSavingThrows.failures;
+    const data = characterData.globals.deathSavingThrows ?? {};
+    const successes = data.successes ?? 0;
+    const failures = data.failures ?? 0;
+
     const changeHandler = (merge) => {
         characterDispatch({
-            type: "change-text-field",
-            mergeObject: merge,
-            fieldName: "deathSavingThrows",
+            type: "global-merge",
+            name: "deathSavingThrows",
+            value: merge,
         });
     };
     return (

@@ -1,12 +1,15 @@
 import { NumberInput } from "../CommonFormElements";
 
 export default function HealthStats({characterData, characterDispatch}) {
-    const {health} = characterData;
+    const { health } = characterData.globals ?? {};
+    const maxHp = health.maxHp ?? 0;
+    const currentHp = health.currentHp ?? 0;
+    const tempHp = health.tempHp ?? 0;
     const changeHandler = (merge) => {
         characterDispatch({
-            type: "change-text-field",
-            mergeObject: merge,
-            fieldName: "health",
+            type: "global-merge",
+            name: "health",
+            value: merge,
         });
     };
     return (
@@ -23,7 +26,7 @@ export default function HealthStats({characterData, characterDispatch}) {
                 <div className="sheet-title">maximum</div>
                 <div className="form-big">
                     <NumberInput
-                        value={health.maxHp}
+                        value={maxHp}
                         onChange={(newValue)=>{changeHandler({"maxHp": newValue})}}
                     />
                 </div>
@@ -32,7 +35,7 @@ export default function HealthStats({characterData, characterDispatch}) {
                 <div className="sheet-title">current</div>
                 <div className="form-big">
                     <NumberInput
-                            value={health.currentHp}
+                            value={currentHp}
                             onChange={(newValue)=>{changeHandler({"currentHp": newValue})}}
                     />
                 </div>
@@ -41,7 +44,7 @@ export default function HealthStats({characterData, characterDispatch}) {
                 <div className="sheet-title">temporary</div>
                 <div className="form-big">
                     <NumberInput
-                            value={health.tempHp}
+                            value={tempHp}
                             onChange={(newValue)=>{changeHandler({"tempHp": newValue})}}
                     />
                 </div>

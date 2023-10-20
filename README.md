@@ -46,6 +46,7 @@ you can print character sheet to a .pdf file using built-in browser features. Pr
 - enhancing layout editor UI/UX
 - configuring custom fonts and templates
 - photo-mode with hidden status bar
+- and also moving appstate to backend from react :^)
 
 ## about
 ### why I made this

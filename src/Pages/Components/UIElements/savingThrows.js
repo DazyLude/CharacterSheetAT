@@ -2,18 +2,23 @@ import { getStatMod } from "../../Utils";
 import { TextFieldInput, Checkbox } from "../CommonFormElements";
 
 export default function SavingThrows({characterData, characterDispatch}) {
-    const {proficiencies, primarySkills, proficiencyModifier, savingThrowsModifiers} = characterData;
+    const {proficiencies, stats, proficiencyModifier, savingThrowsModifiers} = characterData.globals;
+
     const dispatcher = (prof, val) => {
+        const merge = {};
+        merge[prof] = val;
         characterDispatch({
-            type: "change-proficiency",
-            proficiency: prof,
-            newValue: val,
-        });
-    };
+            type: "global-merge",
+            name: "proficiencies",
+            value: merge,
+        })
+    }
+
     const textFieldHandler = (merge) => {
         characterDispatch({
-            type: "change-text-field",
-            mergeObject: merge,
+            type: "global",
+            name: "savingThrowsModifiers",
+            value: merge,
         });
     };
 
@@ -28,13 +33,13 @@ export default function SavingThrows({characterData, characterDispatch}) {
     const savingThrowRows = Object.entries(skillList).map(
         ([skillName, skillDep], num) => {
             const isProficient = proficiencies[skillName] ?? false;
-            const modifier = (proficiencies[skillName] ?? 0) * proficiencyModifier;
+            const modifier = (proficiencies[skillName] ?? 0) * (proficiencyModifier ?? 0);
             const changeHandler = (value) => {dispatcher(skillName, value)};
             const skill = {
                 even: num % 2 === 0,
                 name: skillName,
                 isProficient: isProficient,
-                modifier: getStatMod(primarySkills[skillDep], modifier),
+                modifier: getStatMod(stats[skillDep] ?? 0, modifier),
                 changeHandler: changeHandler,
             }
             return (<SavingThrowRow skill={skill} key={skillDep}/>);
@@ -55,7 +60,7 @@ export default function SavingThrows({characterData, characterDispatch}) {
             <div style={{gridArea: "2 / 2 / -1 / 3"}}>
                 <TextFieldInput
                     value={savingThrowsModifiers}
-                    onChange={(newValue)=>{textFieldHandler({"savingThrowsModifiers": newValue})}}
+                    onChange={(newValue)=>{textFieldHandler(newValue)}}
                 />
             </div>
         </div>

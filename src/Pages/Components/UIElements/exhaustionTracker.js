@@ -1,11 +1,12 @@
 import { NumberInput } from "../CommonFormElements";
 
 export default function HitdiceTracker({characterData, characterDispatch}) {
-    const { exhaustion } = characterData;
+    const { exhaustion } = characterData.globals ?? 0;
     const changeHandler= (merge) => {
         characterDispatch({
-            type: "change-text-field",
-            mergeObject: merge,
+            type: "global",
+            name: "exhaustion",
+            value: merge,
         });
     };
 
@@ -37,7 +38,7 @@ export default function HitdiceTracker({characterData, characterDispatch}) {
             <div className="form-big">
                 <NumberInput
                     value={exhaustion}
-                    onChange={(newValue)=>{changeHandler({"exhaustion": newValue})}}
+                    onChange={(newValue)=>{changeHandler(newValue)}}
                 />
             </div>
         </div>

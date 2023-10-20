@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { GridContext } from "./Systems/grid";
 import { UseEffectButton } from "./CommonFormElements";
 
@@ -74,12 +74,12 @@ const constructibleElements = {
         defaultSize: {w: 5, h: 5},
     },
     "inventory": {
-        data: {dataSet: {}, count: 0},
+        data: {data: {}, count: 0},
         idCode: "inventory",
         defaultSize: {w: 12, h: 10},
     },
     "spellList": {
-        data: {dataSet: {}, count: 0, spellCastingAbility: "cha", weaponBonus: 0},
+        data: {data: {}, count: 0, spellCastingAbility: "cha", weaponBonus: 0},
         idCode: "spell list",
         defaultSize: {w: 12, h: 10},
     }
@@ -93,7 +93,7 @@ export default function ElementEditor({dispatch}) {
 
     const gridData = useContext(GridContext);
     const usedKeys = Object.keys(gridData);
-    const lowestRow = Object.values(gridData).map(({y, h}) => y + h).reduce((val, sav) => val < sav ? sav : val, 0);
+    const lowestRow = Object.values(gridData).map(({y, h}) => y + h).reduce((val, sav) => val < sav ? sav : val, 1);
     const [placement, setPlacement] = useState({x: 1, y: lowestRow, w: 1, h: 1});
     useEffect(() => {setPlacement((p) => {return {...p, y: lowestRow}})}, [lowestRow]);
 
@@ -113,6 +113,17 @@ export default function ElementEditor({dispatch}) {
     const removerOptions = usedKeys.map((key) => {
         return <option value={key} key={key}>{key}</option>
     })
+
+    const createGridElement = useCallback(
+        ({ elementType, elementId, elementPlacement }) => {
+            const elementInitialData = { ...constructibleElements[selection].data };
+            dispatch({type: "grid-merge", id: elementId, value: {type: elementType, ...elementPlacement}});
+            if (Object.keys(elementInitialData).length !== 0) {
+                dispatch({type: "element-merge", id: elementId, value: elementInitialData});
+            }
+        },
+        [dispatch, selection]
+    );
 
     const activateWindow = (n) => {if (activeWindow!==n) {setActiveWindow(n)} else {setActiveWindow(0)}}
 
@@ -198,10 +209,9 @@ export default function ElementEditor({dispatch}) {
                     <UseEffectButton
                         title="add new element to the grid"
                         action={() => {
-                            dispatch({
-                                type: "add-grid-element",
+                            createGridElement({
                                 elementId: id,
-                                elementData: {type: selection, ...constructibleElements[selection].data},
+                                elementType: selection,
                                 elementPlacement: placement,
                             })
                         }}
@@ -232,8 +242,8 @@ export default function ElementEditor({dispatch}) {
                     title="remove an element from the grid"
                     action={() => {
                         dispatch({
-                            type: "remove-grid-element",
-                            elementId: removerSelection,
+                            type: "remove",
+                            id: removerSelection,
                         })
                     }}
                 />

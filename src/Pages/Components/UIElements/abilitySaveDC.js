@@ -2,17 +2,19 @@ import { memo, useContext, createElement } from "react";
 import { AppContext } from "../Systems/appContext";
 
 export default function AbilitySaveInterface({characterData, characterDispatch, id}) {
-    const ability = characterData.gridElements[id].stat;
-    const { proficiencyModifier, primarySkills } = characterData;
+    let data = characterData.elements[id] ?? {}
+    const ability = data.stat ??= "cha";
+    const proficiencyModifier = characterData.globals.proficiencyModifier ?? 0;
+    const stats = characterData.globals.stats ?? {};
     const AbilitySaveDCMemo = memo(AbilitySaveDC);
-    return createElement(AbilitySaveDCMemo, {ability, proficiencyModifier, primarySkills, characterDispatch, id});
+    return createElement(AbilitySaveDCMemo, {ability, proficiencyModifier, stats, characterDispatch, id});
 }
 
-function AbilitySaveDC({ability, proficiencyModifier, primarySkills, characterDispatch, id}) {
+function AbilitySaveDC({ability, proficiencyModifier, stats, characterDispatch, id}) {
     const {isEditingElements} = useContext(AppContext);
 
     const changeHandler = (value) => {
-        characterDispatch({type: "change-grid-element", merge: {stat: value}, id});
+        characterDispatch({type: "element", name: "stat", value, id});
     };
 
     const abilityOptions = ['str', 'dex', 'con', 'int', 'wis', 'cha'].map((ability) => {
@@ -32,7 +34,7 @@ function AbilitySaveDC({ability, proficiencyModifier, primarySkills, characterDi
             <>
                 <div className="sheet-title" style={{"paddingTop": "10px"}}>Ability save DC</div>
                 <div className="sheet-big">
-                    {8 + proficiencyModifier + Math.floor((primarySkills[ability] - 10)/2)}
+                    {8 + (proficiencyModifier ?? 0) + Math.floor(((stats[ability] ?? 0) - 10)/2)}
                     {" "}
                     {ability}
                 </div>

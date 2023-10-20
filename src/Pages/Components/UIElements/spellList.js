@@ -4,9 +4,9 @@ import { getStatModNumeric, getStatMod } from "../../Utils";
 import { TextFieldInput, TextInput, ControlledSpoiler, Checkbox, Table, NumberInput} from "../CommonFormElements";
 
 export default function SpellList({characterData, characterDispatch, id}) {
-    const skills = characterData.primarySkills;
-    const proficiencyModifier = characterData.proficiencyModifier;
-    const data = characterData.gridElements[id];
+    const skills = characterData.globals.stats ?? {};
+    const proficiencyModifier = characterData.globals.proficiencyModifier ?? 0;
+    const data = characterData.elements[id] ?? {};
     const dispatcher = (args) => {characterDispatch({id: id, ...args})}; // operation type is defined later
 
     const spellCastingAbility = data.spellCastingAbility ?? "cha";
@@ -25,7 +25,7 @@ export default function SpellList({characterData, characterDispatch, id}) {
     }
 
     const changeSpellCastingAbility = (val) => {
-        dispatcher({type: "change-grid-element", merge: {spellCastingAbility: val}});
+        dispatcher({type: "element-merge", value: {"spellCastingAbility": val}});
     }
 
     const columnStyle = {
@@ -42,7 +42,7 @@ export default function SpellList({characterData, characterDispatch, id}) {
             Head={SpellListHead}
             columnStyle={columnStyle}
             columns={1}
-            data={{count: data.count, dataSet: data.dataSet}}
+            data={{count: data.count, dataSet: data.data}}
             itemElement={Spell}
             defaultItemObject={defaultSpell}
             dispatcher={dispatcher}

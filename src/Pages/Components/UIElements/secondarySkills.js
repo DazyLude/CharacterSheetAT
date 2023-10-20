@@ -4,12 +4,17 @@ import { Checkbox, NumberInput, Spoiler } from "../CommonFormElements";
 import { AppContext } from "../Systems/appContext";
 
 export default function SecondarySkills({characterData, characterDispatch}) {
-    const {primarySkills, proficiencies, proficiencyModifier} = characterData;
+    const stats = characterData.globals.stats ?? {};
+    const proficiencies = characterData.globals.proficiencies ?? {};
+    const proficiencyModifier = characterData.globals.proficiencyModifier ?? 0;
+
     const changeHandler = (prof, val) => {
+        const merge = {};
+        merge[prof] = val;
         characterDispatch({
-            type: "change-proficiency",
-            proficiency: prof,
-            newValue: val,
+            type: "global-merge",
+            name: "proficiencies",
+            value: merge,
         })
     }
 
@@ -67,7 +72,7 @@ export default function SecondarySkills({characterData, characterDispatch}) {
             return {
                 name: skillName,
                 prof: proficiencies[skillName],
-                mod: getStatMod(primarySkills[skillDep], modifier),
+                mod: getStatMod(stats[skillDep] ?? 0, modifier),
                 dep: skillDep,
                 changeHandler: skillChangeHandler,
             }

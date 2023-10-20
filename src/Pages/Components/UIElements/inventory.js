@@ -3,11 +3,12 @@ import { useContext } from "react";
 import { AppContext } from "../Systems/appContext";
 
 export default function Inventory({characterData, characterDispatch, id}) {
-    const str = characterData.primarySkills.str;
-    const data = characterData.gridElements[id];
+    const stats = characterData.stats ?? {};
+    const str = stats.str ?? 0;
+    const data = characterData.elements[id] ?? {};
     const dispatcher = (args) => {characterDispatch({id: id, ...args})}; // operation type is defined later
 
-    const carriedWeight = Object.values(data.dataSet).reduce(
+    const carriedWeight = Object.values(data.data).reduce(
         (accumulator, entry) => {return accumulator += entry.wght * entry.qty},
         0
     );
@@ -33,7 +34,7 @@ export default function Inventory({characterData, characterDispatch, id}) {
             Head={InventoryHead}
             columnStyle={{...columnStyle}}
             columns={2}
-            data={{count: data.count, dataSet: data.dataSet}}
+            data={{count: data.count, dataSet: data.data}}
             itemElement={InventoryItem}
             defaultItemObject={defaultItem}
             dispatcher={dispatcher}

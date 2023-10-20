@@ -78,15 +78,15 @@ export function Table({data, itemElement, defaultItemObject, dispatcher, childre
     ) ?? 0;
 
     const incrementCount = () => {
-        dispatcher({type: "change-grid-element", merge: {count: count + 1}});
+        dispatcher({type: "element-merge", value: {count: count + 1}});
     }
 
     const addItem = () => {
         const newItem = defaultItemObject;
         dispatcher({
-            type: "add-set-item",
-            itemId: count + 1,
-            item: {
+            type: "element-set-add",
+            name: `${count + 1}`,
+            value: {
                 ...newItem,
                 placement: [leastPopulatedColumn, lowestPriority]
             }
@@ -95,16 +95,16 @@ export function Table({data, itemElement, defaultItemObject, dispatcher, childre
 
     const removeItem = (removedItemId) => {
         dispatcher({
-            type: "remove-set-item",
-            itemId: removedItemId,
+            type: "element-set-remove",
+            name: `${removedItemId}`,
         })
     }
 
     const editItem = (replacedItemId, replacement) => {
         dispatcher({
-            type: "merge-set-item",
-            itemId: replacedItemId,
-            replacement: replacement,
+            type: "element-set-merge",
+            name: `${replacedItemId}`,
+            value: replacement,
         })
     }
     const displayItems = tableEntries.map(([id, entry]) => {
