@@ -108,7 +108,6 @@ impl<'a> CharacterData {
         }
     }
 
-
     pub fn merge_with_set_item(&'a mut self, id: String, item_name: String, merge_object: Map<String, Value>) {
         let get_item = |v : &'a mut Map<String, Value>| {
             v.get_mut(&item_name).and_then(Value::as_object_mut)
