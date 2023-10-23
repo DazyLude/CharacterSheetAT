@@ -13,6 +13,7 @@ import SavingThrows from "./savingThrows";
 import Inventory from "./inventory";
 import SpellList from "./spellList";
 import CustomTextField from "./customTextField";
+import ImageDisplay from "./imageDisplay";
 
 export {
     GeneralInfo,
@@ -30,6 +31,7 @@ export {
     CustomTextField,
     Inventory,
     SpellList,
+    ImageDisplay
 };
 
 const classLibrary = {
@@ -48,6 +50,7 @@ const classLibrary = {
     "customTextField": CustomTextField,
     "inventory": Inventory,
     "spellList": SpellList,
+    "imageDisplay": ImageDisplay,
 }
 
 export function getUIElementFromString(typeString) {

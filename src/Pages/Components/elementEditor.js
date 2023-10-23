@@ -82,6 +82,11 @@ const constructibleElements = {
         data: {data: {}, count: 0, spellCastingAbility: "cha", weaponBonus: 0},
         idCode: "spell list",
         defaultSize: {w: 12, h: 10},
+    },
+    "imageDisplay": {
+        data: {path: "", text: ""},
+        idCode: "image",
+        defaultSize: {w: 5, h: 5}
     }
 }
 

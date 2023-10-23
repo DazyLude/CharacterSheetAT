@@ -29,24 +29,22 @@ A small open source SPA that can be used to manage your DND5e character and shar
 - newest items are added to the least populated column at the bottom.
 
 ### sharing a .pdf
-you can print character sheet to a .pdf file using built-in browser features. Pressing ctrl+p opens a printing interface, where you can select "Save to PDF" in most browsers.
+you can print character sheet to a .pdf file using built-in browser features. Pressing ctrl+p opens a printing interface, where you can select "Save to PDF".
 
 ## planned features for 0.6
-- moving some of the features from React to Tauri, e.g. file manipulation
+- moving some of the features from React to Tauri, e.g. file manipulation (partially done)
 - adding commonly used elements creator interface
 - adding shortcuts for implemented features
-- image display element
-- exploring native appdata folders provided by Tauri for storage of, well, app data
+- image display element (done)
+- exploring native appdata folders provided by Tauri for storage of, well, app data (done)
 
 ## planned features in no particular order
-- using external resourses, such as images, from web or local machine, on the character sheet
 - changing the color scheme of the character sheet
 - multiple character sheets opened at once, for your DM'ing needs
 - quick new character sheet creation using various templates
 - enhancing layout editor UI/UX
 - configuring custom fonts and templates
 - photo-mode with hidden status bar
-- and also moving appstate to backend from react :^)
 
 ## about
 ### why I made this
