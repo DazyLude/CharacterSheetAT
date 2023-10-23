@@ -1,6 +1,8 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use std::path::PathBuf;
+
 use tauri::{ Manager, State, AppHandle, RunEvent };
 use app::logger::log_tauri_error;
 use app::menu::{ generate_app_menu, menu_handler };
@@ -37,7 +39,7 @@ fn main() {
         .menu(generate_app_menu())
         .on_menu_event(menu_handler)
         .manage(JSONFile::new())
-        .invoke_handler(tauri::generate_handler![change_data, request_data])
+        .invoke_handler(tauri::generate_handler![change_data, request_data, request_path, make_path_relative])
         .build(tauri::generate_context!())
         .expect("error when building tauri application")
         .run(run_handler);
@@ -58,3 +60,24 @@ fn request_data(app_state: State<JSONFile>) -> Result<PayloadJSON, String> {
     })
 }
 
+#[tauri::command]
+fn request_path(app_state: State<JSONFile>, path: String) -> Result<String, String> {
+    let child_path : PathBuf = path.into();
+    if child_path.is_absolute() {
+        return Err(child_path.to_string_lossy().to_string());
+    }
+    let mut json_path : PathBuf = app_state.path.lock().unwrap().clone();
+    json_path.pop();
+    Ok(json_path.join::<PathBuf>(child_path).to_string_lossy().to_string())
+}
+
+#[tauri::command]
+fn make_path_relative(app_state: State<JSONFile>, path: String) -> Result<String, String> {
+    let mut json_path : PathBuf = app_state.path.lock().unwrap().clone();
+    json_path.pop();
+    let child_path : PathBuf = path.into();
+    if !child_path.starts_with(&json_path) {
+        return Err(child_path.to_string_lossy().to_string());
+    }
+    Ok(child_path.strip_prefix(&json_path).unwrap().to_string_lossy().to_string())
+}
