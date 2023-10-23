@@ -16,7 +16,7 @@ pub struct CharacterData {
     elements: Map<String, Value>,
 }
 
-impl CharacterData {
+impl<'a> CharacterData {
     pub fn generate_empty() -> Self {
         let empty_globals = serde_json::from_str(r#"{
             "stats": {},
@@ -82,54 +82,42 @@ impl CharacterData {
         };
         self.elements.entry(id).and_modify(closure).or_insert(Value::Object(merge_object));
     }
+
+    /// get_element_data takes an id of an element, and returns it's data object's mutable reference
+    /// if it has data field, but it's not an object, then None is returned
+    fn get_element_data(&'a mut self, id: String) -> Option<&mut Map<String, Value>> {
+        let get_data = |v : &'a mut Map<String, Value>| {
+            v.get_mut("data").and_then(Value::as_object_mut)
+        };
+
+        self.elements.get_mut(&id).and_then(Value::as_object_mut).and_then(get_data)
+    }
+
     /// *_set method family works with element-associated data objects.
     pub fn add_to_set(&mut self, id: String, name: String, value: Value) {
-
-        self.elements.entry(&id).and_modify(
-            |element_object| {
-                element_object.as_object_mut().unwrap().entry("data").and_modify(
-                    |element_data| {
-                       element_data.as_object_mut().unwrap().entry(name).or_insert(value);
-                    }
-                );
-            });
-
+        match self.get_element_data(id) {
+            None => return,
+            Some(data) => { data.entry(name).or_insert(value); } ,
+        }
     }
+
     pub fn remove_from_set(&mut self, id: String, name: String) {
-        match self.elements.get_mut(&id) {
+        match self.get_element_data(id) {
             None => return,
-            Some(maybe_obj) => match maybe_obj.as_object_mut() {
-                None => return,
-                Some(obj) => match obj.get_mut("data") {
-                    None => return,
-                    Some(data_maybe_obj) => match data_maybe_obj.as_object_mut() {
-                        None => return,
-                        Some(data_obj) => data_obj.remove(&name),
-                    }
-                }
-            }
-        };
+            Some(data) => { data.remove(&name); } ,
+        }
     }
-    pub fn merge_with_set_item(&mut self, id: String, item_name: String, merge_object: Map<String, Value>) {
-        match self.elements.get_mut(&id) {
-            None => return,
-            Some(maybe_obj) => match maybe_obj.as_object_mut() {
-                None => return,
-                Some(obj) => match obj.get_mut("data") {
-                    None => return,
-                    Some(data_maybe_obj) => match data_maybe_obj.as_object_mut() {
-                        None => return,
-                        Some(data_obj) => match data_obj.get_mut(&item_name) {
-                            None => return,
-                            Some(maybe_item_data) => match maybe_item_data.as_object_mut() {
-                                None => return,
-                                Some(item_data) => item_data.append(&mut merge_object.clone()),
-                            }
-                        },
-                    }
-                }
-            }
+
+
+    pub fn merge_with_set_item(&'a mut self, id: String, item_name: String, merge_object: Map<String, Value>) {
+        let get_item = |v : &'a mut Map<String, Value>| {
+            v.get_mut(&item_name).and_then(Value::as_object_mut)
         };
+
+        match self.get_element_data(id).and_then(get_item) {
+            None => return,
+            Some(item_data) => item_data.append(&mut merge_object.clone()),
+        }
     }
 
     pub fn as_value(&self) -> Value {
