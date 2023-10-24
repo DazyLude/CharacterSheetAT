@@ -5,12 +5,12 @@ use tauri::{ AppHandle, Manager };
 use crate::{
     character_data::CharacterData,
     disk_interactions::load_json_from_disk,
-    ipc::load_data,
+    ipc::{ load_data, ChangeJSON},
 };
 
 pub struct JSONFile {
-    pub data: Mutex<CharacterData>,
-    pub path: Mutex<PathBuf>,
+    data: Mutex<CharacterData>,
+    path: Mutex<PathBuf>,
 }
 
 impl JSONFile {
@@ -27,11 +27,56 @@ impl JSONFile {
         self.data = Mutex::from(CharacterData::generate_empty());
         self.path = Mutex::from(empty_path);
     }
+
+    pub fn change_character_data(&self, change: ChangeJSON) -> Result<(), String> {
+        let mut data: CharacterData = self.data.lock().unwrap().clone();
+        let err_change = change.clone();
+        let op_type = change.value_type.clone();
+
+        let op: Option<()> = match (op_type.as_str(), change.to_data_tuple()) {
+            // (value_type, (id, value_name, new_value, merge_object))
+            ("grid",        (Some(i), None,    None,    Some(m))) => data.merge_grid(i, m),
+            ("grid",        (Some(i), Some(n), Some(v), None   )) => data.edit_grid(i, n, v),
+            ("element",     (Some(i), None,    None,    Some(m))) => data.merge_element(i, m),
+            ("element",     (Some(i), Some(n), Some(v), None   )) => data.edit_element(i, n, v),
+            ("global",      (None,    Some(n), None,    Some(m))) => data.merge_global(n, m),
+            ("global",      (None,    Some(n), Some(v), None   )) => data.edit_global(n, v),
+            ("element-set", (Some(i), Some(n), None,    Some(m))) => data.merge_with_set_item(i, n, m),
+            ("element-set", (Some(i), Some(n), Some(v), None   )) => data.add_to_set(i, n, v),
+            ("remove",      (Some(i), None   , None,    None   )) => data.remove_by_id(i),
+            ("remove-set",  (Some(i), Some(n), None,    None   )) => data.remove_from_set(i, n),
+            (_, _) => None,
+        };
+
+        match op {
+            Some(_) => {
+                *self.data.lock().unwrap() = data;
+                return Ok(());
+            },
+            None => return Err(format!("ill formed changeJSON: {:?}", err_change)),
+        }
+    }
+
+    pub fn get_data(&self) -> CharacterData {
+        self.data.lock().unwrap().clone()
+    }
+
+    pub fn get_path(&self) -> PathBuf {
+        self.path.lock().unwrap().clone()
+    }
+
+    pub fn set_path(&self, path: PathBuf) {
+        *self.path.lock().unwrap() = path;
+    }
+
+    pub fn set_data(&self, data: CharacterData) {
+        *self.data.lock().unwrap() = data;
+    }
 }
 
 pub fn app_state_to_recovery_string(app_handle: &AppHandle) -> String {
     let app_state = app_handle.state::<JSONFile>();
-    let open_file_path: PathBuf = app_state.path.lock().unwrap().clone();
+    let open_file_path: PathBuf = app_state.get_path();
     let path_str = open_file_path.as_os_str();
     let data = path_str.to_string_lossy();
 
@@ -52,6 +97,6 @@ pub fn load_app_state_from_recovery_string(app_handle: &AppHandle, data: &String
 
 pub fn set_json_file(app_handle: &AppHandle, v: CharacterData, p: PathBuf) {
     let app_state = app_handle.state::<JSONFile>();
-    *app_state.path.lock().unwrap() = p;
-    *app_state.data.lock().unwrap() = v;
+    app_state.set_path(p);
+    app_state.set_data(v);
 }

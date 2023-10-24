@@ -11,7 +11,6 @@ use app::app_state::{JSONFile, app_state_to_recovery_string, load_app_state_from
 use app::disk_interactions::{load_startup_data, save_startup_data};
 
 use app::ipc::{ChangeJSON, load_data, PayloadJSON};
-use app::ipc::apply_change;
 
 fn main() {
     let run_handler = |app_handle: &AppHandle, event: RunEvent| {
@@ -47,16 +46,14 @@ fn main() {
 
 #[tauri::command]
 fn change_data(app_handle: AppHandle, app_state: State<JSONFile>, payload: ChangeJSON) -> Result<(), String> {
-    let mut data = app_state.data.lock().unwrap().clone();
-    let _ = apply_change(payload, &mut data);
-    *app_state.data.lock().unwrap() = data;
+    let _ = app_state.change_character_data(payload);
     load_data(&app_handle)
 }
 
 #[tauri::command]
 fn request_data(app_state: State<JSONFile>) -> Result<PayloadJSON, String> {
     Ok(PayloadJSON {
-        data: app_state.data.lock().unwrap().as_value(),
+        data: app_state.get_data().as_value(),
     })
 }
 
@@ -66,14 +63,14 @@ fn request_path(app_state: State<JSONFile>, path: String) -> Result<String, Stri
     if child_path.is_absolute() {
         return Err(child_path.to_string_lossy().to_string());
     }
-    let mut json_path : PathBuf = app_state.path.lock().unwrap().clone();
+    let mut json_path : PathBuf = app_state.get_path();
     json_path.pop();
     Ok(json_path.join::<PathBuf>(child_path).to_string_lossy().to_string())
 }
 
 #[tauri::command]
 fn make_path_relative(app_state: State<JSONFile>, path: String) -> Result<String, String> {
-    let mut json_path : PathBuf = app_state.path.lock().unwrap().clone();
+    let mut json_path : PathBuf = app_state.get_path();
     json_path.pop();
     let child_path : PathBuf = path.into();
     if !child_path.starts_with(&json_path) {

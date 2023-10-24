@@ -26,7 +26,7 @@ pub fn menu_handler (event: WindowMenuEvent) {
         "log" => {
             let handle = event.window().app_handle();
             let state = handle.state::<JSONFile>();
-            println!("{:?}", *state.data.lock().unwrap());
+            println!("{:?}", state.get_data());
         }
         "save" => {
             let _ = save_character_sheet(event.window().app_handle().state::<JSONFile>());
@@ -68,8 +68,8 @@ fn open_character_sheet(window: tauri::Window) {
 }
 
 fn save_character_sheet(app_state: State<JSONFile>) -> Result<(), String> {
-    let path = app_state.path.lock().unwrap().clone();
-    let data = serde_json::to_string(&app_state.data.lock().unwrap().as_value()).unwrap();
+    let data = serde_json::to_string(&app_state.get_data().as_value()).unwrap();
+    let path = app_state.get_path();
     if path.to_str() == Some("") {return Ok(());}
 
     match std::fs::write(&path, &data) {
@@ -81,13 +81,13 @@ fn save_character_sheet(app_state: State<JSONFile>) -> Result<(), String> {
 fn save_as_character_sheet(window: tauri::Window) {
     FileDialogBuilder::new().save_file(move |file_path| {
         let app = &window.app_handle();
-        let data = app.state::<JSONFile>().data.lock().unwrap().as_value();
+        let data = app.state::<JSONFile>().get_data().as_value();
         let data = serde_json::to_string(&data).unwrap();
         match file_path {
             Some(p) => {
                 match std::fs::write(&p, &data) {
                     Err(_e) => {},
-                    Ok(_) => *app.state::<JSONFile>().path.lock().unwrap() = p,
+                    Ok(_) => app.state::<JSONFile>().set_path(p),
                 };
             },
             None => return, // path was not provided by the user, we can just exit
