@@ -1,7 +1,7 @@
 use tauri::{ CustomMenuItem, Menu, Submenu, WindowMenuEvent, Manager, State };
 use tauri::api::dialog::FileDialogBuilder;
 use crate::disk_interactions::load_json_from_disk;
-use crate::app_state::{JSONFile, set_json_file};
+use crate::app_state::{JSONFile, set_json_file, JSONHistory};
 use crate::character_data::CharacterData;
 use crate::ipc::load_data;
 
@@ -16,6 +16,8 @@ pub fn generate_app_menu() -> Menu {
     Menu::new()
         .add_submenu(file_submenu)
         .add_item(CustomMenuItem::new("log", "Log"))
+        .add_item(CustomMenuItem::new("undo", "Undo"))
+        .add_item(CustomMenuItem::new("redo", "Redo"))
 }
 
 pub fn menu_handler (event: WindowMenuEvent) {
@@ -39,6 +41,22 @@ pub fn menu_handler (event: WindowMenuEvent) {
             let v = CharacterData::generate_empty();
             let p = "".into();
             set_json_file(&app_handle, v, p);
+            let _ = load_data(&app_handle);
+        }
+        "undo" => {
+            let app_handle = event.window().app_handle();
+            let mut data = app_handle.state::<JSONFile>().get_data();
+            let history = app_handle.state::<JSONHistory>();
+            history.history.lock().unwrap().undo_one(&mut data);
+            app_handle.state::<JSONFile>().set_data(data);
+            let _ = load_data(&app_handle);
+        }
+        "redo" => {
+            let app_handle = event.window().app_handle();
+            let mut data = app_handle.state::<JSONFile>().get_data();
+            let history = app_handle.state::<JSONHistory>();
+            history.history.lock().unwrap().redo_one(&mut data);
+            app_handle.state::<JSONFile>().set_data(data);
             let _ = load_data(&app_handle);
         }
         e => println!("Got an unimplemented menu event with id: {:?}", e),

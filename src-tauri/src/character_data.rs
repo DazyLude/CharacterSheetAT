@@ -1,3 +1,5 @@
+use crate::command::{Command, Commandable};
+
 use serde_json::{Value, Map, json};
 
 /// Where goes what:
@@ -16,9 +18,27 @@ pub struct CharacterData {
     elements: Map<String, Value>,
 }
 
-pub trait CharacterDataCommand {
-    fn execute(&self, data: &mut CharacterData);
-    fn undo(&self, data: &mut CharacterData);
+pub struct CharacterDataCommand {
+    old: CharacterData,
+    new: CharacterData,
+}
+
+impl CharacterDataCommand {
+    pub fn from_old_and_new(old: CharacterData, new: CharacterData) -> CharacterDataCommand {
+        CharacterDataCommand {
+            old,
+            new
+        }
+    }
+}
+impl Commandable for CharacterData {}
+impl Command<CharacterData> for CharacterDataCommand {
+    fn execute(&self, apply_to: &mut CharacterData) {
+        *apply_to = self.new.clone();
+    }
+    fn undo(&self, apply_to: &mut CharacterData) {
+        *apply_to = self.old.clone();
+    }
 }
 
 impl<'a> CharacterData {

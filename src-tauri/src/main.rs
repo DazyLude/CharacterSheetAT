@@ -7,7 +7,7 @@ use tauri::{ Manager, State, AppHandle, RunEvent };
 use app::logger::log_tauri_error;
 use app::menu::{ generate_app_menu, menu_handler };
 
-use app::app_state::{JSONFile, app_state_to_recovery_string, load_app_state_from_recovery_string};
+use app::app_state::{change_character_data, JSONFile, JSONHistory, app_state_to_recovery_string, load_app_state_from_recovery_string};
 use app::disk_interactions::{load_startup_data, save_startup_data};
 
 use app::ipc::{ChangeJSON, load_data, PayloadJSON};
@@ -38,6 +38,7 @@ fn main() {
         .menu(generate_app_menu())
         .on_menu_event(menu_handler)
         .manage(JSONFile::new())
+        .manage(JSONHistory::new())
         .invoke_handler(tauri::generate_handler![change_data, request_data, request_path, make_path_relative])
         .build(tauri::generate_context!())
         .expect("error when building tauri application")
@@ -45,8 +46,8 @@ fn main() {
 }
 
 #[tauri::command]
-fn change_data(app_handle: AppHandle, app_state: State<JSONFile>, payload: ChangeJSON) -> Result<(), String> {
-    let _ = app_state.change_character_data(payload);
+fn change_data(app_handle: AppHandle, file: State<JSONFile>, history: State<JSONHistory>, payload: ChangeJSON) -> Result<(), String> {
+    let _ = change_character_data(&file, &history, payload);
     load_data(&app_handle)
 }
 
