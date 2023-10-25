@@ -6,30 +6,22 @@ use crate::{
     character_data::{CharacterData, CharacterDataCommand},
     disk_interactions::load_json_from_disk,
     ipc::{ load_data, ChangeJSON},
-    command::{CommandStack, Command},
+    command::CommandStack,
 };
+
 
 pub struct JSONFile {
     data: Mutex<CharacterData>,
     path: Mutex<PathBuf>,
-}
-
-pub struct JSONHistory {
     pub history: Mutex<CommandStack<CharacterDataCommand, CharacterData>>
 }
-
-impl JSONHistory {
-    pub fn new() -> JSONHistory {
-        JSONHistory { history: Mutex::from(CommandStack::new()) }
-    }
-}
-
 impl JSONFile {
     pub fn new() -> JSONFile {
         let empty_path: PathBuf = "".into();
         JSONFile {
             data: Mutex::from(CharacterData::generate_empty()),
             path: Mutex::from(empty_path),
+            history: Mutex::from(CommandStack::new())
         }
     }
 
@@ -84,7 +76,7 @@ pub fn set_json_file(app_handle: &AppHandle, v: CharacterData, p: PathBuf) {
 }
 
 
-pub fn change_character_data(file: &JSONFile, history: &JSONHistory, change: ChangeJSON) -> Result<(), String> {
+pub fn change_character_data(file: &JSONFile, change: ChangeJSON) -> Result<(), String> {
     let old_data = file.get_data();
     let mut data: CharacterData = file.get_data();
     let err_change = change.clone();
@@ -108,7 +100,7 @@ pub fn change_character_data(file: &JSONFile, history: &JSONHistory, change: Cha
     match op {
         Some(_) => {
             let command = CharacterDataCommand::from_old_and_new(old_data, data.clone());
-            history.history.lock().unwrap().do_one(command, &mut data);
+            file.history.lock().unwrap().do_one(command, &mut data);
             file.set_data(data);
             return Ok(());
         },

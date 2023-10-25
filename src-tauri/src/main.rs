@@ -5,9 +5,9 @@ use std::path::PathBuf;
 
 use tauri::{ Manager, State, AppHandle, RunEvent };
 use app::logger::log_tauri_error;
-use app::menu::{ generate_app_menu, menu_handler };
+use app::menu::{ generate_app_menu, menu_handler, save_character_sheet };
 
-use app::app_state::{change_character_data, JSONFile, JSONHistory, app_state_to_recovery_string, load_app_state_from_recovery_string};
+use app::app_state::{change_character_data, JSONFile, app_state_to_recovery_string, load_app_state_from_recovery_string};
 use app::disk_interactions::{load_startup_data, save_startup_data};
 
 use app::ipc::{ChangeJSON, load_data, PayloadJSON};
@@ -38,16 +38,15 @@ fn main() {
         .menu(generate_app_menu())
         .on_menu_event(menu_handler)
         .manage(JSONFile::new())
-        .manage(JSONHistory::new())
-        .invoke_handler(tauri::generate_handler![change_data, request_data, request_path, make_path_relative])
+        .invoke_handler(tauri::generate_handler![change_data, request_data, request_path, make_path_relative, shortcut])
         .build(tauri::generate_context!())
         .expect("error when building tauri application")
         .run(run_handler);
 }
 
 #[tauri::command]
-fn change_data(app_handle: AppHandle, file: State<JSONFile>, history: State<JSONHistory>, payload: ChangeJSON) -> Result<(), String> {
-    let _ = change_character_data(&file, &history, payload);
+fn change_data(app_handle: AppHandle, file: State<JSONFile>, payload: ChangeJSON) -> Result<(), String> {
+    let _ = change_character_data(&file, payload);
     load_data(&app_handle)
 }
 
@@ -78,4 +77,39 @@ fn make_path_relative(app_state: State<JSONFile>, path: String) -> Result<String
         return Err(child_path.to_string_lossy().to_string());
     }
     Ok(child_path.strip_prefix(&json_path).unwrap().to_string_lossy().to_string())
+}
+
+#[derive(serde::Deserialize)]
+struct PressedKey {
+    ctrl_key: bool,
+    alt_key: bool,
+    key_code: String,
+}
+
+impl<'a> PressedKey {
+    pub fn decompose(&'a self) -> (bool, bool, &'a str) {
+        (self.ctrl_key, self.alt_key, self.key_code.as_str())
+    }
+}
+
+#[tauri::command]
+fn shortcut(app_handle: AppHandle, payload: PressedKey) {
+    match payload.decompose() {
+        (true, false, "KeyS") => {
+            let _ = save_character_sheet(app_handle.state::<JSONFile>());
+        },
+        (true, false, "KeyZ") => {
+            let mut data = app_handle.state::<JSONFile>().get_data();
+            app_handle.state::<JSONFile>().history.lock().unwrap().undo_one(&mut data);
+            app_handle.state::<JSONFile>().set_data(data);
+            let _ = load_data(&app_handle);
+        },
+        (true, false, "KeyY") => {
+            let mut data = app_handle.state::<JSONFile>().get_data();
+            app_handle.state::<JSONFile>().history.lock().unwrap().redo_one(&mut data);
+            app_handle.state::<JSONFile>().set_data(data);
+            let _ = load_data(&app_handle);
+        },
+        _ => {}
+    }
 }

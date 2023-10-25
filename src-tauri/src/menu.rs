@@ -1,7 +1,7 @@
 use tauri::{ CustomMenuItem, Menu, Submenu, WindowMenuEvent, Manager, State };
 use tauri::api::dialog::FileDialogBuilder;
 use crate::disk_interactions::load_json_from_disk;
-use crate::app_state::{JSONFile, set_json_file, JSONHistory};
+use crate::app_state::{JSONFile, set_json_file};
 use crate::character_data::CharacterData;
 use crate::ipc::load_data;
 
@@ -46,16 +46,14 @@ pub fn menu_handler (event: WindowMenuEvent) {
         "undo" => {
             let app_handle = event.window().app_handle();
             let mut data = app_handle.state::<JSONFile>().get_data();
-            let history = app_handle.state::<JSONHistory>();
-            history.history.lock().unwrap().undo_one(&mut data);
+            app_handle.state::<JSONFile>().history.lock().unwrap().undo_one(&mut data);
             app_handle.state::<JSONFile>().set_data(data);
             let _ = load_data(&app_handle);
         }
         "redo" => {
             let app_handle = event.window().app_handle();
             let mut data = app_handle.state::<JSONFile>().get_data();
-            let history = app_handle.state::<JSONHistory>();
-            history.history.lock().unwrap().redo_one(&mut data);
+            app_handle.state::<JSONFile>().history.lock().unwrap().redo_one(&mut data);
             app_handle.state::<JSONFile>().set_data(data);
             let _ = load_data(&app_handle);
         }
@@ -85,7 +83,7 @@ fn open_character_sheet(window: tauri::Window) {
     });
 }
 
-fn save_character_sheet(app_state: State<JSONFile>) -> Result<(), String> {
+pub fn save_character_sheet(app_state: State<JSONFile>) -> Result<(), String> {
     let data = serde_json::to_string(&app_state.get_data().as_value()).unwrap();
     let path = app_state.get_path();
     if path.to_str() == Some("") {return Ok(());}

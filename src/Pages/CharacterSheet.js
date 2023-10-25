@@ -66,6 +66,17 @@ export default function CharacterSheet() {
 
     useEffect(
         () => {
+            const onKeyDown = (e) => {
+                invoke('shortcut', { payload: { ctrl_key: e.ctrlKey, alt_key: e.altKey, key_code: e.code } });
+            }
+            window.addEventListener("keydown", onKeyDown);
+            return () => {window.removeEventListener("keydown", onKeyDown)};
+        },
+        []
+    )
+
+    useEffect(
+        () => {
             const onLoad = (e) => {
                 const data = e.payload.data;
                 if (data !== undefined) {
