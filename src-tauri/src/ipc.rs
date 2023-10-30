@@ -10,16 +10,10 @@ pub struct PayloadJSON {
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct ChangeJSON {
     pub value_type: String,
-    id: Option<String>,
-    value_name: Option<String>,
-    new_value: Option<Value>,
-    merge_object: Option<Map<String, Value>>,
-}
-
-impl ChangeJSON {
-    pub fn to_data_tuple(self) -> (Option<String>, Option<String>, Option<Value>, Option<Map<String, Value>>) {
-        (self.id, self.value_name, self.new_value, self.merge_object)
-    }
+    pub id: Option<String>,
+    pub value_name: Option<String>,
+    pub new_value: Option<Value>,
+    pub merge_object: Option<Map<String, Value>>,
 }
 
 pub fn load_data(app_handle: &tauri::AppHandle) -> Result<(), String> {

@@ -1,4 +1,4 @@
-use crate::command::{Command, Commandable};
+use crate::{command::Command, ipc::ChangeJSON};
 
 use serde_json::{Value, Map, json};
 
@@ -19,25 +19,44 @@ pub struct CharacterData {
 }
 
 pub struct CharacterDataCommand {
-    old: CharacterData,
-    new: CharacterData,
+    old_data: CharacterData,
+    forward_change: ChangeJSON,
 }
 
 impl CharacterDataCommand {
-    pub fn from_old_and_new(old: CharacterData, new: CharacterData) -> CharacterDataCommand {
+    pub fn from_change_json(old_data: CharacterData, forward_change: ChangeJSON) -> CharacterDataCommand {
         CharacterDataCommand {
-            old,
-            new
+            old_data,
+            forward_change,
         }
     }
 }
-impl Commandable for CharacterData {}
-impl Command<CharacterData> for CharacterDataCommand {
-    fn execute(&self, apply_to: &mut CharacterData) {
-        *apply_to = self.new.clone();
+
+impl Command for CharacterDataCommand {
+    type Commandable = CharacterData;
+    fn execute(&self, apply_to: &mut Self::Commandable) -> Result<(), String>{
+        let ChangeJSON { value_type, id, value_name, new_value, merge_object } = &self.forward_change;
+        let op: Option<()> = match (value_type.as_str(), id, value_name, new_value, merge_object) {
+            ("grid",        Some(i), None,    None,    Some(m)) => apply_to.merge_grid(i, m),
+            ("grid",        Some(i), Some(n), Some(v), None   ) => apply_to.edit_grid(i, n, v),
+            ("element",     Some(i), None,    None,    Some(m)) => apply_to.merge_element(i, m),
+            ("element",     Some(i), Some(n), Some(v), None   ) => apply_to.edit_element(i, n, v),
+            ("global",      None,    Some(n), None,    Some(m)) => apply_to.merge_global(n, m),
+            ("global",      None,    Some(n), Some(v), None   ) => apply_to.edit_global(n, v),
+            ("element-set", Some(i), Some(n), None,    Some(m)) => apply_to.merge_with_set_item(i, n, m),
+            ("element-set", Some(i), Some(n), Some(v), None   ) => apply_to.add_to_set(i, n, v),
+            ("remove",      Some(i), None   , None,    None   ) => apply_to.remove_by_id(i),
+            ("remove-set",  Some(i), Some(n), None,    None   ) => apply_to.remove_from_set(i, n),
+            _ => None,
+        };
+
+        match op {
+            None => {Err(format!("ill formed changeJSON: {:?}", self.forward_change))},
+            _ => {Ok(())}
+        }
     }
-    fn undo(&self, apply_to: &mut CharacterData) {
-        *apply_to = self.old.clone();
+    fn undo(&self, apply_to: &mut Self::Commandable) {
+        *apply_to = self.old_data.clone();
     }
 }
 
@@ -64,20 +83,20 @@ impl<'a> CharacterData {
         v.as_object_mut().unwrap().insert(v_n.clone(), n_v.clone());
     }
     /// edit_* function family edits or inserts 1 entry. Works with any value.
-    pub fn edit_global(&mut self, global_name: String, new_value: Value) -> Option<()> {
-        self.globals.entry(global_name).and_modify(|v| *v = new_value.clone()).or_insert(new_value);
+    pub fn edit_global(&mut self, global_name: &String, new_value: &Value) -> Option<()> {
+        self.globals.entry(global_name).and_modify(|v| *v = new_value.clone()).or_insert(new_value.clone());
 
         Some(())
     }
-    pub fn edit_grid(&mut self, id: String, value_name: String, new_value: Value) -> Option<()> {
-        let closure = |v: &mut Value| {Self::modify_closure(v, value_name.clone(), &new_value)};
+    pub fn edit_grid(&mut self, id: &String, value_name: &String, new_value: &Value) -> Option<()> {
+        let closure = |v: &mut Value| {Self::modify_closure(v, value_name.clone(), new_value)};
         self.grid.entry(id)
             .and_modify(closure)
             .or_insert(serde_json::from_value(json!({value_name: new_value})).unwrap());
 
         Some(())
     }
-    pub fn edit_element(&mut self, id: String, value_name: String, new_value: Value) -> Option<()> {
+    pub fn edit_element(&mut self, id: &String, value_name: &String, new_value: &Value) -> Option<()> {
         let closure = |v: &mut Value| {Self::modify_closure(v, value_name.clone(), &new_value)};
         self.elements.entry(id)
             .and_modify(closure)
@@ -86,68 +105,68 @@ impl<'a> CharacterData {
         Some(())
     }
     /// merge_* function family merges old data with new for a specific id. Works only with objects
-    pub fn merge_global(&mut self, global_name: String, merge_object: Map<String, Value>) -> Option<()> {
+    pub fn merge_global(&mut self, global_name: &String, merge_object: &Map<String, Value>) -> Option<()> {
         let closure = |v: &mut Value| {
             match v.as_object_mut() {
                 Some(m) => m.append(&mut merge_object.clone()),
                 None => return,
             }
         };
-        self.globals.entry(global_name).and_modify(closure).or_insert(Value::Object(merge_object));
+        self.globals.entry(global_name).and_modify(closure).or_insert(Value::Object(merge_object.clone()));
 
         Some(())
     }
-    pub fn merge_grid(&mut self, id: String, merge_object: Map<String, Value>) -> Option<()> {
+    pub fn merge_grid(&mut self, id: &String, merge_object: &Map<String, Value>) -> Option<()> {
         let closure = |v: &mut Value| {
             match v.as_object_mut() {
                 Some(m) => m.append(&mut merge_object.clone()),
                 None => return,
             }
         };
-        self.grid.entry(id).and_modify(closure).or_insert(Value::Object(merge_object));
+        self.grid.entry(id).and_modify(closure).or_insert(Value::Object(merge_object.clone()));
 
         Some(())
     }
-    pub fn merge_element(&mut self, id: String, merge_object: Map<String, Value>) -> Option<()> {
+    pub fn merge_element(&mut self, id: &String, merge_object: &Map<String, Value>) -> Option<()> {
         let closure = |v: &mut Value| {
             match v.as_object_mut() {
                 Some(m) => m.append(&mut merge_object.clone()),
                 None => return,
             }
         };
-        self.elements.entry(id).and_modify(closure).or_insert(Value::Object(merge_object));
+        self.elements.entry(id).and_modify(closure).or_insert(Value::Object(merge_object.clone()));
 
         Some(())
     }
 
     /// get_element_data takes an id of an element, and returns it's data object's mutable reference
     /// if it has data field, but it's not an object, then None is returned
-    fn get_element_data(&'a mut self, id: String) -> Option<&'a mut Map<String, Value>> {
+    fn get_element_data(&'a mut self, id: &String) -> Option<&'a mut Map<String, Value>> {
         let get_data = |v : &'a mut Map<String, Value>| {
             v.get_mut("data").and_then(Value::as_object_mut)
         };
 
-        self.elements.get_mut(&id).and_then(Value::as_object_mut).and_then(get_data)
+        self.elements.get_mut(id).and_then(Value::as_object_mut).and_then(get_data)
     }
 
     /// *_set method family works with element-associated data objects.
-    pub fn add_to_set(&mut self, id: String, name: String, value: Value) -> Option<()> {
+    pub fn add_to_set(&mut self, id: &String, name: &String, value: &Value) -> Option<()> {
         let element_data = self.get_element_data(id)?;
-        element_data.entry(name).or_insert(value);
+        element_data.entry(name).or_insert(value.clone());
 
         Some(())
     }
 
-    pub fn remove_from_set(&mut self, id: String, name: String) -> Option<()> {
+    pub fn remove_from_set(&mut self, id: &String, name: &String) -> Option<()> {
         let data = self.get_element_data(id)?;
-        data.remove(&name)?;
+        data.remove(name)?;
 
         Some(())
     }
 
-    pub fn merge_with_set_item(&'a mut self, id: String, item_name: String, merge_object: Map<String, Value>) -> Option<()> {
+    pub fn merge_with_set_item(&'a mut self, id: &String, item_name: &String, merge_object: &Map<String, Value>) -> Option<()> {
         let get_item = |v : &'a mut Map<String, Value>| {
-            v.get_mut(&item_name).and_then(Value::as_object_mut)
+            v.get_mut(item_name).and_then(Value::as_object_mut)
         };
 
         let item_data = self.get_element_data(id).and_then(get_item)?;
@@ -155,9 +174,9 @@ impl<'a> CharacterData {
 
         Some(())
     }
-    pub fn remove_by_id(&mut self, id: String) -> Option<()> {
-        self.elements.remove(&id);
-        self.grid.remove(&id);
+    pub fn remove_by_id(&mut self, id: &String) -> Option<()> {
+        self.elements.remove(id);
+        self.grid.remove(id);
         Some(())
     }
 

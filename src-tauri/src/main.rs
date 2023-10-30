@@ -2,29 +2,76 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use std::path::PathBuf;
+use std::ffi::OsStr;
 
-use tauri::{ Manager, State, AppHandle, RunEvent };
+use tauri::api::dialog::confirm;
+use tauri::{ Manager, State, AppHandle, RunEvent, WindowEvent };
+
 use app::logger::log_tauri_error;
 use app::menu::{ generate_app_menu, menu_handler, save_character_sheet };
-
 use app::app_state::{change_character_data, JSONFile, app_state_to_recovery_string, load_app_state_from_recovery_string};
 use app::disk_interactions::{load_startup_data, save_startup_data};
-
 use app::ipc::{ChangeJSON, load_data, PayloadJSON};
+
+const APP_NAME : &str = "CSAT";
 
 fn main() {
     let run_handler = |app_handle: &AppHandle, event: RunEvent| {
         match event {
-            tauri::RunEvent::ExitRequested { .. }  => {
-                let r_s = app_state_to_recovery_string(&app_handle);
-                let _ = save_startup_data(&app_handle, &r_s);
-            }
             tauri::RunEvent::Ready => {
                 let r_s = match load_startup_data(&app_handle) {
                     Ok(s) => s,
                     Err(_) => return,
                 };
                 load_app_state_from_recovery_string(app_handle, &r_s);
+            }
+            tauri::RunEvent::WindowEvent { label, event, .. } => {
+                match label.as_str() {
+                    "editor" => {
+                        let window_handle = app_handle.get_window("editor");
+                        match event {
+                            WindowEvent::CloseRequested { api, .. } => {
+                                let window_handle_clone = window_handle.clone();
+                                let app_handle_clone = app_handle.clone();
+                                api.prevent_close();
+                                if app_handle.state::<JSONFile>().has_unsaved_chages() {
+                                    confirm(
+                                        app_handle.get_window("editor").as_ref(),
+                                        "discard changes",
+                                        "You have unsaved changes.\nAre you sure you want to discard them?",
+                                        move |answer| {
+                                            if answer {
+                                                let r_s = app_state_to_recovery_string(&app_handle_clone);
+                                                let _ = save_startup_data(&app_handle_clone, &r_s);
+                                                let _ = window_handle_clone.unwrap().close();
+                                            }
+                                        }
+                                    );
+                                }
+                                else {
+                                    let r_s = app_state_to_recovery_string(&app_handle);
+                                    let _ = save_startup_data(&app_handle, &r_s);
+                                    let _ = window_handle.unwrap().close();
+                                }
+                            }
+                            _ => {}
+                        }
+                    }
+                    _ => {},
+                }
+            }
+            tauri::RunEvent::MainEventsCleared => {
+                match app_handle.get_window("editor") {
+                    Some(w) => {
+                        let mut title_suffix = "".to_string();
+                        title_suffix += app_handle.state::<JSONFile>().get_path().file_name().and_then(OsStr::to_str).unwrap_or("not_named");
+                        if app_handle.state::<JSONFile>().has_unsaved_chages() {
+                            title_suffix += "*";
+                        }
+                        let _ = w.set_title(&(APP_NAME.to_string() + " editor: " + &title_suffix));
+                    }
+                    None => {}
+                }
             }
             _ => {}
         }
@@ -99,15 +146,11 @@ fn shortcut(app_handle: AppHandle, payload: PressedKey) {
             let _ = save_character_sheet(app_handle.state::<JSONFile>());
         },
         (true, false, "KeyZ") => {
-            let mut data = app_handle.state::<JSONFile>().get_data();
-            app_handle.state::<JSONFile>().history.lock().unwrap().undo_one(&mut data);
-            app_handle.state::<JSONFile>().set_data(data);
+            app_handle.state::<JSONFile>().go_back();
             let _ = load_data(&app_handle);
         },
         (true, false, "KeyY") => {
-            let mut data = app_handle.state::<JSONFile>().get_data();
-            app_handle.state::<JSONFile>().history.lock().unwrap().redo_one(&mut data);
-            app_handle.state::<JSONFile>().set_data(data);
+            app_handle.state::<JSONFile>().go_forward();
             let _ = load_data(&app_handle);
         },
         _ => {}

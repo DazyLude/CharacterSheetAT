@@ -55,10 +55,12 @@
     },
     "windows": [
       {
-        "fullscreen": false,
-        "height": 700,
-        "resizable": true,
+        "label": "editor",
         "title": "dnd-character-sheet-assisting-tool",
+        "url": "",
+        "fullscreen": false,
+        "resizable": true,
+        "height": 700,
         "width": 950
       }
     ]

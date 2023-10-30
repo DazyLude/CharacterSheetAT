@@ -13,7 +13,8 @@ use crate::{
 pub struct JSONFile {
     data: Mutex<CharacterData>,
     path: Mutex<PathBuf>,
-    pub history: Mutex<CommandStack<CharacterDataCommand, CharacterData>>
+    has_unsaved_chages: Mutex<bool>,
+    history: Mutex<CommandStack<CharacterDataCommand>>
 }
 impl JSONFile {
     pub fn new() -> JSONFile {
@@ -21,7 +22,8 @@ impl JSONFile {
         JSONFile {
             data: Mutex::from(CharacterData::generate_empty()),
             path: Mutex::from(empty_path),
-            history: Mutex::from(CommandStack::new())
+            has_unsaved_chages: Mutex::from(false),
+            history: Mutex::from(CommandStack::new()),
         }
     }
 
@@ -45,6 +47,35 @@ impl JSONFile {
 
     pub fn set_data(&self, data: CharacterData) {
         *self.data.lock().unwrap() = data;
+        *self.has_unsaved_chages.lock().unwrap() = true;
+    }
+
+    pub fn change_data(&self, command: CharacterDataCommand) -> Result<(), String> {
+        let mut data = self.data.lock().unwrap().clone();
+        self.history.lock().unwrap().do_one(command, &mut data)?;
+        *self.data.lock().unwrap() = data;
+        *self.has_unsaved_chages.lock().unwrap() = true;
+        Ok(())
+    }
+
+    pub fn go_back(&self) {
+        let mut data = self.get_data();
+        self.history.lock().unwrap().undo_one(&mut data);
+        self.set_data(data);
+    }
+
+    pub fn go_forward(&self) {
+        let mut data = self.get_data();
+        self.history.lock().unwrap().redo_one(&mut data);
+        self.set_data(data);
+    }
+
+    pub fn remove_not_saved_flag(&self) {
+        *self.has_unsaved_chages.lock().unwrap() = false;
+    }
+
+    pub fn has_unsaved_chages(&self) -> bool {
+        self.has_unsaved_chages.lock().unwrap().clone()
     }
 }
 
@@ -64,46 +95,20 @@ pub fn load_app_state_from_recovery_string(app_handle: &AppHandle, data: &String
         Err(_) => return,
     };
 
-    set_json_file(&app_handle, v.into(), path);
+    load_json_file(&app_handle, v.into(), path);
 
     let _ = load_data(app_handle);
 }
 
-pub fn set_json_file(app_handle: &AppHandle, v: CharacterData, p: PathBuf) {
+pub fn load_json_file(app_handle: &AppHandle, v: CharacterData, p: PathBuf) {
     let app_state = app_handle.state::<JSONFile>();
     app_state.set_path(p);
     app_state.set_data(v);
+    app_state.remove_not_saved_flag();
 }
 
 
 pub fn change_character_data(file: &JSONFile, change: ChangeJSON) -> Result<(), String> {
-    let old_data = file.get_data();
-    let mut data: CharacterData = file.get_data();
-    let err_change = change.clone();
-    let op_type = change.value_type.clone();
-
-    let op: Option<()> = match (op_type.as_str(), change.to_data_tuple()) {
-        // (value_type, (id, value_name, new_value, merge_object))
-        ("grid",        (Some(i), None,    None,    Some(m))) => data.merge_grid(i, m),
-        ("grid",        (Some(i), Some(n), Some(v), None   )) => data.edit_grid(i, n, v),
-        ("element",     (Some(i), None,    None,    Some(m))) => data.merge_element(i, m),
-        ("element",     (Some(i), Some(n), Some(v), None   )) => data.edit_element(i, n, v),
-        ("global",      (None,    Some(n), None,    Some(m))) => data.merge_global(n, m),
-        ("global",      (None,    Some(n), Some(v), None   )) => data.edit_global(n, v),
-        ("element-set", (Some(i), Some(n), None,    Some(m))) => data.merge_with_set_item(i, n, m),
-        ("element-set", (Some(i), Some(n), Some(v), None   )) => data.add_to_set(i, n, v),
-        ("remove",      (Some(i), None   , None,    None   )) => data.remove_by_id(i),
-        ("remove-set",  (Some(i), Some(n), None,    None   )) => data.remove_from_set(i, n),
-        (_, _) => None,
-    };
-
-    match op {
-        Some(_) => {
-            let command = CharacterDataCommand::from_old_and_new(old_data, data.clone());
-            file.history.lock().unwrap().do_one(command, &mut data);
-            file.set_data(data);
-            return Ok(());
-        },
-        None => return Err(format!("ill formed changeJSON: {:?}", err_change)),
-    }
+    let command = CharacterDataCommand::from_change_json(file.get_data(), change);
+    file.change_data(command)
 }

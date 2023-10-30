@@ -1,7 +1,7 @@
 use tauri::{ CustomMenuItem, Menu, Submenu, WindowMenuEvent, Manager, State };
 use tauri::api::dialog::FileDialogBuilder;
 use crate::disk_interactions::load_json_from_disk;
-use crate::app_state::{JSONFile, set_json_file};
+use crate::app_state::{JSONFile, load_json_file};
 use crate::character_data::CharacterData;
 use crate::ipc::load_data;
 
@@ -40,21 +40,17 @@ pub fn menu_handler (event: WindowMenuEvent) {
             let app_handle = event.window().app_handle();
             let v = CharacterData::generate_empty();
             let p = "".into();
-            set_json_file(&app_handle, v, p);
+            load_json_file(&app_handle, v, p);
             let _ = load_data(&app_handle);
         }
         "undo" => {
             let app_handle = event.window().app_handle();
-            let mut data = app_handle.state::<JSONFile>().get_data();
-            app_handle.state::<JSONFile>().history.lock().unwrap().undo_one(&mut data);
-            app_handle.state::<JSONFile>().set_data(data);
+            app_handle.state::<JSONFile>().go_back();
             let _ = load_data(&app_handle);
         }
         "redo" => {
             let app_handle = event.window().app_handle();
-            let mut data = app_handle.state::<JSONFile>().get_data();
-            app_handle.state::<JSONFile>().history.lock().unwrap().redo_one(&mut data);
-            app_handle.state::<JSONFile>().set_data(data);
+            app_handle.state::<JSONFile>().go_forward();
             let _ = load_data(&app_handle);
         }
         e => println!("Got an unimplemented menu event with id: {:?}", e),
@@ -73,7 +69,7 @@ fn open_character_sheet(window: tauri::Window) {
                         return;
                     },
                 };
-                set_json_file(&app_handle, v.into(), p);
+                load_json_file(&app_handle, v.into(), p);
             },
             None => return, // path was not provided by the user, we can just exit
         };
@@ -90,20 +86,26 @@ pub fn save_character_sheet(app_state: State<JSONFile>) -> Result<(), String> {
 
     match std::fs::write(&path, &data) {
         Err(e) => return Err(e.to_string()),
-        Ok(_) => return Ok(()),
+        Ok(_) => {
+            app_state.remove_not_saved_flag();
+            return Ok(())
+        },
     };
 }
 
 fn save_as_character_sheet(window: tauri::Window) {
     FileDialogBuilder::new().save_file(move |file_path| {
         let app = &window.app_handle();
-        let data = app.state::<JSONFile>().get_data().as_value();
-        let data = serde_json::to_string(&data).unwrap();
+        let data_json = app.state::<JSONFile>().get_data().as_value();
+        let data = serde_json::to_string(&data_json).unwrap();
         match file_path {
             Some(p) => {
                 match std::fs::write(&p, &data) {
                     Err(_e) => {},
-                    Ok(_) => app.state::<JSONFile>().set_path(p),
+                    Ok(_) => {
+                        app.state::<JSONFile>().set_path(p);
+                        app.state::<JSONFile>().remove_not_saved_flag();
+                    },
                 };
             },
             None => return, // path was not provided by the user, we can just exit
