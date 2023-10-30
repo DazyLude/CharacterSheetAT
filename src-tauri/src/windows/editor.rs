@@ -5,7 +5,7 @@ use crate::disk_interactions::save_startup_data;
 use crate::funny_constants::APP_NAME;
 use std::ffi::OsStr;
 
-pub fn editor_builder(app_handle: AppHandle) -> Result<(), tauri::Error> {
+pub fn builder(app_handle: AppHandle) -> Result<(), tauri::Error> {
     std::thread::spawn(
         move || {
             let _editor_window = tauri::WindowBuilder::new(
@@ -34,7 +34,9 @@ fn generate_editor_menu() -> Menu {
 
     let edit_menu = Menu::new()
         .add_item(CustomMenuItem::new("undo", "Undo").accelerator("ctrl+Z"))
-        .add_item(CustomMenuItem::new("redo", "Redo").accelerator("ctrl+Y"));
+        .add_item(CustomMenuItem::new("redo", "Redo").accelerator("ctrl+Y"))
+        .add_item(CustomMenuItem::new("add_element", "Add Element").accelerator("ctrl+E"))
+        .add_item(CustomMenuItem::new("remove_element", "Remove Element").accelerator("ctrl+D"));
     let edit_submenu = Submenu::new("Edit", edit_menu);
 
     Menu::new()
@@ -53,6 +55,14 @@ pub fn run_event_handler(app_handle: &AppHandle, event: WindowEvent) {
             let close = move |h: &AppHandle, w: &Window| {
                 let r_s = app_state_to_recovery_string(&h);
                 let _ = save_startup_data(&h, &r_s);
+                match h.get_window("add_element") {
+                    Some(cw) => {let _ = cw.close();}
+                    None => {}
+                };
+                match h.get_window("remove_element") {
+                    Some(cw) => {let _ = cw.close();}
+                    None => {}
+                };
                 let _ = w.close();
             };
 

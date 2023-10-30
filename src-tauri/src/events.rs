@@ -33,7 +33,21 @@ pub fn menu_event_handler(event: WindowMenuEvent) {
             let app_handle = event.window().app_handle();
             app_handle.state::<JSONFile>().go_forward();
             let _ = load_data(&app_handle);
-        }
+        },
+        "add_element" => {
+            let app_handle = event.window().app_handle();
+            let _ = match app_handle.get_window("add_element") {
+                Some(w) => w.set_focus(),
+                None => windows::add_element::builder(app_handle),
+            };
+        },
+        "remove_element" => {
+            let app_handle = event.window().app_handle();
+            let _ = match app_handle.get_window("remove_element") {
+                Some(w) => w.set_focus(),
+                None => windows::remove_element::builder(app_handle),
+            };
+        },
         e => println!("Got an unimplemented menu event with id: {:?}", e),
     }
 }
@@ -73,6 +87,20 @@ pub fn shortcut_handler(app_handle: &AppHandle, payload: &PressedKey) {
             app_handle.state::<JSONFile>().go_forward();
             let _ = load_data(&app_handle);
         },
+        (true, false, "KeyE") => {
+            let h = app_handle.clone();
+            let _ = match app_handle.get_window("add_element") {
+                Some(w) => w.set_focus(),
+                None => windows::add_element::builder(h),
+            };
+        }
+        (true, false, "KeyD") => {
+            let h = app_handle.clone();
+            let _ = match app_handle.get_window("remove_element") {
+                Some(w) => w.set_focus(),
+                None => windows::remove_element::builder(h),
+            };
+        }
         _ => return,
     }
 }

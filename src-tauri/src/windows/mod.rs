@@ -1,6 +1,8 @@
 use tauri::{ AppHandle, Manager, WindowEvent };
 
 pub mod editor;
+pub mod add_element;
+pub mod remove_element;
 
 
 pub fn after_events_cleared(app_handle: &AppHandle) {

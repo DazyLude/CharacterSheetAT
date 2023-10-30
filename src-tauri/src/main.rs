@@ -3,9 +3,9 @@
 
 use std::path::PathBuf;
 
-use app::windows::editor::editor_builder;
 use tauri::{ State, AppHandle };
 
+use app::windows;
 use app::app_state::{ change_character_data, JSONFile };
 use app::ipc::{ ChangeJSON, load_data, PayloadJSON, PressedKey };
 use app::events::{ run_event_handler, setup_app_event_listeners, menu_event_handler, shortcut_handler };
@@ -19,7 +19,7 @@ fn main() {
         .build(tauri::generate_context!())
         .expect("error when building tauri application");
 
-    let _ = editor_builder(app.handle());
+    let _ = windows::editor::builder(app.handle());
 
     app.run(run_event_handler);
 }
@@ -31,10 +31,19 @@ fn change_data(app_handle: AppHandle, file: State<JSONFile>, payload: ChangeJSON
 }
 
 #[tauri::command]
-fn request_data(app_state: State<JSONFile>) -> Result<PayloadJSON, String> {
-    Ok(PayloadJSON {
-        data: app_state.get_data().as_value(),
-    })
+fn request_data(app_state: State<JSONFile>, requested_data: Option<String>) -> Result<PayloadJSON, String> {
+    match requested_data {
+        Some(data) => {
+            match data.as_str() {
+                _e => return Err(format!("incorrect data type requested: {}", _e)),
+            }
+        }
+        None => {
+            return Ok(PayloadJSON {
+                data: app_state.get_data().as_value(),
+            })
+        }
+    }
 }
 
 #[tauri::command]

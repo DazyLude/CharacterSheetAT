@@ -1,5 +1,44 @@
 import { invoke } from "@tauri-apps/api";
 
+export function dispatcher({type, id, name, value}) {
+    console.log("called dispatcher")
+    switch(type) {
+        case "global":
+            changeGlobal(name, value);
+            break;
+        case "grid":
+            changeGrid(id, name, value);
+            break;
+        case "element":
+            changeElement(id, name, value);
+            break;
+        case "global-merge":
+            mergeGlobal(name, {...value});
+            break;
+        case "grid-merge":
+            mergeGrid(id, {...value});
+            break;
+        case "element-merge":
+            mergeElement(id, {...value});
+            break;
+        case "element-set-merge":
+            mergeWithSet(id, name, {...value});
+            break;
+        case "element-set-add":
+            addToSet(id, name, value);
+            break;
+        case "element-set-remove":
+            removeFromSet(id, name);
+            break;
+        case "remove":
+            removeById(id);
+            break;
+        default:
+            console.error("unknown dispatch type: " + type);
+    }
+}
+
+
 export function changeGlobal(value_name, new_value) {
     invoke("change_data", {payload: {value_type: "global", new_value, value_name}})
         .catch((e) => console.error(e));

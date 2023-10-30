@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useMemo, createElement } from "react";
-import { funnyConstants, changeGlobal, changeGrid, changeElement, mergeGlobal, mergeGrid, mergeElement, removeById, mergeWithSet, addToSet, removeFromSet } from "./Utils";
+import { funnyConstants, dispatcher } from "./Utils";
 
 import { GridController, GridElementMemo } from "./Components/Systems/grid";
 import { GridContext, GridContextReducer } from "./Components/Systems/grid";
@@ -15,70 +15,18 @@ export default function CharacterSheet() {
     const [mousePosition, setMousePosition] = useState([0, 0]);
     const [characterData, setCharacterData] = useState({globals:{}, grid:{}, elements:{}});
     const characterDispatch = useCallback(
-        ({type, id, name, value}) => {
-            console.log("called dispatcher")
-            switch(type) {
-                case "global":
-                    changeGlobal(name, value);
-                    break;
-                case "grid":
-                    changeGrid(id, name, value);
-                    break;
-                case "element":
-                    changeElement(id, name, value);
-                    break;
-                case "global-merge":
-                    mergeGlobal(name, {...value});
-                    break;
-                case "grid-merge":
-                    mergeGrid(id, {...value});
-                    break;
-                case "element-merge":
-                    mergeElement(id, {...value});
-                    break;
-                case "element-set-merge":
-                    mergeWithSet(id, name, {...value});
-                    break;
-                case "element-set-add":
-                    addToSet(id, name, value);
-                    break;
-                case "element-set-remove":
-                    removeFromSet(id, name);
-                    break;
-                case "remove":
-                    removeById(id);
-                    break;
-                default:
-                    console.error("unknown dispatch type: " + type);
-            }
+        (args) => {
+            dispatcher(args);
         },
         []
     );
 
-    useEffect(
+    useEffect( // requests data and subscribes to changes
         () => {
             invoke("request_data")
                 .then((e) => setCharacterData(e.data))
                 .catch((e) => console.error(e));
-        },
-        []
-    )
 
-    useEffect(
-        () => {
-            const onKeyDown = (e) => {
-                if (e.ctrlKey || e.altKey) {
-                    invoke('shortcut', { payload: { ctrl_key: e.ctrlKey, alt_key: e.altKey, key_code: e.code } });
-                }
-            }
-            window.addEventListener("keydown", onKeyDown);
-            return () => {window.removeEventListener("keydown", onKeyDown)};
-        },
-        []
-    )
-
-    useEffect(
-        () => {
             const onLoad = (e) => {
                 const data = e.payload.data;
                 if (data !== undefined) {
@@ -91,7 +39,7 @@ export default function CharacterSheet() {
                 unlisten.then(f => f());
             };
         },
-        [setCharacterData]
+        []
     )
 
     const {columnGap, columnWidth, rowGap, rowHeight} = funnyConstants;
@@ -184,6 +132,9 @@ export default function CharacterSheet() {
                             <GridController>
                                 {gridElementsList}
                             </GridController>
+                    </div>
+                    <div style={{gridColumn: "1 / -1", height: "500px"}}>
+                        {/* intentionally empty; this is a blank filler at the bottom */}
                     </div>
                 </div>
                 </MousePositionContext.Provider>
