@@ -16,6 +16,19 @@ pub struct ChangeJSON {
     pub merge_object: Option<Map<String, Value>>,
 }
 
+#[derive(serde::Deserialize)]
+pub struct PressedKey {
+    ctrl_key: bool,
+    alt_key: bool,
+    key_code: String,
+}
+
+impl<'a> PressedKey {
+    pub fn decompose(&'a self) -> (bool, bool, &'a str) {
+        (self.ctrl_key, self.alt_key, self.key_code.as_str())
+    }
+}
+
 pub fn load_data(app_handle: &tauri::AppHandle) -> Result<(), String> {
     let data = app_handle.state::<JSONFile>().get_data().as_value();
     app_handle

@@ -2,15 +2,6 @@ use crate::{command::Command, ipc::ChangeJSON};
 
 use serde_json::{Value, Map, json};
 
-/// Where goes what:
-/// # globals
-/// weakly typed data that associate with a character, rather than the GUI element
-/// for example: stats, expertises, AC, Name etc.
-/// # grid
-/// strongly typed data used for page layout rendering
-/// # elements
-/// weakly typed data that associates with a GUI element, rather than with a character
-/// for example: text box text, image's location and caption etc.
 #[derive(Debug, Clone)]
 pub struct CharacterData {
     globals: Map<String, Value>,
@@ -192,17 +183,18 @@ impl<'a> CharacterData {
 
 impl From<Value> for CharacterData {
     fn from(value: Value) -> Self {
+        let empty_data = CharacterData::generate_empty();
         let json_globals = match &value["globals"] {
             Value::Object(v) => v,
-            _ => return CharacterData::generate_empty(),
+            _ => &empty_data.globals,
         };
         let json_grid = match &value["grid"] {
             Value::Object(v) => v,
-            _ => return CharacterData::generate_empty(),
+            _ => &empty_data.grid,
         };
         let element_grid = match &value["elements"] {
             Value::Object(v) => v,
-            _ => return CharacterData::generate_empty(),
+            _ => &empty_data.elements,
         };
         CharacterData {
             globals: json_globals.clone(),

@@ -1,4 +1,4 @@
-import { HashRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
 import CharacterSheet from './Pages/CharacterSheet';
 import ConfigPage from './Pages/ConfigPage';
@@ -7,14 +7,15 @@ import { AppContextProvider } from './Pages/Components/Systems/appContext';
 
 function App() {
     return (
-        <HashRouter>
+        <BrowserRouter>
             <AppContextProvider>
                 <Routes>
-                    <Route path="/" element={<CharacterSheet />} />
+                    <Route path="/" element={<ConfigPage />} />
+                    <Route path="/editor" element={<CharacterSheet />} />
                     <Route path="/config" element={<ConfigPage />} />
                 </Routes>
             </AppContextProvider>
-        </HashRouter>
+        </BrowserRouter>
     );
 }
 
