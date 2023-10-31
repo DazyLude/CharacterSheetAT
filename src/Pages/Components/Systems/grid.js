@@ -1,14 +1,13 @@
-import { useContext, useState, useEffect, memo, createElement, createContext, useCallback } from "react";
+import { useContext, useState, useEffect, memo, createElement, createContext, useCallback, useRef } from "react";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUpDown, faUpRightAndDownLeftFromCenter, faUpDownLeftRight } from "@fortawesome/free-solid-svg-icons";
 
 import { AppContext } from "./appContext";
 import { MousePositionContext } from "./mouseTracker";
-import { funnyConstants } from "../../Utils";
+import { funnyConstants, dispatcher } from "../../Utils";
 
 const GridControllerContext = createContext(() => {});
-export const GridContext = createContext({});
 export const GridContextReducer = createContext(() => {});
 
 
@@ -21,26 +20,27 @@ export function GridElement({id, children, position}) {
     const gridControllerCallback = useContext(GridControllerContext);
     const { isLayoutLocked } = useContext(AppContext);
     const { x, y, h, w } = position;
+    const placement = placementStringFromXYWH({ x, y, h, w });
 
     const move = useCallback(
         () => {
-            gridControllerCallback({callerId: id, direction: ""});
+            gridControllerCallback({callerId: id, direction: "", initialPlacement: {...position}});
         },
-        [gridControllerCallback, id]
-    )
+        [gridControllerCallback, id, position]
+    );
 
     const resize = useCallback(
         (direction) => {
-            gridControllerCallback({callerId: id, direction});
+            gridControllerCallback({callerId: id, direction, initialPlacement: {...position}});
         },
-        [gridControllerCallback, id]
-    )
-
-    const placement = `${y} / ${x} / ${h === -1 ? -1 : y + h} / ${w === -1 ? -1 : x + w}`;
+        [gridControllerCallback, id, position]
+    );
 
     return (
         <div className="grid-element" style={{position: "relative", gridArea: placement}}>
-            {isLayoutLocked ? null :
+            {isLayoutLocked ?
+                <>{children}</>
+                :
                 <>
                     <div style={{
                         zIndex: "3",
@@ -124,31 +124,56 @@ export function GridElement({id, children, position}) {
                     </div>
                 </>
             }
-            {children}
         </div>
     );
 };
 
 // the plan is to move grid controlling behaviour here to prevent excessive rerenders of grid elements and their children
 // character sheet tracks mouse position, and shares it through mousePosition context
-export function GridController({children}) {
+export function GridController({children, gridData}) {
     const [direction, setDirection] = useState("");
     const [activeElementId, setActiveElementId] = useState("");
+    const [initialGhostPlacement, setInitialGhostPlacement] = useState({});
 
     const gridControllerCallback = useCallback(
-        ({callerId, direction}) => {
+        ({callerId, direction, initialPlacement}) => {
             setDirection(direction);
-            setActiveElementId(callerId)
+            setActiveElementId(callerId);
+            setInitialGhostPlacement(initialPlacement);
         },
         []
     )
 
     const releaseCallback = useCallback(
-        () => {
+        (action) => {
+            if (activeElementId === "") {
+                return;
+            }
+            console.log(activeElementId);
+            const {dx, dy, dh, dw} = action;
+            const {x, y, h, w} = gridData[activeElementId];
+            const id = activeElementId;
+            let newH = h + (dh ?? 0);
+            newH = newH < 1 ? 1 : newH;
+            let newW = w + (dw ?? 0);
+            newW = newW < 1 ? 1 : newW;
+            let newX = x + (dx ?? 0);
+            if (newX < 1) {
+                newX = x;
+                newW = w;
+            }
+            let newY = y + (dy ?? 0);
+            if (newY < 1) {
+                newY = x;
+                newH = w;
+            }
+
             setDirection("");
             setActiveElementId("");
+            setInitialGhostPlacement({});
+            dispatcher({type: "grid-merge", id, value: {"x": newX, "y": newY, "h": newH, "w": newW}});
         },
-        []
+        [gridData, activeElementId]
     )
 
     if (activeElementId=== "") { // does nothing
@@ -161,8 +186,7 @@ export function GridController({children}) {
 
     const controllerMode = direction === "" ? MovingController : ResizingController;
 
-
-    const controller = createElement(controllerMode, {id: activeElementId, direction, releaseCallback});
+    const controller = createElement(controllerMode, {id: activeElementId, direction, releaseCallback, initialGhostPlacement});
 
     return (
         <GridControllerContext.Provider value={gridControllerCallback}>
@@ -172,117 +196,152 @@ export function GridController({children}) {
     )
 };
 
-function MovingController({id, releaseCallback}) {
-    const gridReducer = useContext(GridContextReducer);
+function MovingController({releaseCallback, initialGhostPlacement}) {
     const mousePosition = useContext(MousePositionContext);
     const [savedMousePosition, setSavedMousePosition] = useState(mousePosition);
     const {columnGap, columnWidth, rowGap, rowHeight} = funnyConstants;
+    const isMounted = useRef(false);
+    const {x, y, w, h} = initialGhostPlacement;
 
-    if (ArrEq(mousePosition, [0, 0])) {
-        setSavedMousePosition(mousePosition);
-    }
-    const dx = Math.trunc((mousePosition[0] - savedMousePosition[0]) / (columnGap + columnWidth));
-    const dy = Math.trunc((mousePosition[1] - savedMousePosition[1]) / (rowGap + rowHeight));
-
-    useEffect(
+    useEffect (
         () => {
-            const release = () => {
-                releaseCallback();
-                setSavedMousePosition([0, 0]);
-            }
-            window.addEventListener("mouseup", release, {once: true});
-            window.addEventListener("touchend", release, {once: true});
-        },
-        [setSavedMousePosition, releaseCallback]
-    );
-
-    useEffect(
-        () => {
-            if (dx !== 0) {
-                gridReducer("move", {id, dx});
-                setSavedMousePosition([mousePosition[0], savedMousePosition[1]]);
-            }
-            if (dy !== 0) {
-                gridReducer("move", {id, dy});
-                setSavedMousePosition([savedMousePosition[0], mousePosition[1]]);
+            if (!isMounted.current) {
+                setSavedMousePosition(mousePosition);
+                isMounted.current = true;
             }
         },
-        [dx, dy, id, mousePosition, savedMousePosition, gridReducer]
-    );
-
-    return <></>;
-}
-
-function ResizingController({id, direction, releaseCallback}) {
-    const gridReducer = useContext(GridContextReducer);
-    const mousePosition = useContext(MousePositionContext);
-    const [savedMousePosition, setSavedMousePosition] = useState(mousePosition);
-    const {columnGap, columnWidth, rowGap, rowHeight} = funnyConstants;
-
-    if (ArrEq(mousePosition, [0, 0])) {
-        setSavedMousePosition(mousePosition);
-    }
-
-    const release = useCallback(
-        () => {
-            releaseCallback();
-            setSavedMousePosition([0, 0]);
-        },
-        [setSavedMousePosition, releaseCallback]
+        [setSavedMousePosition, isMounted, mousePosition]
     )
 
     useEffect(
         () => {
+            console.log("been here twice")
+            const release = (e) => {
+                const dx = Math.round((e.pageX - savedMousePosition[0]) / (columnGap + columnWidth));
+                const dy = Math.round((e.pageY - savedMousePosition[1]) / (rowGap + rowHeight));
+                releaseCallback({dx, dy});
+            }
             window.addEventListener("mouseup", release, {once: true});
             window.addEventListener("touchend", release, {once: true});
+            return () => {
+                window.removeEventListener("mouseup", release);
+                window.removeEventListener("touchend", release);
+            }
         },
-        [release]
+        [releaseCallback, savedMousePosition, columnGap, columnWidth, rowGap, rowHeight]
     );
 
-    const dx = Math.trunc((mousePosition[0] - savedMousePosition[0]) / (columnGap + columnWidth));
-    const dy = Math.trunc((mousePosition[1] - savedMousePosition[1]) / (rowGap + rowHeight));
+    const leftOffset = mousePosition[0] - savedMousePosition[0];
+    const dx = Math.round(leftOffset / (columnGap + columnWidth));
+    const topOffset = mousePosition[1] - savedMousePosition[1];
+    const dy = Math.round(topOffset / (rowGap + rowHeight));
+    const snappedPlacement = placementStringFromXYWH({x: x + dx, y: y + dy, w, h});
+
+    const snappedGhost = createElement("div", {
+        style: {
+            background: "green",
+            opacity: "0.5",
+            zIndex: "11",
+            position: "relative",
+            gridArea: snappedPlacement,
+        }
+    });
+
+    return <>{snappedGhost}</>;
+}
+
+function ResizingController({direction, releaseCallback, initialGhostPlacement}) {
+    const mousePosition = useContext(MousePositionContext);
+    const [savedMousePosition, setSavedMousePosition] = useState(mousePosition);
+    const {columnGap, columnWidth, rowGap, rowHeight} = funnyConstants;
+    const isMounted = useRef(false);
+    const {x, y, w, h} = initialGhostPlacement;
+
+    useEffect (
+        () => {
+            if (!isMounted.current) {
+                setSavedMousePosition(mousePosition);
+                isMounted.current = true;
+            }
+        },
+        [setSavedMousePosition, isMounted, mousePosition]
+    )
 
     useEffect(
         () => {
-            if (dy !== 0) {
+            const release = (e) => {
+                const mouse_dx = Math.round((e.pageX - savedMousePosition[0]) / (columnGap + columnWidth));
+                const mouse_dy = Math.round((e.pageY - savedMousePosition[1]) / (rowGap + rowHeight));
+                const diff = {dx: 0, dy: 0, dh: 0, dw: 0};
                 if (direction.includes('u')) {
-                    gridReducer("move", {id, dy});
-                    gridReducer("resize", {id, dh: -dy});
+                    diff.dy = mouse_dy;
+                    diff.dh = -mouse_dy;
                 }
                 else if (direction.includes('d')) {
-                    gridReducer("resize", {id, dh: dy});
+                    diff.dh = mouse_dy;
                 }
-                setSavedMousePosition([savedMousePosition[0], mousePosition[1]]);
-            }
-            if (dx !== 0) {
                 if (direction.includes('l')) {
-                    gridReducer("move", {id, dx});
-                    gridReducer("resize", {id, dw: -dx});
+                    diff.dx = mouse_dx;
+                    diff.dw = -mouse_dx;
                 }
                 else if (direction.includes('r')) {
-                    gridReducer("resize", {id, dw: dx});
+                    diff.dw = mouse_dx;
                 }
-                setSavedMousePosition([mousePosition[0], savedMousePosition[1]]);
+                releaseCallback({...diff});
+            };
+            window.addEventListener("mouseup", release, {once: true});
+            window.addEventListener("touchend", release, {once: true});
+            return () => {
+                window.removeEventListener("mouseup", release);
+                window.removeEventListener("touchend", release);
             }
         },
-        [id, dx, dy, savedMousePosition, mousePosition, gridReducer, direction]
+        [releaseCallback, direction, savedMousePosition, columnGap, columnWidth, rowGap, rowHeight]
     );
 
-    return <></>;
+    const leftOffset = mousePosition[0] - savedMousePosition[0];
+    const topOffset = mousePosition[1] - savedMousePosition[1];
+    const dx = Math.round(leftOffset / (columnGap + columnWidth));
+    const dy = Math.round(topOffset / (rowGap + rowHeight));
+    const snappedPlacementObject = {x, y, w, h};
+
+    if (direction.includes('u')) {
+        snappedPlacementObject.y += dy;
+        snappedPlacementObject.h -= dy;
+    }
+    else if (direction.includes('d')) {
+        snappedPlacementObject.h += dy;
+    }
+    if (direction.includes('l')) {
+        snappedPlacementObject.x += dx;
+        snappedPlacementObject.w -= dx;
+    }
+    else if (direction.includes('r')) {
+        snappedPlacementObject.w += dx;
+    }
+    if (snappedPlacementObject.x < 1) {
+        snappedPlacementObject.x = x;
+        snappedPlacementObject.w = w;
+    }
+    if (snappedPlacementObject.y < 1) {
+        snappedPlacementObject.y = y;
+        snappedPlacementObject.h = h;
+    }
+    const snappedPlacement = placementStringFromXYWH(snappedPlacementObject);
+
+    const snappedGhost = createElement("div", {
+        style: {
+            background: "green",
+            opacity: "0.5",
+            zIndex: "11",
+            position: "relative",
+            gridArea: snappedPlacement,
+        }
+    });
+
+    return <>{snappedGhost}</>;
 }
 
-
-function ArrEq(array1, array2) {
-    if (!Array.isArray(array1) || !Array.isArray(array2)) {
-        return false;
-    }
-    if (array1.length !== array2.length) {
-        return false;
-    }
-    for (let index = 0; index < array1.length; index++) {
-        if (array1[index] !== array2[index]) {
-            return false;
-        }
-    }
-    return true;
+function placementStringFromXYWH({x, y, w, h}) {
+    return `${y} / ${x} / ${h === -1 ? -1 : y + h} / ${w === -1 ? -1 : x + w}`;
 }

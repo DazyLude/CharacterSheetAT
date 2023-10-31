@@ -2,7 +2,6 @@ import { useEffect, useState, useCallback, useMemo, createElement } from "react"
 import { funnyConstants, dispatcher } from "./Utils";
 
 import { GridController, GridElementMemo } from "./Components/Systems/grid";
-import { GridContext, GridContextReducer } from "./Components/Systems/grid";
 import { MousePositionContext } from "./Components/Systems/mouseTracker";
 import StatusBar from "./Components/statusBar"
 
@@ -61,32 +60,6 @@ export default function CharacterSheet() {
         [setMousePosition]
     )
 
-    const gridReducer = useCallback((type, action) => {
-        const {id} = action;
-        switch (type) {
-            case ("move"): // moves provided (by id) grid element by d(elta)x columns and d(elta)y rows
-                const {dx, dy} = action;
-                const {x, y} = characterData.grid[id];
-                let newX = x + (dx ?? 0);
-                newX = newX < 0 ? 0 : newX;
-                let newY = y + (dy ?? 0);
-                newY = newY < 0 ? 0 : newY;
-                characterDispatch({type: "grid-merge", id, value: {"x": newX, "y": newY}});
-            break;
-            case ("resize"): // changes elements size (by id)
-                const {dh, dw} = action;
-                const {h, w} = characterData.grid[id];
-                let newH = h + (dh ?? 0);
-                newH = newH < 1 ? 1 : newH;
-                let newW = w + (dw ?? 0);
-                newW = newW < 1 ? 1 : newW;
-                characterDispatch({type: "grid-merge", id, value: {"h": newH, "w": newW}});
-            break;
-            default:
-                console.error("grid reducer called with an unknown operation");
-        }
-    }, [characterData.grid, characterDispatch]);
-
     const gridElementsList = useMemo(
         () => {
             return Object.entries(characterData.grid).map(
@@ -107,38 +80,34 @@ export default function CharacterSheet() {
     );
 
     return (
-        <GridContext.Provider value={characterData.grid}>
-            <GridContextReducer.Provider value={gridReducer}>
-                <MousePositionContext.Provider value={mousePosition}>
-                <div style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 890px 1fr",
-                }}
-                >
-                    <StatusBar characterData={characterData} characterDispatch={characterDispatch} />
-                    <div
-                        id="character-sheet"
-                        style={{
-                            "gridColumn": "2",
-                            "margin": "auto",
-                            "width": "100%",
-                            "display": "grid",
-                            "gridTemplateColumns": `repeat(12, ${columnWidth}px)`,
-                            "gridAutoRows": `${rowHeight}px`,
-                            "columnGap": `${columnGap}px`,
-                            "rowGap": `${rowGap}px`,
-                            "gridAutoFlow": "column"
-                        }}>
-                            <GridController>
-                                {gridElementsList}
-                            </GridController>
-                    </div>
-                    <div style={{gridColumn: "1 / -1", height: "500px"}}>
-                        {/* intentionally empty; this is a blank filler at the bottom */}
-                    </div>
-                </div>
-                </MousePositionContext.Provider>
-            </GridContextReducer.Provider>
-        </GridContext.Provider>
+        <MousePositionContext.Provider value={mousePosition}>
+        <div style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 890px 1fr",
+        }}
+        >
+            <StatusBar characterData={characterData} characterDispatch={characterDispatch} />
+            <div
+                id="character-sheet"
+                style={{
+                    "gridColumn": "2",
+                    "margin": "auto",
+                    "width": "100%",
+                    "display": "grid",
+                    "gridTemplateColumns": `repeat(12, ${columnWidth}px)`,
+                    "gridAutoRows": `${rowHeight}px`,
+                    "columnGap": `${columnGap}px`,
+                    "rowGap": `${rowGap}px`,
+                    "gridAutoFlow": "column"
+                }}>
+                    <GridController gridData={characterData.grid}>
+                        {gridElementsList}
+                    </GridController>
+            </div>
+            <div style={{gridColumn: "1 / -1", height: "500px"}}>
+                {/* intentionally empty; this is a blank filler at the bottom */}
+            </div>
+        </div>
+        </MousePositionContext.Provider>
     );
 }

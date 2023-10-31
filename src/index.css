@@ -140,6 +140,12 @@ option:focus {
   width: 100%;
 }
 
+.grid-element.dragging {
+  background: red;
+  opacity: 50%;
+}
+
+
 .error {
   color: #880000;
 }

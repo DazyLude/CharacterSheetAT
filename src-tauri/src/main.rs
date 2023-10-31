@@ -26,6 +26,7 @@ fn main() {
 
 #[tauri::command]
 fn change_data(app_handle: AppHandle, file: State<JSONFile>, payload: ChangeJSON) -> Result<(), String> {
+    println!("{:?}", payload);
     let _ = change_character_data(&file, payload);
     load_data(&app_handle)
 }
