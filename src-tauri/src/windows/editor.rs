@@ -39,9 +39,16 @@ fn generate_editor_menu() -> Menu {
         .add_item(CustomMenuItem::new("remove_element", "Remove Element").accelerator("ctrl+D"));
     let edit_submenu = Submenu::new("Edit", edit_menu);
 
+    let mode_menu = Menu::new()
+        .add_item(CustomMenuItem::new("readonly_switch", "Switch Readonly Mode").accelerator("ctrl+1"))
+        .add_item(CustomMenuItem::new("layout_switch", "Switch Layout Editing Mode").accelerator("ctrl+2"))
+        .add_item(CustomMenuItem::new("element_switch", "Switch Element Editing Mode").accelerator("ctrl+3"));
+    let mode_submenu = Submenu::new("Mode", mode_menu);
+
     Menu::new()
         .add_submenu(file_submenu)
         .add_submenu(edit_submenu)
+        .add_submenu(mode_submenu)
 }
 
 pub fn run_event_handler(app_handle: &AppHandle, event: WindowEvent) {

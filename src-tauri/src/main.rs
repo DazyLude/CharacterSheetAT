@@ -78,9 +78,10 @@ fn shortcut(app_handle: AppHandle, payload: PressedKey) {
 
 #[tauri::command]
 fn request_ghost_drawn(app_handle: AppHandle, current_style: State<GridGhost>, ghost_style: Map<String, Value>, append: Option<Value>) {
+    let current_window = current_style.get_window();
     match append {
-        Some(_) => current_style.append_to_style(ghost_style),
-        None => current_style.set_new_style(ghost_style),
+        Some(_) => current_style.append_to_style(ghost_style, current_window),
+        None => current_style.set_new_style(ghost_style, current_window),
     }
     draw_ghost(&app_handle)
 }

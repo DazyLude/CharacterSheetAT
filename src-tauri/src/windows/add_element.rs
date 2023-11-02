@@ -11,6 +11,7 @@ pub fn builder(app_handle: AppHandle) -> Result<(), tauri::Error> {
                 .title("add element")
                 .fullscreen(false)
                 .resizable(false)
+                .minimizable(false)
                 .inner_size(522., 253.)
                 .build()?;
             Ok(())

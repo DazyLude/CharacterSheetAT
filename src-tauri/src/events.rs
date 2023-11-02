@@ -48,6 +48,18 @@ pub fn menu_event_handler(event: WindowMenuEvent) {
                 None => windows::remove_element::builder(app_handle),
             };
         },
+        "readonly_switch" => {
+            let app_handle = event.window().app_handle();
+            crate::ipc::change_editor_context(&app_handle, "readOnly-switch".to_string());
+        }
+        "layout_switch" => {
+            let app_handle = event.window().app_handle();
+            crate::ipc::change_editor_context(&app_handle, "layoutEdit-switch".to_string());
+        }
+        "element_switch" => {
+            let app_handle = event.window().app_handle();
+            crate::ipc::change_editor_context(&app_handle, "elementEdit-switch".to_string());
+        }
         e => println!("Got an unimplemented menu event with id: {:?}", e),
     }
 }
@@ -90,16 +102,31 @@ pub fn shortcut_handler(app_handle: &AppHandle, payload: &PressedKey) {
         (true, false, "KeyE") => {
             let h = app_handle.clone();
             let _ = match app_handle.get_window("add_element") {
-                Some(w) => w.set_focus(),
+                Some(w) => {
+                    let _ = w.set_focus();
+                    w.show()
+                }
                 None => windows::add_element::builder(h),
             };
         }
         (true, false, "KeyD") => {
             let h = app_handle.clone();
             let _ = match app_handle.get_window("remove_element") {
-                Some(w) => w.set_focus(),
+                Some(w) => {
+                    let _ = w.set_focus();
+                    w.show()
+                }
                 None => windows::remove_element::builder(h),
             };
+        }
+        (true, false, "Digit1") => {
+            crate::ipc::change_editor_context(app_handle, "readOnly-switch".to_string());
+        }
+        (true, false, "Digit2") => {
+            crate::ipc::change_editor_context(app_handle, "layoutEdit-switch".to_string());
+        }
+        (true, false, "Digit3") => {
+            crate::ipc::change_editor_context(app_handle, "elementEdit-switch".to_string());
         }
         _ => return,
     }

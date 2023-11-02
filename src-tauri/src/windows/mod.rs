@@ -1,6 +1,7 @@
+use serde_json::{json, Map};
 use tauri::{ AppHandle, Manager, WindowEvent };
 
-use crate::ipc;
+use crate::{ipc, app_state::GridGhost};
 
 pub mod editor;
 pub mod add_element;
@@ -21,20 +22,32 @@ pub fn run_event_handler(app_handle: &AppHandle, label: String, event: WindowEve
         }
         "add_element" => {
             match event {
-                WindowEvent::Focused(b) => {
-                    if b {
-                        ipc::add_ghost_request(app_handle);
-                    }
+                WindowEvent::Focused(true) => {
+                    app_handle.state::<GridGhost>().set_window("adder".to_string());
+                    ipc::add_ghost_request(app_handle);
+                }
+                WindowEvent::CloseRequested { .. } | WindowEvent::Focused(false) => {
+                    app_handle.state::<GridGhost>().append_to_style(
+                        Map::from(json!({"display": "none"}).as_object().unwrap().clone()),
+                        "adder".to_string()
+                    );
+                    ipc::draw_ghost(app_handle)
                 }
                 _ => {}
             }
         }
         "remove_element" => {
             match event {
-                WindowEvent::Focused(b) => {
-                    if b {
+                WindowEvent::Focused(true) => {
+                        app_handle.state::<GridGhost>().set_window("remover".to_string());
                         ipc::remove_ghost_request(app_handle);
-                    }
+                }
+                WindowEvent::CloseRequested { .. } | WindowEvent::Focused(false) => {
+                    app_handle.state::<GridGhost>().append_to_style(
+                        Map::from(json!({"display": "none"}).as_object().unwrap().clone()),
+                        "remover".to_string()
+                    );
+                    ipc::draw_ghost(app_handle)
                 }
                 _ => {}
             }

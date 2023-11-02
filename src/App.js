@@ -1,8 +1,7 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect } from 'react';
 
 import { CharacterSheet, AddElement, RemoveElement } from './Pages';
-import { EditorContextProvider } from './Pages/Components/Systems/appContext';
 import { invoke } from '@tauri-apps/api';
 
 function App() {

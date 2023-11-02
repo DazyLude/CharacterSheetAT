@@ -62,3 +62,11 @@ pub fn add_ghost_request(app_handle: &tauri::AppHandle) {
             app_handle.trigger_global("error", Some(error.to_string()))
         );
 }
+
+pub fn change_editor_context(app_handle: &tauri::AppHandle, action: String) {
+    app_handle
+        .emit_all("change_context", action)
+        .unwrap_or_else(|error|
+            app_handle.trigger_global("error", Some(error.to_string()))
+        );
+}

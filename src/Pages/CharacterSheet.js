@@ -3,7 +3,6 @@ import { funnyConstants, dispatcher } from "./Utils";
 
 import { GridController, GridElementMemo } from "./Components/Systems/grid";
 import { MousePositionContext } from "./Components/Systems/mouseTracker";
-import StatusBar from "./Components/statusBar"
 
 import { getUIElementFromString } from "./Components/UIElements";
 
@@ -88,7 +87,6 @@ export default function CharacterSheet() {
                 gridTemplateColumns: "1fr 890px 1fr",
             }}
             >
-                <StatusBar characterData={characterData} characterDispatch={characterDispatch} />
                 <div
                     id="character-sheet"
                     style={{

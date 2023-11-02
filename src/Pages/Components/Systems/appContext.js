@@ -1,4 +1,5 @@
-import { createContext, useReducer } from 'react';
+import { createContext, useReducer, useEffect } from 'react';
+import { listen } from '@tauri-apps/api/event';
 
 export const initialContext = {
     readOnly: false,
@@ -30,6 +31,22 @@ export const EditorDispatchContext = createContext(null);
 
 export function EditorContextProvider({children}) {
     const [context, contextDispatcher] = useReducer(contextReducer, initialContext);
+
+    useEffect( // requests data and subscribes to changes
+        () => {
+            const onEvent = (e) => {
+                const data = e.payload;
+                console.log(data);
+                contextDispatcher({type: data});
+            }
+
+            const unlisten = listen("change_context", onEvent);
+            return () => {
+                unlisten.then(f => f());
+            };
+        },
+        []
+    )
 
     return (
         <EditorContext.Provider value={context}>

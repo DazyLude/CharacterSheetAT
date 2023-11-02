@@ -107,26 +107,40 @@ pub fn change_character_data(file: &JSONFile, change: ChangeJSON) -> Result<(), 
 
 pub struct GridGhost {
     style: Mutex<Map<String, Value>>,
+    active_window: Mutex<String>,
 }
 
 impl GridGhost {
     pub fn new() -> GridGhost {
         GridGhost {
-            style: Mutex::from(Map::new())
+            style: Mutex::from(Map::new()),
+            active_window: Mutex::from("".to_string()),
         }
     }
 
-    pub fn set_new_style(&self, new_style: Map<String, Value>) {
+    pub fn set_new_style(&self, new_style: Map<String, Value>, window: String) {
+        *self.active_window.lock().unwrap() = window;
         *self.style.lock().unwrap() = new_style;
     }
 
-    pub fn append_to_style(&self, addition: Map<String, Value>) {
+    pub fn append_to_style(&self, addition: Map<String, Value>, window: String) {
+        if *self.active_window.lock().unwrap() != window {
+            return;
+        }
         let mut old_style = self.style.lock().unwrap().clone();
         old_style.append(&mut addition.clone());
-        self.set_new_style(old_style)
+        self.set_new_style(old_style, window)
     }
 
     pub fn get_style(&self) -> Map<String, Value> {
         self.style.lock().unwrap().clone()
+    }
+
+    pub fn set_window(&self, window: String) {
+        *self.active_window.lock().unwrap() = window;
+    }
+
+    pub fn get_window(&self) -> String {
+        self.active_window.lock().unwrap().clone()
     }
 }
