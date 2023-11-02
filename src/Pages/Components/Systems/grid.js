@@ -1,8 +1,5 @@
 import { useContext, useState, useEffect, memo, createElement, createContext, useCallback, useRef } from "react";
 
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUpDown, faUpRightAndDownLeftFromCenter, faUpDownLeftRight } from "@fortawesome/free-solid-svg-icons";
-
 import { EditorContext } from "./appContext";
 import { MousePositionContext } from "./mouseTracker";
 import { funnyConstants, dispatcher, placementStringFromXYWH } from "../../Utils";
@@ -13,7 +10,6 @@ const GridControllerContext = createContext(() => {});
 // memoized version of gridElement
 // prevents rerenders when parents are updated
 export const GridElementMemo = memo(GridElement);
-const FAI = memo(FontAwesomeIcon);
 
 export function GridElement({id, children, position}) {
     const gridControllerCallback = useContext(GridControllerContext);
@@ -35,10 +31,6 @@ export function GridElement({id, children, position}) {
         [gridControllerCallback, id, position]
     );
 
-    return createElement(MovableAndResizableGridElement, {id, children, isLayoutLocked, placement, move, resize});
-};
-
-function MovableAndResizableGridElement({id, children, isLayoutLocked, placement, move, resize}) {
     return (
         <div className="grid-element" style={{position: "relative", gridArea: placement}}>
             {isLayoutLocked ?
@@ -63,77 +55,69 @@ function MovableAndResizableGridElement({id, children, isLayoutLocked, placement
                         {/* top left */}
                         <div
                             onMouseDown={() => {resize('ul')}}
-                            style={{display: "flex", justifyContent: "center", alignItems: "center", background: "gray", width: "100%", height: "100%", cursor: "nw-resize"}}
+                            style={{background: "gray", width: "100%", height: "100%", cursor: "nw-resize"}}
                         >
-                            <FAI icon={faUpRightAndDownLeftFromCenter} rotation={90}/>
                         </div>
                         {/* neutral good */}
                         <div
                             onMouseDown={() => {resize('u')}}
-                            style={{display: "flex", justifyContent: "center", alignItems: "center", background: "dimgrey", width: "100%", height: "100%", cursor: "n-resize"}}
+                            style={{background: "dimgrey", width: "100%", height: "100%", cursor: "n-resize"}}
                         >
-                            <FAI icon={faUpDown} />
                         </div>
                         {/* top right */}
                         <div
                             onMouseDown={() => {resize('ur')}}
-                            style={{display: "flex", justifyContent: "center", alignItems: "center", background: "gray", width: "100%", height: "100%", cursor: "ne-resize"}}
+                            style={{background: "gray", width: "100%", height: "100%", cursor: "ne-resize"}}
                         >
-                            <FAI icon={faUpRightAndDownLeftFromCenter}/>
                         </div>
                         {/* lawful neutral */}
                         <div
                             onMouseDown={() => {resize('l')}}
-                            style={{display: "flex", justifyContent: "center", alignItems: "center", background: "dimgrey", width: "100%", height: "100%", cursor: "w-resize"}}
+                            style={{background: "dimgrey", width: "100%", height: "100%", cursor: "w-resize"}}
                         >
-                            <FAI icon={faUpDown} rotation={90}/>
                         </div>
                         {/* center */}
                         <div
                             onMouseDown={() => {move()}}
-                            style={{display: "flex", flexDirection: "column", justifyContent: "space-around", background: "gray", width: "100%", height: "100%", cursor: "move"}}
+                            style={{background: "gray", width: "100%", height: "100%", cursor: "move"}}
                         >
                             { id === undefined ?
                                 null
                                 :
                                 <div style={{height: "40px", textOverflow:"ellipsis", overflow: "hidden"}}>id: {id}</div>
                             }
-                            <FAI icon={faUpDownLeftRight} />
                         </div>
                         {/* chaotic neutral */}
                         <div
                             onMouseDown={() => {resize('r')}}
-                            style={{display: "flex", justifyContent: "center", alignItems: "center", background: "dimgrey", width: "100%", height: "100%", cursor: "e-resize"}}
+                            style={{background: "dimgrey", width: "100%", height: "100%", cursor: "e-resize"}}
                         >
-                            <FAI icon={faUpDown} rotation={90}/>
                         </div>
                         {/* bottom left */}
                         <div
                             onMouseDown={() => {resize('ld')}}
-                            style={{display: "flex", justifyContent: "center", alignItems: "center", background: "gray", width: "100%", height: "100%", cursor: "sw-resize"}}
+                            style={{background: "gray", width: "100%", height: "100%", cursor: "sw-resize"}}
                         >
-                            <FAI icon={faUpRightAndDownLeftFromCenter}/>
                         </div>
                         {/* neutral evil */}
                         <div
                             onMouseDown={() => {resize('d')}}
-                            style={{display: "flex", justifyContent: "center", alignItems: "center", background: "dimgrey", width: "100%", height: "100%", cursor: "s-resize"}}
+                            style={{background: "dimgrey", width: "100%", height: "100%", cursor: "s-resize"}}
                         >
-                            <FAI icon={faUpDown} />
                         </div>
                         {/* bottom right */}
                         <div
                             onMouseDown={() => {resize('rd')}}
-                            style={{display: "flex", justifyContent: "center", alignItems: "center", background: "gray", width: "100%", height: "100%", cursor: "se-resize"}}
+                            style={{background: "gray", width: "100%", height: "100%", cursor: "se-resize"}}
                         >
-                            <FAI icon={faUpRightAndDownLeftFromCenter} rotation={90}/>
                         </div>
                     </div>
                 </>
             }
         </div>
     );
-}
+};
+
 // the plan is to move grid controlling behaviour here to prevent excessive rerenders of grid elements and their children
 // character sheet tracks mouse position, and shares it through mousePosition context
 export function GridController({children, gridData}) {
