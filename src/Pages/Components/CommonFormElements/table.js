@@ -1,7 +1,7 @@
 import { createElement, useCallback, useState } from "react";
 import UseEffectButton from "./useEffectButton";
 import { useContext } from "react";
-import { AppContext } from "../Systems/appContext";
+import { EditorContext } from "../Systems/appContext";
 
 // Table is a React component that implements shared behaviour between inventory and spellList sheet elements
 // It is a stateful component, since it has to manage long descriptions of displayed data
@@ -25,7 +25,7 @@ import { AppContext } from "../Systems/appContext";
 
 export function Table({data, itemElement, defaultItemObject, dispatcher, children, columns, columnStyle, Head}) {
     const [ openedSpoilerId, setOpenedSpoilerId ] = useState("");
-    const { isEditingElements } = useContext(AppContext);
+    const { isEditingElements } = useContext(EditorContext);
     const tableEntries = Object.entries(data.dataSet ?? {});
     const count = data.count ?? 0;
 

@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { AppContext } from "../Systems/appContext";
+import { EditorContext } from "../Systems/appContext";
 
 export default function DeathSavesTracker({characterData, characterDispatch}) {
     const data = characterData.globals.deathSavingThrows ?? {};
@@ -36,7 +36,7 @@ export default function DeathSavesTracker({characterData, characterDispatch}) {
 }
 
 function RadioRow(props) {
-    const context = useContext(AppContext);
+    const context = useContext(EditorContext);
     const readOnly = context.readOnly;
 
     const clickHandler = () => {

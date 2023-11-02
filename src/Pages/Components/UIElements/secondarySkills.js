@@ -1,7 +1,7 @@
 import { useContext } from "react";
 import { getStatMod } from "../../Utils";
 import { Checkbox, NumberInput, Spoiler } from "../CommonFormElements";
-import { AppContext } from "../Systems/appContext";
+import { EditorContext } from "../Systems/appContext";
 
 export default function SecondarySkills({characterData, characterDispatch}) {
     const stats = characterData.globals.stats ?? {};
@@ -102,7 +102,7 @@ export default function SecondarySkills({characterData, characterDispatch}) {
 }
 
 function SecondarySkillRow(props) {
-    const {isEditingElements} = useContext(AppContext);
+    const {isEditingElements} = useContext(EditorContext);
     const skill = props.skill ?? {};
     const proficiency = skill.prof ?? false;
     const modifier = skill.mod ?? 0;

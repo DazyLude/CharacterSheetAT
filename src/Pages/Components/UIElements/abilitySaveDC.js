@@ -1,5 +1,5 @@
 import { memo, useContext, createElement } from "react";
-import { AppContext } from "../Systems/appContext";
+import { EditorContext } from "../Systems/appContext";
 
 export default function AbilitySaveInterface({characterData, characterDispatch, id}) {
     let data = characterData.elements[id] ?? {}
@@ -11,7 +11,7 @@ export default function AbilitySaveInterface({characterData, characterDispatch, 
 }
 
 function AbilitySaveDC({ability, proficiencyModifier, stats, characterDispatch, id}) {
-    const {isEditingElements} = useContext(AppContext);
+    const {isEditingElements} = useContext(EditorContext);
 
     const changeHandler = (value) => {
         characterDispatch({type: "element", name: "stat", value, id});

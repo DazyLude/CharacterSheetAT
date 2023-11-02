@@ -3,7 +3,7 @@ import { useContext, useState, useEffect, memo, createElement, createContext, us
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUpDown, faUpRightAndDownLeftFromCenter, faUpDownLeftRight } from "@fortawesome/free-solid-svg-icons";
 
-import { AppContext } from "./appContext";
+import { EditorContext } from "./appContext";
 import { MousePositionContext } from "./mouseTracker";
 import { funnyConstants, dispatcher, placementStringFromXYWH } from "../../Utils";
 import { listen } from "@tauri-apps/api/event";
@@ -17,7 +17,7 @@ const FAI = memo(FontAwesomeIcon);
 
 export function GridElement({id, children, position}) {
     const gridControllerCallback = useContext(GridControllerContext);
-    const { isLayoutLocked } = useContext(AppContext);
+    const { isLayoutLocked } = useContext(EditorContext);
     const { x, y, h, w } = position;
     const placement = placementStringFromXYWH({ x, y, h, w });
 

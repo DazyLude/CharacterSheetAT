@@ -1,5 +1,5 @@
 import { createElement, useContext } from "react";
-import { AppContext } from "../Systems/appContext";
+import { EditorContext } from "../Systems/appContext";
 import { getStatModNumeric, getStatMod } from "../../Utils";
 import { TextFieldInput, TextInput, ControlledSpoiler, Checkbox, Table, NumberInput} from "../CommonFormElements";
 
@@ -58,7 +58,7 @@ export default function SpellList({characterData, characterDispatch, id}) {
 }
 
 function Title({ spellCastingAbility, changeSpellCastingAbility, spellSavingThrow, spellAttackBonus}) {
-    const { isEditingElements } = useContext(AppContext);
+    const { isEditingElements } = useContext(EditorContext);
     if (isEditingElements) {
         return (
                 <select style={{padding: "2px 10px"}} value={spellCastingAbility} onChange={(e) => changeSpellCastingAbility(e.target.value)}>
@@ -86,7 +86,7 @@ function Title({ spellCastingAbility, changeSpellCastingAbility, spellSavingThro
 }
 
 function SpellListHead() {
-    const {isEditingElements} = useContext(AppContext);
+    const {isEditingElements} = useContext(EditorContext);
     return (
         <>
             <span>Prep</span>
@@ -111,7 +111,7 @@ function SpellListHead() {
 }
 
 function Spell({entry, editItem, removeItem, isOpen, spoilerStateHandler}) {
-    const {isEditingElements} = useContext(AppContext);
+    const {isEditingElements} = useContext(EditorContext);
     const longDescription = entry.isLong;
     const text = entry.text;
     const isPrepared = entry.isPrepared;
@@ -201,7 +201,7 @@ function Spell({entry, editItem, removeItem, isOpen, spoilerStateHandler}) {
 }
 
 function SpellDescription({longDescription, text, editItem, removeItem, spoilerStateHandler, isOpen}) {
-    const { isEditingElements } = useContext(AppContext);
+    const { isEditingElements } = useContext(EditorContext);
     const textHandler = (value) => {editItem({text: value})};
     const spoilerHandler = (value) => {editItem({isLong: value})};
 

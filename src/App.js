@@ -2,7 +2,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { useEffect, useState, useCallback } from 'react';
 
 import { CharacterSheet, AddElement, RemoveElement } from './Pages';
-import { AppContextProvider } from './Pages/Components/Systems/appContext';
+import { EditorContextProvider } from './Pages/Components/Systems/appContext';
 import { invoke } from '@tauri-apps/api';
 
 function App() {
@@ -21,14 +21,12 @@ function App() {
 
     return (
         <BrowserRouter>
-            <AppContextProvider>
-                <Routes>
-                    <Route path="/" element={<></>} />
-                    <Route path="/editor" element={<CharacterSheet/>} />
-                    <Route path="/add_element" element={<AddElement/>} />
-                    <Route path="/remove_element" element={<RemoveElement/>} />
-                </Routes>
-            </AppContextProvider>
+            <Routes>
+                <Route path="/" element={<></>} />
+                <Route path="/editor" element={<CharacterSheet/>} />
+                <Route path="/add_element" element={<AddElement/>} />
+                <Route path="/remove_element" element={<RemoveElement/>} />
+            </Routes>
         </BrowserRouter>
     );
 }

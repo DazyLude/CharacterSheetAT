@@ -1,6 +1,6 @@
 import { TextInput, NumberInput, Table, UseEffectButton } from "../CommonFormElements";
 import { useContext } from "react";
-import { AppContext } from "../Systems/appContext";
+import { EditorContext } from "../Systems/appContext";
 
 export default function Inventory({characterData, characterDispatch, id}) {
     const stats = characterData.stats ?? {};
@@ -58,7 +58,7 @@ function Title({carriedWeight, str}) {
 }
 
 function InventoryItem({entry, editItem, removeItem}) {
-    const {isEditingElements} = useContext(AppContext);
+    const {isEditingElements} = useContext(EditorContext);
     const setPriority = (value) => {editItem({placement: [entry.placement[0], value]})};
     const incrementColumn = () => {editItem({placement: [entry.placement[0] + 1, entry.placement[1]]})};
     const decrementColumn = () => {editItem({placement: [entry.placement[0] - 1, entry.placement[1]]})};
@@ -116,7 +116,7 @@ function InventoryItem({entry, editItem, removeItem}) {
 }
 
 function InventoryHead() {
-    const {isEditingElements} = useContext(AppContext);
+    const {isEditingElements} = useContext(EditorContext);
     return(
         <>
             {isEditingElements ?

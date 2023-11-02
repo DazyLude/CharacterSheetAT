@@ -1,5 +1,5 @@
 import { useCallback, useContext, useEffect, useState, useMemo } from "react";
-import { AppContext } from "../Systems/appContext";
+import { EditorContext } from "../Systems/appContext";
 import { open } from "@tauri-apps/api/dialog";
 import { TextInput, UseEffectButton } from "../CommonFormElements";
 import { convertFileSrc, invoke } from "@tauri-apps/api/tauri";
@@ -13,7 +13,7 @@ export default function ImageDisplay({characterData, characterDispatch, id}) {
     );
     const [imagePath, setImagePath] = useState(convertFileSrc(data.path) ?? "");
     const imageCaption = data.text ?? "";
-    const { isEditingElements } = useContext(AppContext);
+    const { isEditingElements } = useContext(EditorContext);
 
 
     const imageChangeHandler = (value) => {

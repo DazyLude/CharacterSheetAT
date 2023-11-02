@@ -4,7 +4,7 @@ import { UseEffectButton } from "./Components/CommonFormElements";
 import { invoke } from "@tauri-apps/api";
 import { listen } from '@tauri-apps/api/event';
 
-import { dispatcher, placementStringFromXYWH, objectFromPlacementString } from "./Utils";
+import { dispatcher, placementStringFromXYWH } from "./Utils";
 
 const constructibleElements = {
     "none": { // an example element
@@ -141,8 +141,8 @@ export default function ElementEditor() {
                 .catch((e) => console.error(e));
         },
         []
-    )
-    
+    );
+
     useEffect(
         () => {
             const onRequest = () => {drawGhost(placement);};
@@ -153,22 +153,6 @@ export default function ElementEditor() {
         },
         [drawGhost, placement]
     )
-
-
-    // useEffect( // requests data and subscribes to changes
-    //     () => {
-    //         const onEvent = (e) => {
-    //             const data = e.payload;
-    //             setPlacement(objectFromPlacementString(data.gridArea));
-    //         }
-
-    //         const unlisten = listen("draw_ghost", onEvent);
-    //         return () => {
-    //             unlisten.then(f => f());
-    //         };
-    //     },
-    //     []
-    // )
 
     const createGridElement = useCallback(
         ({ elementType, elementId, elementPlacement }) => {
@@ -181,7 +165,6 @@ export default function ElementEditor() {
         [selection]
     );
 
-   
     const usedKeys = Object.keys(gridData);
     const lowestRow = Object.values(gridData).map(({y, h}) => y + h).reduce((val, sav) => val < sav ? sav : val, 1);
 

@@ -1,10 +1,10 @@
 import { useContext } from "react";
-import { AppContext } from "../Systems/appContext";
+import { EditorContext } from "../Systems/appContext";
 
 export default function TextFieldInput({value, onChange, size}) {
     value ??= "";
     onChange ??= ((e) => {});
-    const {readOnly} = useContext(AppContext);
+    const {readOnly} = useContext(EditorContext);
 
     return(
         <textarea

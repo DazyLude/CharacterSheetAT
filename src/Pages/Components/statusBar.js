@@ -2,12 +2,12 @@ import { useContext } from "react";
 
 import { UseEffectButton } from "./CommonFormElements";
 
-import { AppContext, AppDispatchContext } from "./Systems/appContext";
+import { EditorContext, EditorDispatchContext } from "./Systems/appContext";
 
 
 export default function StatusBar() {
-    const contextDispatcher = useContext(AppDispatchContext);
-    const { readOnly, isLayoutLocked, isEditingElements } = useContext(AppContext);
+    const contextDispatcher = useContext(EditorDispatchContext);
+    const { readOnly, isLayoutLocked, isEditingElements } = useContext(EditorContext);
 
     return (
         <div

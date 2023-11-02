@@ -25,17 +25,17 @@ export function contextReducer(state, action) {
     return newState;
 }
 
-export const AppContext = createContext(null);
-export const AppDispatchContext = createContext(null);
+export const EditorContext = createContext(null);
+export const EditorDispatchContext = createContext(null);
 
-export function AppContextProvider({children}) {
+export function EditorContextProvider({children}) {
     const [context, contextDispatcher] = useReducer(contextReducer, initialContext);
 
     return (
-        <AppContext.Provider value={context}>
-            <AppDispatchContext.Provider value={contextDispatcher}>
+        <EditorContext.Provider value={context}>
+            <EditorDispatchContext.Provider value={contextDispatcher}>
                 {children}
-            </AppDispatchContext.Provider>
-        </AppContext.Provider>
+            </EditorDispatchContext.Provider>
+        </EditorContext.Provider>
     );
 }

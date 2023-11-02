@@ -9,8 +9,9 @@ import { getUIElementFromString } from "./Components/UIElements";
 
 import { listen } from '@tauri-apps/api/event';
 import { invoke } from "@tauri-apps/api";
+import { EditorContextProvider } from "./Components/Systems/appContext";
 
-export default function CharacterSheet({GhostElement}) {
+export default function CharacterSheet() {
     const [mousePosition, setMousePosition] = useState([0, 0]);
     const [characterData, setCharacterData] = useState({globals:{}, grid:{}, elements:{}});
     const characterDispatch = useCallback(
@@ -80,35 +81,36 @@ export default function CharacterSheet({GhostElement}) {
     );
 
     return (
-        <MousePositionContext.Provider value={mousePosition}>
-        <div style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 890px 1fr",
-        }}
-        >
-            <StatusBar characterData={characterData} characterDispatch={characterDispatch} />
-            <div
-                id="character-sheet"
-                style={{
-                    "gridColumn": "2",
-                    "margin": "auto",
-                    "width": "100%",
-                    "display": "grid",
-                    "gridTemplateColumns": `repeat(12, ${columnWidth}px)`,
-                    "gridAutoRows": `${rowHeight}px`,
-                    "columnGap": `${columnGap}px`,
-                    "rowGap": `${rowGap}px`,
-                    "gridAutoFlow": "column"
-                }}>
-                    <GridController gridData={characterData.grid}>
-                        {gridElementsList}
-                    </GridController>
-                    {GhostElement}
+        <EditorContextProvider>
+            <MousePositionContext.Provider value={mousePosition}>
+            <div style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 890px 1fr",
+            }}
+            >
+                <StatusBar characterData={characterData} characterDispatch={characterDispatch} />
+                <div
+                    id="character-sheet"
+                    style={{
+                        "gridColumn": "2",
+                        "margin": "auto",
+                        "width": "100%",
+                        "display": "grid",
+                        "gridTemplateColumns": `repeat(12, ${columnWidth}px)`,
+                        "gridAutoRows": `${rowHeight}px`,
+                        "columnGap": `${columnGap}px`,
+                        "rowGap": `${rowGap}px`,
+                        "gridAutoFlow": "column"
+                    }}>
+                        <GridController gridData={characterData.grid}>
+                            {gridElementsList}
+                        </GridController>
+                </div>
+                <div style={{gridColumn: "1 / -1", height: "500px"}}>
+                    {/* intentionally empty; this is a blank filler at the bottom */}
+                </div>
             </div>
-            <div style={{gridColumn: "1 / -1", height: "500px"}}>
-                {/* intentionally empty; this is a blank filler at the bottom */}
-            </div>
-        </div>
-        </MousePositionContext.Provider>
+            </MousePositionContext.Provider>
+        </EditorContextProvider>
     );
 }
