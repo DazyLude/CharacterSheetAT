@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 use std::sync::Mutex;
+use serde_json::{ Map, Value };
 use tauri::{ AppHandle, Manager };
 
 use crate::{
@@ -9,13 +10,13 @@ use crate::{
     command::CommandStack,
 };
 
-
 pub struct JSONFile {
     data: Mutex<CharacterData>,
     path: Mutex<PathBuf>,
     has_unsaved_chages: Mutex<bool>,
     history: Mutex<CommandStack<CharacterDataCommand>>
 }
+
 impl JSONFile {
     pub fn new() -> JSONFile {
         let empty_path: PathBuf = "".into();
@@ -107,8 +108,33 @@ pub fn load_json_file(app_handle: &AppHandle, v: CharacterData, p: PathBuf) {
     app_state.remove_not_saved_flag();
 }
 
-
 pub fn change_character_data(file: &JSONFile, change: ChangeJSON) -> Result<(), String> {
     let command = CharacterDataCommand::from_change_json(file.get_data(), change);
     file.change_data(command)
+}
+
+pub struct GridGhost {
+    style: Mutex<Map<String, Value>>,
+}
+
+impl GridGhost {
+    pub fn new() -> GridGhost {
+        GridGhost {
+            style: Mutex::from(Map::new())
+        }
+    }
+
+    pub fn set_new_style(&self, new_style: Map<String, Value>) {
+        *self.style.lock().unwrap() = new_style;
+    }
+
+    pub fn append_to_style(&self, addition: Map<String, Value>) {
+        let mut old_style = self.style.lock().unwrap().clone();
+        old_style.append(&mut addition.clone());
+        self.set_new_style(old_style)
+    }
+
+    pub fn get_style(&self) -> Map<String, Value> {
+        self.style.lock().unwrap().clone()
+    }
 }

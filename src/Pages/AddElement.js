@@ -4,7 +4,7 @@ import { UseEffectButton } from "./Components/CommonFormElements";
 import { invoke } from "@tauri-apps/api";
 import { listen } from '@tauri-apps/api/event';
 
-import { dispatcher } from "./Utils";
+import { dispatcher, placementStringFromXYWH, objectFromPlacementString } from "./Utils";
 
 const constructibleElements = {
     "none": { // an example element
@@ -98,9 +98,9 @@ export default function ElementEditor() {
     const [selection, setSelection] = useState("none");
     const [id, setId]= useState("");
     const [placement, setPlacement] = useState({x: 1, y: 1, w: 1, h: 1});
-    
+
     const [gridData, setGridData] = useState({});
-    
+
     useEffect( // requests data and subscribes to changes
     () => {
         invoke("request_data")
@@ -122,17 +122,75 @@ export default function ElementEditor() {
     []
     )
 
-    const dispatch = useCallback(
-        (args) => {
-            dispatcher(args);
+    const mergePlacement = useCallback(
+        (placementMerge) => {
+            const new_placement = {...placement, ...placementMerge};
+            setPlacement({...new_placement});
+            drawGhost(new_placement)
+        },
+        [placement]
+    )
+
+    const drawGhost = useCallback(
+        (new_placement) => {
+            invoke("request_ghost_drawn", {
+                ghostStyle: {
+                    "background": "green",
+                    "gridArea": placementStringFromXYWH(new_placement)
+                }})
+                .catch((e) => console.error(e));
         },
         []
-        );
+    )
+    
+    useEffect(
+        () => {
+            const onRequest = () => {drawGhost(placement);};
+            const unlisten = listen("add_ghost_request", onRequest);
+            return () => {
+                unlisten.then(f => f());
+            };
+        },
+        [drawGhost, placement]
+    )
 
-        const usedKeys = Object.keys(gridData);
-        const lowestRow = Object.values(gridData).map(({y, h}) => y + h).reduce((val, sav) => val < sav ? sav : val, 1);
 
-    useEffect(() => {setPlacement((p) => {return {...p, y: lowestRow}})}, [lowestRow]);
+    // useEffect( // requests data and subscribes to changes
+    //     () => {
+    //         const onEvent = (e) => {
+    //             const data = e.payload;
+    //             setPlacement(objectFromPlacementString(data.gridArea));
+    //         }
+
+    //         const unlisten = listen("draw_ghost", onEvent);
+    //         return () => {
+    //             unlisten.then(f => f());
+    //         };
+    //     },
+    //     []
+    // )
+
+    const createGridElement = useCallback(
+        ({ elementType, elementId, elementPlacement }) => {
+            const elementInitialData = { ...constructibleElements[selection].data };
+            dispatcher({type: "grid-merge", id: elementId, value: {type: elementType, ...elementPlacement}});
+            if (Object.keys(elementInitialData).length !== 0) {
+                dispatcher({type: "element-merge", id: elementId, value: elementInitialData});
+            }
+        },
+        [selection]
+    );
+
+   
+    const usedKeys = Object.keys(gridData);
+    const lowestRow = Object.values(gridData).map(({y, h}) => y + h).reduce((val, sav) => val < sav ? sav : val, 1);
+
+    useEffect(
+        () => {
+            mergePlacement({y: lowestRow})
+        },
+        [lowestRow]
+    );
 
     const isCreateButtonActive = () => {
         if (usedKeys.find((e) => e === id)) {
@@ -147,16 +205,6 @@ export default function ElementEditor() {
         return <option value={key} key={key}>{val.idCode}</option>
     })
 
-    const createGridElement = useCallback(
-        ({ elementType, elementId, elementPlacement }) => {
-            const elementInitialData = { ...constructibleElements[selection].data };
-            dispatch({type: "grid-merge", id: elementId, value: {type: elementType, ...elementPlacement}});
-            if (Object.keys(elementInitialData).length !== 0) {
-                dispatch({type: "element-merge", id: elementId, value: elementInitialData});
-            }
-        },
-        [dispatch, selection]
-    );
 
     return (
         <div style={{
@@ -176,7 +224,7 @@ export default function ElementEditor() {
                     value={selection}
                     onChange={(e) => {
                         setId(constructibleElements[e.target.value].idCode);
-                        setPlacement({...placement, ...constructibleElements[e.target.value].defaultSize})
+                        mergePlacement({...constructibleElements[e.target.value].defaultSize})
                         setSelection(e.target.value);
                     }}
                     >
@@ -193,7 +241,7 @@ export default function ElementEditor() {
                     min={1}
                     max={12}
                     value={placement.x}
-                    onChange={(e) => {setPlacement({...placement, x: parseInt(e.target.value)})}}
+                    onChange={(e) => {mergePlacement({x: parseInt(e.target.value)})}}
                     />
                 <label htmlFor="element-w">new element width (w): </label>
                 <input
@@ -203,7 +251,7 @@ export default function ElementEditor() {
                     max={13 - placement.x}
                     type="number"
                     value={placement.w}
-                    onChange={(e) => {setPlacement({...placement, w: parseInt(e.target.value)})}}
+                    onChange={(e) => {mergePlacement({w: parseInt(e.target.value)})}}
                     />
                 <label htmlFor="element-y">new element row (y): </label>
                 <input
@@ -212,7 +260,7 @@ export default function ElementEditor() {
                     type="number"
                     min={1}
                     value={placement.y}
-                    onChange={(e) => {setPlacement({...placement, y: parseInt(e.target.value)})}}
+                    onChange={(e) => {mergePlacement({y: parseInt(e.target.value)})}}
                     />
                 <label htmlFor="element-h">new element height (h): </label>
                 <input
@@ -221,7 +269,7 @@ export default function ElementEditor() {
                     type="number"
                     min={-1}
                     value={placement.h}
-                    onChange={(e) => {setPlacement({...placement, h: parseInt(e.target.value)})}}
+                    onChange={(e) => {mergePlacement({h: parseInt(e.target.value)})}}
                     />
             </div>
             {

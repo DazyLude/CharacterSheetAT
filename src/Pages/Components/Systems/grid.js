@@ -5,11 +5,10 @@ import { faUpDown, faUpRightAndDownLeftFromCenter, faUpDownLeftRight } from "@fo
 
 import { AppContext } from "./appContext";
 import { MousePositionContext } from "./mouseTracker";
-import { funnyConstants, dispatcher } from "../../Utils";
+import { funnyConstants, dispatcher, placementStringFromXYWH } from "../../Utils";
+import { listen } from "@tauri-apps/api/event";
 
 const GridControllerContext = createContext(() => {});
-export const GridContextReducer = createContext(() => {});
-
 
 // memoized version of gridElement
 // prevents rerenders when parents are updated
@@ -134,6 +133,7 @@ export function GridController({children, gridData}) {
     const [direction, setDirection] = useState("");
     const [activeElementId, setActiveElementId] = useState("");
     const [initialGhostPlacement, setInitialGhostPlacement] = useState({});
+    const [backendGhostStyle, setBackendGhostStyle] = useState({display: "none"});
 
     const gridControllerCallback = useCallback(
         ({callerId, direction, initialPlacement}) => {
@@ -142,14 +142,13 @@ export function GridController({children, gridData}) {
             setInitialGhostPlacement(initialPlacement);
         },
         []
-    )
+    );
 
     const releaseCallback = useCallback(
         (action) => {
             if (activeElementId === "") {
                 return;
             }
-            console.log(activeElementId);
             const {dx, dy, dh, dw} = action;
             const {x, y, h, w} = gridData[activeElementId];
             const id = activeElementId;
@@ -176,9 +175,35 @@ export function GridController({children, gridData}) {
         [gridData, activeElementId]
     )
 
+    const BackendGhost = createElement("div", {
+        style: {
+            opacity: "0.5",
+            zIndex: "11",
+            position: "relative",
+            ...backendGhostStyle
+        }
+    });
+
+    useEffect( // requests data and subscribes to changes
+        () => {
+            const onEvent = (e) => {
+                const data = e.payload;
+                console.log(data);
+                setBackendGhostStyle(data);
+            }
+
+            const unlisten = listen("draw_ghost", onEvent);
+            return () => {
+                unlisten.then(f => f());
+            };
+        },
+        []
+    )
+
     if (activeElementId=== "") { // does nothing
         return (
             <GridControllerContext.Provider value={gridControllerCallback}>
+                {BackendGhost}
                 {children}
             </GridControllerContext.Provider>
         )
@@ -190,6 +215,7 @@ export function GridController({children, gridData}) {
 
     return (
         <GridControllerContext.Provider value={gridControllerCallback}>
+            {BackendGhost}
             {controller}
             {children}
         </GridControllerContext.Provider>
@@ -215,7 +241,6 @@ function MovingController({releaseCallback, initialGhostPlacement}) {
 
     useEffect(
         () => {
-            console.log("been here twice")
             const release = (e) => {
                 const dx = Math.round((e.pageX - savedMousePosition[0]) / (columnGap + columnWidth));
                 const dy = Math.round((e.pageY - savedMousePosition[1]) / (rowGap + rowHeight));
@@ -340,8 +365,4 @@ function ResizingController({direction, releaseCallback, initialGhostPlacement})
     });
 
     return <>{snappedGhost}</>;
-}
-
-function placementStringFromXYWH({x, y, w, h}) {
-    return `${y} / ${x} / ${h === -1 ? -1 : y + h} / ${w === -1 ? -1 : x + w}`;
 }

@@ -4,18 +4,20 @@
 use std::path::PathBuf;
 
 use tauri::{ State, AppHandle };
+use serde_json::{ Value, Map };
 
 use app::windows;
-use app::app_state::{ change_character_data, JSONFile };
-use app::ipc::{ ChangeJSON, load_data, PayloadJSON, PressedKey };
+use app::app_state::{ change_character_data, JSONFile, GridGhost };
+use app::ipc::{ ChangeJSON, load_data, PayloadJSON, PressedKey, draw_ghost };
 use app::events::{ run_event_handler, setup_app_event_listeners, menu_event_handler, shortcut_handler };
 
 fn main() {
     let app = tauri::Builder::default()
         .setup(setup_app_event_listeners)
         .manage(JSONFile::new())
+        .manage(GridGhost::new())
         .on_menu_event(menu_event_handler)
-        .invoke_handler(tauri::generate_handler![change_data, request_data, request_path, make_path_relative, shortcut])
+        .invoke_handler(tauri::generate_handler![change_data, request_data, request_path, make_path_relative, shortcut, request_ghost_drawn])
         .build(tauri::generate_context!())
         .expect("error when building tauri application");
 
@@ -26,9 +28,9 @@ fn main() {
 
 #[tauri::command]
 fn change_data(app_handle: AppHandle, file: State<JSONFile>, payload: ChangeJSON) -> Result<(), String> {
-    println!("{:?}", payload);
     let _ = change_character_data(&file, payload);
-    load_data(&app_handle)
+    load_data(&app_handle);
+    Ok(())
 }
 
 #[tauri::command]
@@ -72,4 +74,13 @@ fn make_path_relative(app_state: State<JSONFile>, path: String) -> Result<String
 #[tauri::command]
 fn shortcut(app_handle: AppHandle, payload: PressedKey) {
     shortcut_handler(&app_handle, &payload);
+}
+
+#[tauri::command]
+fn request_ghost_drawn(app_handle: AppHandle, current_style: State<GridGhost>, ghost_style: Map<String, Value>, append: Option<Value>) {
+    match append {
+        Some(_) => current_style.append_to_style(ghost_style),
+        None => current_style.set_new_style(ghost_style),
+    }
+    draw_ghost(&app_handle)
 }

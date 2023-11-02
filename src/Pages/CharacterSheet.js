@@ -10,7 +10,7 @@ import { getUIElementFromString } from "./Components/UIElements";
 import { listen } from '@tauri-apps/api/event';
 import { invoke } from "@tauri-apps/api";
 
-export default function CharacterSheet() {
+export default function CharacterSheet({GhostElement}) {
     const [mousePosition, setMousePosition] = useState([0, 0]);
     const [characterData, setCharacterData] = useState({globals:{}, grid:{}, elements:{}});
     const characterDispatch = useCallback(
@@ -103,6 +103,7 @@ export default function CharacterSheet() {
                     <GridController gridData={characterData.grid}>
                         {gridElementsList}
                     </GridController>
+                    {GhostElement}
             </div>
             <div style={{gridColumn: "1 / -1", height: "500px"}}>
                 {/* intentionally empty; this is a blank filler at the bottom */}

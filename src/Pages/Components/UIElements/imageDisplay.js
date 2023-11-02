@@ -1,11 +1,16 @@
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState, useMemo } from "react";
 import { AppContext } from "../Systems/appContext";
 import { open } from "@tauri-apps/api/dialog";
 import { TextInput, UseEffectButton } from "../CommonFormElements";
 import { convertFileSrc, invoke } from "@tauri-apps/api/tauri";
 
 export default function ImageDisplay({characterData, characterDispatch, id}) {
-    const data = characterData.elements[id] ?? {};
+    const data = useMemo(
+        () => {
+            return characterData.elements[id] ?? {};
+        },
+        [characterData, id]
+    );
     const [imagePath, setImagePath] = useState(convertFileSrc(data.path) ?? "");
     const imageCaption = data.text ?? "";
     const { isEditingElements } = useContext(AppContext);
@@ -49,7 +54,8 @@ export default function ImageDisplay({characterData, characterDispatch, id}) {
             });
     }
 
-    const resolvePath = () => {
+    const resolvePath = useCallback(
+        () => {
         invoke("request_path", {path: data.path})
             .then((path) => {
                 setImagePath(convertFileSrc(path));
@@ -57,13 +63,15 @@ export default function ImageDisplay({characterData, characterDispatch, id}) {
             .catch((path) => {
                 setImagePath(convertFileSrc(path));
             });
-    }
+        },
+        [data]
+    );
 
     useEffect(
         () => {
             resolvePath()
         },
-        [data]
+        [resolvePath]
     );
 
     return (
@@ -72,7 +80,7 @@ export default function ImageDisplay({characterData, characterDispatch, id}) {
                 isEditingElements ?
                 <UseEffectButton action={setPath} title={"choose file"}/>
                 :
-                <img style={{margin: "auto", width: "100%", height: "90%", objectFit: "contain", overflow: "hidden"}} src={imagePath} />
+                <img alt={imagePath} style={{margin: "auto", width: "100%", height: "90%", objectFit: "contain", overflow: "hidden"}} src={imagePath} />
             }
             <TextInput value={imageCaption} onChange={captionChangeHandler} />
         </div>

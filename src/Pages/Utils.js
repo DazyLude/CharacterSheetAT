@@ -133,3 +133,18 @@ export const funnyConstants = {
     rowHeight: 25, // rows are 25px high
     rowGap: 10,
 }
+
+export function placementStringFromXYWH({x, y, w, h}) {
+    return `${y} / ${x} / ${h === -1 ? -1 : y + h} / ${w === -1 ? -1 : x + w}`;
+}
+
+export function objectFromPlacementString(placementString) {
+    let vars = placementString.split("/")
+        .map((val) => {return parseInt(val)});
+    return {
+        x: vars[1],
+        y: vars[0],
+        w: vars[3] === -1 ? -1 : vars[3] - vars[1],
+        h: vars[2] === -1 ? -1 : vars[2] - vars[0],
+    };
+}
