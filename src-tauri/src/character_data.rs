@@ -2,7 +2,7 @@ use crate::{command::Command, ipc::ChangeJSON};
 
 use serde_json::{Value, Map, json};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CharacterData {
     globals: Map<String, Value>,
     grid: Map<String, Value>,

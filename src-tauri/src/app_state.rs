@@ -12,8 +12,8 @@ use crate::{
 
 pub struct JSONFile {
     data: Mutex<CharacterData>,
+    original: Mutex<CharacterData>,
     path: Mutex<PathBuf>,
-    has_unsaved_chages: Mutex<bool>,
     history: Mutex<CommandStack<CharacterDataCommand>>
 }
 
@@ -22,16 +22,10 @@ impl JSONFile {
         let empty_path: PathBuf = "".into();
         JSONFile {
             data: Mutex::from(CharacterData::generate_empty()),
+            original: Mutex::from(CharacterData::generate_empty()),
             path: Mutex::from(empty_path),
-            has_unsaved_chages: Mutex::from(false),
             history: Mutex::from(CommandStack::new()),
         }
-    }
-
-    pub fn set_empty(&mut self) {
-        let empty_path: PathBuf = "".into();
-        self.data = Mutex::from(CharacterData::generate_empty());
-        self.path = Mutex::from(empty_path);
     }
 
     pub fn get_data(&self) -> CharacterData {
@@ -48,14 +42,12 @@ impl JSONFile {
 
     pub fn set_data(&self, data: CharacterData) {
         *self.data.lock().unwrap() = data;
-        *self.has_unsaved_chages.lock().unwrap() = true;
     }
 
     pub fn change_data(&self, command: CharacterDataCommand) -> Result<(), String> {
         let mut data = self.data.lock().unwrap().clone();
         self.history.lock().unwrap().do_one(command, &mut data)?;
         *self.data.lock().unwrap() = data;
-        *self.has_unsaved_chages.lock().unwrap() = true;
         Ok(())
     }
 
@@ -72,11 +64,11 @@ impl JSONFile {
     }
 
     pub fn remove_not_saved_flag(&self) {
-        *self.has_unsaved_chages.lock().unwrap() = false;
+        *self.original.lock().unwrap() = self.get_data();
     }
 
     pub fn has_unsaved_chages(&self) -> bool {
-        self.has_unsaved_chages.lock().unwrap().clone()
+        *self.original.lock().unwrap() != *self.data.lock().unwrap()
     }
 }
 

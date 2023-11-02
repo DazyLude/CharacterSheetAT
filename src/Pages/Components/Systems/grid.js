@@ -35,6 +35,10 @@ export function GridElement({id, children, position}) {
         [gridControllerCallback, id, position]
     );
 
+    return createElement(MovableAndResizableGridElement, {id, children, isLayoutLocked, placement, move, resize});
+};
+
+function MovableAndResizableGridElement({id, children, isLayoutLocked, placement, move, resize}) {
     return (
         <div className="grid-element" style={{position: "relative", gridArea: placement}}>
             {isLayoutLocked ?
@@ -89,7 +93,11 @@ export function GridElement({id, children, position}) {
                             onMouseDown={() => {move()}}
                             style={{display: "flex", flexDirection: "column", justifyContent: "space-around", background: "gray", width: "100%", height: "100%", cursor: "move"}}
                         >
-                            <div style={{height: "40px", textOverflow:"ellipsis", overflow: "hidden"}}>id: {id}</div>
+                            { id === undefined ?
+                                null
+                                :
+                                <div style={{height: "40px", textOverflow:"ellipsis", overflow: "hidden"}}>id: {id}</div>
+                            }
                             <FAI icon={faUpDownLeftRight} />
                         </div>
                         {/* chaotic neutral */}
@@ -125,8 +133,7 @@ export function GridElement({id, children, position}) {
             }
         </div>
     );
-};
-
+}
 // the plan is to move grid controlling behaviour here to prevent excessive rerenders of grid elements and their children
 // character sheet tracks mouse position, and shares it through mousePosition context
 export function GridController({children, gridData}) {
@@ -181,7 +188,7 @@ export function GridController({children, gridData}) {
             zIndex: "11",
             position: "relative",
             ...backendGhostStyle
-        }
+        },
     });
 
     useEffect( // requests data and subscribes to changes
