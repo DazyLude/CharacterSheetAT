@@ -1,6 +1,6 @@
 use tauri::{ Manager, State };
 use tauri::api::dialog::FileDialogBuilder;
-use crate::app_state::{JSONFile, load_json_file};
+use crate::app_state::{json_file::JSONFile, load_json_file};
 use crate::ipc::load_data;
 
 use tauri::AppHandle;

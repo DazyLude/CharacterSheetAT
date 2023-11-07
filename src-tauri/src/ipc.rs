@@ -1,6 +1,6 @@
 use serde_json::{Value, Map, json};
 use tauri::{ Manager, State };
-use crate::app_state::{JSONFile, GridGhost};
+use crate::app_state::{json_file::JSONFile, GridGhost};
 use std::path::PathBuf;
 
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
@@ -17,7 +17,7 @@ pub struct ChangeJSON {
     pub merge_object: Option<Map<String, Value>>,
 }
 
-#[derive(serde::Deserialize, Debug)]
+#[derive(serde::Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct PressedKey {
     ctrl_key: bool,
     alt_key: bool,
@@ -27,6 +27,9 @@ pub struct PressedKey {
 impl<'a> PressedKey {
     pub fn decompose(&'a self) -> (bool, bool, &'a str) {
         (self.ctrl_key, self.alt_key, self.key_code.as_str())
+    }
+    pub fn compose(ctrl_key: bool, alt_key: bool, key_code: String) -> PressedKey {
+        PressedKey { ctrl_key, alt_key, key_code }
     }
 
     pub fn from_json(v: Value) -> PressedKey {

@@ -1,6 +1,6 @@
 use tauri::{ AppHandle, CustomMenuItem, Menu, Submenu, Manager, WindowEvent, Window };
 use tauri::api::dialog::confirm;
-use crate::app_state::{ JSONFile, app_state_to_recovery_string };
+use crate::app_state::{ json_file::JSONFile, app_state_to_recovery_string };
 use crate::disk_interactions::save_startup_data;
 use crate::funny_constants::APP_NAME;
 use std::ffi::OsStr;

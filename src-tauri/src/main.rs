@@ -1,11 +1,12 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use app::app_state::loaded_shortcuts::LoadedShortcuts;
 use tauri::{ State, AppHandle };
 use serde_json::{ Value, Map };
 
 use app::windows;
-use app::app_state::{ change_character_data, JSONFile, GridGhost };
+use app::app_state::{ change_character_data, json_file::JSONFile, GridGhost };
 use app::ipc::{ ChangeJSON, load_data, PayloadJSON, draw_ghost, handle_non_default_request };
 use app::events::{ run_event_handler, setup_app_event_listeners, menu_event_handler };
 
@@ -14,6 +15,7 @@ fn main() {
         .setup(setup_app_event_listeners)
         .manage(JSONFile::new())
         .manage(GridGhost::new())
+        .manage(LoadedShortcuts::get_default())
         .on_menu_event(menu_event_handler)
         .invoke_handler(tauri::generate_handler![change_data, request_data, request_ghost_drawn])
         .build(tauri::generate_context!())

@@ -1,6 +1,7 @@
 use tauri::{ Manager, AppHandle, RunEvent, App, WindowMenuEvent };
 
-use crate::app_state::{JSONFile, load_app_state_from_recovery_string, load_json_file};
+use crate::app_state::loaded_shortcuts::LoadedShortcuts;
+use crate::app_state::{json_file::JSONFile, load_app_state_from_recovery_string, load_json_file};
 use crate::character_data::CharacterData;
 use crate::disk_interactions::{load_startup_data, open_character_sheet, save_character_sheet, save_as_character_sheet};
 use crate::ipc::{ load_data, PressedKey };
@@ -84,11 +85,11 @@ pub fn run_event_handler(app_handle: &AppHandle, event: RunEvent) {
 pub fn setup_app_event_listeners(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     app.listen_global("error", log_tauri_error);
     let handle = app.handle();
-    app.listen_global("keypress", move |e| {
+    app.listen_global("keypress", move |e| { // keypress event
         let payload_contents = match e.payload() {
             Some(s) => s,
             None => {
-                handle.trigger_global("error", Some("Empty payload on the keypress event".to_string()));
+                handle.trigger_global("error", Some("empty payload on the keypress event".to_string()));
                 return;
             }
         };
@@ -101,24 +102,30 @@ pub fn setup_app_event_listeners(app: &mut App) -> Result<(), Box<dyn std::error
         };
         let pressed_key = PressedKey::from_json(payload_as_json);
         shortcut_handler(&handle, &pressed_key);
-    });
+    }); // keypress event
     Ok(())
 }
 
-pub fn shortcut_handler(app_handle: &AppHandle, payload: &PressedKey) {
-    match payload.decompose() {
-        (true, false, "KeyS") => {
+pub fn shortcut_handler(app_handle: &AppHandle, key: &PressedKey) {
+    let state = app_handle.state::<LoadedShortcuts>();
+    let action = match state.get_entry(key) {
+        Some(a) => a,
+        None => return,
+    };
+
+    match action.as_str() {
+        "save" => {
             let _ = save_character_sheet(app_handle.state::<JSONFile>());
         },
-        (true, false, "KeyZ") => {
+        "undo" => {
             app_handle.state::<JSONFile>().go_back();
             let _ = load_data(&app_handle);
         },
-        (true, false, "KeyY") => {
+        "redo" => {
             app_handle.state::<JSONFile>().go_forward();
             let _ = load_data(&app_handle);
         },
-        (true, false, "KeyE") => {
+        "open-add" => {
             let h = app_handle.clone();
             let _ = match app_handle.get_window("add_element") {
                 Some(w) => {
@@ -128,7 +135,7 @@ pub fn shortcut_handler(app_handle: &AppHandle, payload: &PressedKey) {
                 None => windows::add_element::builder(h),
             };
         }
-        (true, false, "KeyD") => {
+        "open-rem" => {
             let h = app_handle.clone();
             let _ = match app_handle.get_window("remove_element") {
                 Some(w) => {
@@ -138,13 +145,13 @@ pub fn shortcut_handler(app_handle: &AppHandle, payload: &PressedKey) {
                 None => windows::remove_element::builder(h),
             };
         }
-        (true, false, "Digit1") => {
+        "mod1" => {
             crate::ipc::change_editor_context(app_handle, "readOnly-switch".to_string());
         }
-        (true, false, "Digit2") => {
+        "mod2" => {
             crate::ipc::change_editor_context(app_handle, "layoutEdit-switch".to_string());
         }
-        (true, false, "Digit3") => {
+        "mod3" => {
             crate::ipc::change_editor_context(app_handle, "elementEdit-switch".to_string());
         }
         _ => return,
