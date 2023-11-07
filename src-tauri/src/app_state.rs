@@ -21,9 +21,11 @@ impl JSONFile {
     pub fn new() -> JSONFile {
         let empty_path: PathBuf = "".into();
         JSONFile {
-            data: Mutex::from(CharacterData::generate_empty()),
+            // persistent data
             original: Mutex::from(CharacterData::generate_empty()),
             path: Mutex::from(empty_path),
+            // session data
+            data: Mutex::from(CharacterData::generate_empty()),
             history: Mutex::from(CommandStack::new()),
         }
     }

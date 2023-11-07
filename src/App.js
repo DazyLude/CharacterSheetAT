@@ -3,13 +3,15 @@ import { useEffect } from 'react';
 
 import { CharacterSheet, AddElement, RemoveElement } from './Pages';
 import { invoke } from '@tauri-apps/api';
+import { emit } from '@tauri-apps/api/event';
 
 function App() {
     useEffect(
         () => {
             const onKeyDown = (e) => {
                 if (e.ctrlKey || e.altKey) {
-                    invoke('shortcut', { payload: { ctrl_key: e.ctrlKey, alt_key: e.altKey, key_code: e.code } });
+                    emit("keypress", { ctrl_key: e.ctrlKey, alt_key: e.altKey, key_code: e.code });
+                    // invoke('shortcut', { payload: { ctrl_key: e.ctrlKey, alt_key: e.altKey, key_code: e.code } });
                 }
             }
             window.addEventListener("keydown", onKeyDown);

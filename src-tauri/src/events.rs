@@ -83,6 +83,25 @@ pub fn run_event_handler(app_handle: &AppHandle, event: RunEvent) {
 
 pub fn setup_app_event_listeners(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     app.listen_global("error", log_tauri_error);
+    let handle = app.handle();
+    app.listen_global("keypress", move |e| {
+        let payload_contents = match e.payload() {
+            Some(s) => s,
+            None => {
+                handle.trigger_global("error", Some("Empty payload on the keypress event".to_string()));
+                return;
+            }
+        };
+        let payload_as_json = match serde_json::from_str(payload_contents) {
+            Ok(p) => p,
+            Err(e) => {
+                handle.trigger_global("error", Some(e.to_string()));
+                return;
+            },
+        };
+        let pressed_key = PressedKey::from_json(payload_as_json);
+        shortcut_handler(&handle, &pressed_key);
+    });
     Ok(())
 }
 

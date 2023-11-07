@@ -37,13 +37,13 @@ export default function ImageDisplay({characterData, characterDispatch, id}) {
             if (providedPath === null) {
                 return;
             }
-            invoke("make_path_relative", {path: providedPath})
+            invoke("request_data", {requestedData: "rel_path", requestedDataArgument: providedPath})
                 .then((relative_path) => {
-                    imageChangeHandler(relative_path);
+                    imageChangeHandler(relative_path.data);
                 })
                 .catch((absolute_path) => {
                     console.error("Provided path is not in the same/children directory relative to the json: " + absolute_path);
-                    imageChangeHandler(absolute_path);
+                    imageChangeHandler(absolute_path.data);
                 });
         }
 
@@ -56,12 +56,12 @@ export default function ImageDisplay({characterData, characterDispatch, id}) {
 
     const resolvePath = useCallback(
         () => {
-        invoke("request_path", {path: data.path})
+        invoke("request_data", {requestedData: "abs_path", requestedDataArgument: data.path})
             .then((path) => {
-                setImagePath(convertFileSrc(path));
+                setImagePath(convertFileSrc(path.data));
             })
             .catch((path) => {
-                setImagePath(convertFileSrc(path));
+                setImagePath(convertFileSrc(path.data));
             });
         },
         [data]

@@ -26,7 +26,7 @@ pub fn run_event_handler(app_handle: &AppHandle, label: String, event: WindowEve
                     app_handle.state::<GridGhost>().set_window("adder".to_string());
                     ipc::add_ghost_request(app_handle);
                 }
-                WindowEvent::CloseRequested { .. } | WindowEvent::Focused(false) => {
+                WindowEvent::CloseRequested { .. } => {
                     app_handle.state::<GridGhost>().append_to_style(
                         Map::from(json!({"display": "none"}).as_object().unwrap().clone()),
                         "adder".to_string()
