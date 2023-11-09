@@ -1,31 +1,32 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { EditorContext } from "../Systems/appContext";
 
 export default function TextFieldInput({value, onChange, size}) {
-    const [selectionStart, setSelectionStart] = useState(5);
-    const elementRef = useRef(null);
-    const {readOnly} = useContext(EditorContext);
-    onChange ??= ((e) => {});
     value ??= "";
+    onChange ??= ((e) => {});
+    const [internalValue, setInternalValue] = useState(value);
+    const {readOnly} = useContext(EditorContext);
 
     useEffect(
         () => {
-            const input = elementRef.current;
-            if (input) {
-                input.setSelectionRange(selectionStart, selectionStart);
-            }
+            setInternalValue(value);
         },
-        [elementRef, selectionStart, value]
+        [value]
     )
 
     return(
         <textarea
             style={{...size}}
             readOnly={readOnly}
-            value={value}
-            ref={elementRef}
-            onFocus={(e) => {e.target.selectionStart = selectionStart}}
-            onChange={(e) => {if(!readOnly) {setSelectionStart(e.target.selectionStart); onChange(e.target.value);}}}
+            value={internalValue}
+            onBlur={(_e) => {if (internalValue !== value) {onChange(internalValue)}}}
+            onChange={
+                (e) => {
+                    if(!readOnly) {
+                        setInternalValue(e.target.value);
+                    }
+                }
+            }
         />
     );
 }
