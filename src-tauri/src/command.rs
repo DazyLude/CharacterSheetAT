@@ -53,7 +53,7 @@ impl<T> CommandStack<T> where T: Command {
         if self.distance_from_front == self.stack.len() {
             return;
         }
-        // this has been done once already (when do one is executed), so no check needed
+        // this has been done once already (when do_one is executed), so no check needed
         let _ = self.stack.get(self.distance_from_front).unwrap().execute(apply_to);
         self.distance_from_front += 1;
 

@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useMemo, createElement } from "react";
 import { funnyConstants, dispatcher } from "./Utils";
 
-import { GridController, GridElementMemo } from "./Components/Systems/grid";
+import { GhostController, GridController, GridElementMemo } from "./Components/Systems/grid";
 import { MousePositionContext } from "./Components/Systems/mouseTracker";
 
 import { getUIElementFromString } from "./Components/UIElements";
@@ -103,6 +103,7 @@ export default function CharacterSheet() {
                         <GridController gridData={characterData.grid}>
                             {gridElementsList}
                         </GridController>
+                        <GhostController />
                 </div>
                 <div style={{gridColumn: "1 / -1", height: "500px"}}>
                     {/* intentionally empty; this is a blank filler at the bottom */}

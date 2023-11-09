@@ -4,5 +4,4 @@ pub mod disk_interactions;
 pub mod app_state;
 pub mod command;
 pub mod windows;
-pub mod events;
 pub mod funny_constants;

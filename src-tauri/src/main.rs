@@ -1,23 +1,19 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use app::app_state::loaded_shortcuts::LoadedShortcuts;
 use tauri::{ State, AppHandle };
-use serde_json::{ Value, Map };
+use serde_json::Value;
 
 use app::windows;
-use app::app_state::{ change_character_data, json_file::JSONFile, GridGhost };
-use app::ipc::{ ChangeJSON, load_data, PayloadJSON, draw_ghost, handle_non_default_request };
-use app::events::{ run_event_handler, setup_app_event_listeners, menu_event_handler };
+use app::app_state::{ with_managed_states, change_character_data, editor_state::EditorState };
+use app::ipc::{ event_emitters::load_data, ChangeJSON, PayloadJSON, handle_non_default_request };
+use app::ipc::{ run_event_handler, setup_app_event_listeners, menu_event_handler };
 
 fn main() {
-    let app = tauri::Builder::default()
+    let app = with_managed_states()
         .setup(setup_app_event_listeners)
-        .manage(JSONFile::new())
-        .manage(GridGhost::new())
-        .manage(LoadedShortcuts::get_default())
         .on_menu_event(menu_event_handler)
-        .invoke_handler(tauri::generate_handler![change_data, request_data, request_ghost_drawn])
+        .invoke_handler(tauri::generate_handler![change_data, request_data])
         .build(tauri::generate_context!())
         .expect("error when building tauri application");
 
@@ -27,14 +23,14 @@ fn main() {
 }
 
 #[tauri::command]
-fn change_data(app_handle: AppHandle, file: State<JSONFile>, payload: ChangeJSON) -> Result<(), String> {
+fn change_data(app_handle: AppHandle, file: State<EditorState>, payload: ChangeJSON) -> Result<(), String> {
     let _ = change_character_data(&file, payload);
     load_data(&app_handle);
     Ok(())
 }
 
 #[tauri::command]
-fn request_data(app_state: State<JSONFile>, requested_data: Option<String>, requested_data_argument: Option<Value>) -> Result<PayloadJSON, String> {
+fn request_data(app_state: State<EditorState>, requested_data: Option<String>, requested_data_argument: Option<Value>) -> Result<PayloadJSON, String> {
     match requested_data {
         Some(data) => {
             handle_non_default_request(app_state, data.as_str(), requested_data_argument)
@@ -45,14 +41,4 @@ fn request_data(app_state: State<JSONFile>, requested_data: Option<String>, requ
             })
         }
     }
-}
-
-#[tauri::command]
-fn request_ghost_drawn(app_handle: AppHandle, current_style: State<GridGhost>, ghost_style: Map<String, Value>, append: Option<Value>) {
-    let current_window = current_style.get_window();
-    match append {
-        Some(_) => current_style.append_to_style(ghost_style, current_window),
-        None => current_style.set_new_style(ghost_style, current_window),
-    }
-    draw_ghost(&app_handle)
 }

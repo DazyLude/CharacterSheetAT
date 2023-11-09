@@ -95,63 +95,31 @@ const constructibleElements = {
 }
 
 export default function ElementEditor() {
+    const [elementEditorState, setState] = useState({});
     const [selection, setSelection] = useState("none");
-    const [id, setId]= useState("");
-    const [placement, setPlacement] = useState({x: 1, y: 1, w: 1, h: 1});
-
-    const [gridData, setGridData] = useState({});
+    const placement = elementEditorState.placement ?? {x: 1, y: 1, w: 1, h: 1};
+    const id = elementEditorState.id ?? "";
+    const isActive = elementEditorState.active ?? false;
 
     useEffect( // requests data and subscribes to changes
-    () => {
-        invoke("request_data")
-        .then((e) => setGridData(e.data.grid))
-        .catch((e) => console.error(e));
-
-        const onLoad = (e) => {
-            const data = e.payload.data.grid;
-            if (data !== undefined) {
-                setGridData(data);
-            }
-        }
-
-        const unlisten = listen("new_character_sheet", onLoad);
-        return () => {
-            unlisten.then(f => f());
-        };
-    },
-    []
-    )
-
-    const mergePlacement = useCallback(
-        (placementMerge) => {
-            const new_placement = {...placement, ...placementMerge};
-            setPlacement({...new_placement});
-            drawGhost(new_placement)
-        },
-        [placement]
-    )
-
-    const drawGhost = useCallback(
-        (new_placement) => {
-            invoke("request_ghost_drawn", {
-                ghostStyle: {
-                    "background": "green",
-                    "gridArea": placementStringFromXYWH(new_placement)
-                }})
-                .catch((e) => console.error(e));
-        },
-        []
-    );
-
-    useEffect(
         () => {
-            const onRequest = () => {drawGhost(placement);};
-            const unlisten = listen("add_ghost_request", onRequest);
+            invoke("request_data", {requestedData: "add-element"})
+                .then((e) => setState(e.data))
+                .catch((e) => console.error(e));
+
+            const onLoad = (e) => {
+                const data = e.payload.data;
+                if (data !== undefined) {
+                    setState(data);
+                }
+            }
+
+            const unlisten = listen("new_add_element_data", onLoad);
             return () => {
                 unlisten.then(f => f());
             };
         },
-        [drawGhost, placement]
+        []
     )
 
     const createGridElement = useCallback(

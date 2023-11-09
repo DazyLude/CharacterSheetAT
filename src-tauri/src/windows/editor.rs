@@ -1,6 +1,6 @@
 use tauri::{ AppHandle, CustomMenuItem, Menu, Submenu, Manager, WindowEvent, Window };
 use tauri::api::dialog::confirm;
-use crate::app_state::{ json_file::JSONFile, app_state_to_recovery_string };
+use crate::app_state::{ editor_state::EditorState, app_state_to_recovery_string };
 use crate::disk_interactions::save_startup_data;
 use crate::funny_constants::APP_NAME;
 use std::ffi::OsStr;
@@ -73,7 +73,7 @@ pub fn run_event_handler(app_handle: &AppHandle, event: WindowEvent) {
                 let _ = w.close();
             };
 
-            if app_handle.state::<JSONFile>().has_unsaved_chages() {
+            if app_handle.state::<EditorState>().has_unsaved_chages() {
                 let window_clone = window.clone();
                 let app_handle_clone = window.app_handle();
                 confirm(
@@ -97,8 +97,8 @@ pub fn run_event_handler(app_handle: &AppHandle, event: WindowEvent) {
 
 pub fn after_events_cleared(app_handle: &AppHandle, window_handle: &Window) {
     let mut title_suffix = "".to_string();
-    title_suffix += app_handle.state::<JSONFile>().get_path().file_name().and_then(OsStr::to_str).unwrap_or("not_named");
-    if app_handle.state::<JSONFile>().has_unsaved_chages() {
+    title_suffix += app_handle.state::<EditorState>().get_path().file_name().and_then(OsStr::to_str).unwrap_or("not_named");
+    if app_handle.state::<EditorState>().has_unsaved_chages() {
         title_suffix += "*";
     }
     let _ = window_handle.set_title(&(APP_NAME.to_string() + " editor: " + &title_suffix));
