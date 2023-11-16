@@ -1,7 +1,8 @@
 use tauri::{ Manager, State };
 use tauri::api::dialog::FileDialogBuilder;
-use crate::app_state::{editor_state::EditorState, load_json_file};
+use crate::app_state::load_json_file;
 use crate::ipc::event_emitters::load_data;
+use crate::windows::EditorStateSync;
 
 use tauri::AppHandle;
 use serde_json::Value;
@@ -82,7 +83,7 @@ pub fn open_character_sheet(window: tauri::Window) {
     });
 }
 
-pub fn save_character_sheet(app_state: State<EditorState>) -> Result<(), String> {
+pub fn save_character_sheet(app_state: State<EditorStateSync>) -> Result<(), String> {
     let data = serde_json::to_string(&app_state.get_data().as_value()).unwrap();
     let path = app_state.get_path();
     if path.to_str() == Some("") {return Ok(());}
@@ -99,15 +100,15 @@ pub fn save_character_sheet(app_state: State<EditorState>) -> Result<(), String>
 pub fn save_as_character_sheet(window: tauri::Window) {
     FileDialogBuilder::new().save_file(move |file_path| {
         let app = &window.app_handle();
-        let data_json = app.state::<EditorState>().get_data().as_value();
+        let data_json = app.state::<EditorStateSync>().get_data().as_value();
         let data = serde_json::to_string(&data_json).unwrap();
         match file_path {
             Some(p) => {
                 match std::fs::write(&p, &data) {
                     Err(_e) => {},
                     Ok(_) => {
-                        app.state::<EditorState>().set_path(p);
-                        app.state::<EditorState>().remove_not_saved_flag();
+                        app.state::<EditorStateSync>().set_path(p);
+                        app.state::<EditorStateSync>().remove_not_saved_flag();
                     },
                 };
             },

@@ -1,12 +1,11 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use app::app_state::editor_state;
 use tauri::{ State, AppHandle, Manager };
 use serde_json::Value;
 
-use app::windows;
-use app::app_state::{ with_managed_states, change_character_data, editor_state::EditorState };
+use app::windows::{ *, CSATWindow };
+use app::app_state::{ with_managed_states, change_character_data };
 use app::ipc::{ event_emitters::load_data, ChangeJSON, PayloadJSON, handle_non_default_request };
 use app::ipc::{ run_event_handler, setup_app_event_listeners, menu_event_handler };
 
@@ -18,13 +17,13 @@ fn main() {
         .build(tauri::generate_context!())
         .expect("error when building tauri application");
 
-    let _ = windows::editor::builder(app.handle());
+    let _ = EditorWindow::builder(&app.handle());
 
     app.run(run_event_handler);
 }
 
 #[tauri::command]
-fn change_data(app_handle: AppHandle, file: State<EditorState>, payload: ChangeJSON) -> Result<(), String> {
+fn change_data(app_handle: AppHandle, file: State<EditorStateSync>, payload: ChangeJSON) -> Result<(), String> {
     let _ = change_character_data(&file, payload);
     load_data(&app_handle);
     Ok(())
@@ -37,7 +36,7 @@ fn request_data(app_handle: AppHandle, requested_data: Option<String>, requested
             handle_non_default_request(app_handle, data.as_str(), requested_data_argument)
         }
         None => {
-            let state = app_handle.state::<EditorState>();
+            let state = app_handle.state::<EditorStateSync>();
             return Ok(PayloadJSON {
                 data: state.get_data().as_value(),
             })

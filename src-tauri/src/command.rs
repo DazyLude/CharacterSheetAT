@@ -2,38 +2,39 @@ use std::collections::VecDeque;
 
 const DEFAULT_STACK_CAPACITY : usize = 50;
 
-pub trait Command {
-    type Commandable;
-    fn execute(&self, apply_to: &mut Self::Commandable) -> Result<(), String>;
-    fn undo(&self, apply_to: &mut Self::Commandable);
+pub trait Command<T> {
+    fn execute(&self, apply_to: &mut T) -> Result<(), String>;
+    fn undo(&self, apply_to: &mut T);
 }
 
 /// stack - currently memorised commands
 /// bottom_size - amount of commands that are left before reverting to the starting state
 /// stack_size_limit - amount of commands that are saved in the stack before it starts discarding ones in the beginning
-pub struct CommandStack<T> where T: Command {
+pub struct CommandStack<T, C> where T: Command<C> {
+    pub data: C,
     stack: VecDeque<T>,
     distance_from_front: usize,
     stack_size_limit: usize,
 }
 
-impl<T> CommandStack<T> where T: Command {
-    pub fn new() -> CommandStack<T> {
+impl<T, C> CommandStack<T, C> where T: Command<C> {
+    pub fn with_initial(data: C) -> CommandStack<T, C> {
         CommandStack {
+            data,
             stack: VecDeque::with_capacity(DEFAULT_STACK_CAPACITY),
             distance_from_front: 0,
             stack_size_limit: DEFAULT_STACK_CAPACITY,
         }
     }
-    pub fn undo_one(&mut self, apply_to: &mut T::Commandable) {
+    pub fn undo_one(&mut self) {
         if self.distance_from_front == 0 {
             return;
         }
         self.distance_from_front -= 1;
-        self.stack.get(self.distance_from_front).unwrap().undo(apply_to);
+        self.stack.get(self.distance_from_front).unwrap().undo(&mut self.data);
     }
-    pub fn do_one(&mut self, one: T, apply_to: &mut T::Commandable) -> Result<(), String> {
-        one.execute(apply_to)?;
+    pub fn do_one(&mut self, one: T) -> Result<(), String> {
+        one.execute(&mut self.data)?;
         self.push_one(one);
         Ok(())
     }
@@ -49,12 +50,12 @@ impl<T> CommandStack<T> where T: Command {
         }
     }
 
-    pub fn redo_one(&mut self, apply_to: &mut T::Commandable) {
+    pub fn redo_one(&mut self) {
         if self.distance_from_front == self.stack.len() {
             return;
         }
         // this has been done once already (when do_one is executed), so no check needed
-        let _ = self.stack.get(self.distance_from_front).unwrap().execute(apply_to);
+        let _ = self.stack.get(self.distance_from_front).unwrap().execute(&mut self.data);
         self.distance_from_front += 1;
 
     }

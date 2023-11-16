@@ -4,14 +4,13 @@ use tauri::{ Manager, State, AppHandle, RunEvent, App, WindowMenuEvent };
 use std::path::PathBuf;
 
 use crate::app_state::{
-    editor_state::EditorState,
     loaded_shortcuts::LoadedShortcuts,
     load_app_state_from_recovery_string,
     load_json_file
 };
 use crate::character_data::CharacterData;
 use crate::disk_interactions::{load_startup_data, open_character_sheet, save_character_sheet, save_as_character_sheet};
-use crate::windows::{self, CSATWindow, AddElementStateSync};
+use crate::windows::{self, CSATWindow, AddElementStateSync, EditorStateSync};
 
 
 /// Just a JSON value
@@ -95,7 +94,7 @@ pub fn menu_event_handler(event: WindowMenuEvent) {
             open_character_sheet(event.window().clone());
         }
         "save" => {
-            let _ = save_character_sheet(event.window().app_handle().state::<EditorState>());
+            let _ = save_character_sheet(event.window().app_handle().state::<EditorStateSync>());
         }
         "save as" => {
             save_as_character_sheet(event.window().clone());
@@ -109,12 +108,12 @@ pub fn menu_event_handler(event: WindowMenuEvent) {
         }
         "undo" => {
             let app_handle = event.window().app_handle();
-            app_handle.state::<EditorState>().go_back();
+            app_handle.state::<EditorStateSync>().go_back();
             let _ = event_emitters::load_data(&app_handle);
         }
         "redo" => {
             let app_handle = event.window().app_handle();
-            app_handle.state::<EditorState>().go_forward();
+            app_handle.state::<EditorStateSync>().go_forward();
             let _ = event_emitters::load_data(&app_handle);
         },
         "add_element" => {
@@ -152,12 +151,12 @@ pub fn menu_event_handler(event: WindowMenuEvent) {
 
 pub mod event_emitters {
     //! Global event emitters that are listened to at the frontend should be defined in this module.
-    use crate::app_state::editor_state::EditorState;
+    use crate::windows::EditorStateSync;
     use super::{PayloadJSON, emit_tauri_error};
     use tauri::Manager;
 
     pub fn load_data(app_handle: &tauri::AppHandle) {
-        let data = app_handle.state::<EditorState>().get_data().as_value();
+        let data = app_handle.state::<EditorStateSync>().get_data().as_value();
         app_handle
             .emit_all("new_character_sheet", PayloadJSON { data } )
             .unwrap_or_else(|error| emit_tauri_error(app_handle, error.to_string()));
@@ -220,14 +219,14 @@ fn shortcut_handler(app_handle: &AppHandle, key: &PressedKey) {
 
     match action.as_str() {
         "save" => {
-            let _ = save_character_sheet(app_handle.state::<EditorState>());
+            let _ = save_character_sheet(app_handle.state::<EditorStateSync>());
         },
         "undo" => {
-            app_handle.state::<EditorState>().go_back();
+            app_handle.state::<EditorStateSync>().go_back();
             let _ = event_emitters::load_data(&app_handle);
         },
         "redo" => {
-            app_handle.state::<EditorState>().go_forward();
+            app_handle.state::<EditorStateSync>().go_forward();
             let _ = event_emitters::load_data(&app_handle);
         },
         "open-add" => {
@@ -275,11 +274,11 @@ pub fn handle_non_default_request(
     match requested_data {
         "all" => { // same as default
             return Ok(PayloadJSON {
-                data: app_handle.state::<EditorState>().get_data().as_value(),
+                data: app_handle.state::<EditorStateSync>().get_data().as_value(),
             });
         }
         "abs_path" => {
-            let editor_state = app_handle.state::<EditorState>();
+            let editor_state = app_handle.state::<EditorStateSync>();
             let path = match requested_data_argument.as_ref().and_then(Value::as_str) {
                 Some(p) => p.to_string(),
                 None => return Err(format!("incorrect data argument when requesting absolute path")),
@@ -289,7 +288,7 @@ pub fn handle_non_default_request(
             });
         }
         "rel_path" => {
-            let editor_state = app_handle.state::<EditorState>();
+            let editor_state = app_handle.state::<EditorStateSync>();
             let path = match requested_data_argument.as_ref().and_then(Value::as_str) {
                 Some(p) => p.to_string(),
                 None => return Err(format!("incorrect data argument when requesting relative path")),
@@ -308,7 +307,7 @@ pub fn handle_non_default_request(
     }
 }
 
-fn request_path(app_state: State<EditorState>, path: String) -> Result<String, String> {
+fn request_path(app_state: State<EditorStateSync>, path: String) -> Result<String, String> {
     let child_path : PathBuf = path.into();
     if child_path.is_absolute() {
         return Err(child_path.to_string_lossy().to_string());
@@ -318,7 +317,7 @@ fn request_path(app_state: State<EditorState>, path: String) -> Result<String, S
     Ok(json_path.join::<PathBuf>(child_path).to_string_lossy().to_string())
 }
 
-fn make_path_relative(app_state: State<EditorState>, path: String) -> Result<String, String> {
+fn make_path_relative(app_state: State<EditorStateSync>, path: String) -> Result<String, String> {
     let mut json_path : PathBuf = app_state.get_path();
     json_path.pop();
     let child_path : PathBuf = path.into();

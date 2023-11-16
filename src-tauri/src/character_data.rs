@@ -70,9 +70,8 @@ impl CharacterDataCommand {
     }
 }
 
-impl Command for CharacterDataCommand {
-    type Commandable = CharacterData;
-    fn execute(&self, apply_to: &mut Self::Commandable) -> Result<(), String>{
+impl Command<CharacterData> for CharacterDataCommand {
+    fn execute(&self, apply_to: &mut CharacterData) -> Result<(), String>{
         match self {
             Self::Simple(command) => {
                 let ChangeJSON { value_type, id, value_name, new_value, merge_object } = *command.forward_change.clone();
@@ -107,7 +106,7 @@ impl Command for CharacterDataCommand {
         }
 
     }
-    fn undo(&self, apply_to: &mut Self::Commandable) {
+    fn undo(&self, apply_to: &mut CharacterData) {
         match self {
             Self::Simple(command) => {
                 *apply_to = command.old_data.clone();

@@ -5,7 +5,7 @@ use serde_json::{Value, Map};
 
 use crate::{
     character_data::CharacterDataCommand,
-    app_state::editor_state::EditorState,
+    windows::EditorStateSync,
     ipc::{get_json_from_event, emit_tauri_error}
 };
 
@@ -64,7 +64,7 @@ fn on_add_new_element_event(app_handle: &AppHandle, event: tauri::Event) {
         Some(state) => state.get_cloned_state(),
         None => return,
     };
-    let old_editor_data = match app_handle.try_state::<EditorState>() {
+    let old_editor_data = match app_handle.try_state::<EditorStateSync>() {
         Some(state) => state.get_data(),
         None => return,
     };
@@ -72,7 +72,8 @@ fn on_add_new_element_event(app_handle: &AppHandle, event: tauri::Event) {
     let element_data = get_json_from_event(event).as_ref().and_then(Value::as_object).cloned();
 
     let add = CharacterDataCommand::add_element(old_editor_data, element_data, ae_state.id.clone(), ae_state.get_placement_as_map());
-    let _ = app_handle.state::<EditorState>().change_data(add);
+    app_handle.state::<AddElementStateSync>().set_inactive(app_handle);
+    let _ = app_handle.state::<EditorStateSync>().change_data(add);
 }
 
 fn on_change_state_event(handle: &AppHandle, event: tauri::Event) {
@@ -117,6 +118,12 @@ impl AddElementStateSync {
     pub fn set_new_state(&self, new_state: AddElementState, handle: &AppHandle) {
         let _ = handle.emit_to("add_element", "new_data", new_state.as_json());
         *self.state.lock().unwrap() = new_state;
+    }
+
+    pub fn set_inactive(&self, handle: &AppHandle) {
+        let mut new_state = self.state.lock().unwrap().clone();
+        new_state.is_active = false;
+        self.set_new_state(new_state, handle)
     }
 
     pub fn new() -> Self {
@@ -177,7 +184,7 @@ impl AddElementState {
 }
 
 fn check_id_availability(app_handle: &AppHandle, id: &String) -> bool {
-    match app_handle.try_state::<EditorState>() {
+    match app_handle.try_state::<EditorStateSync>() {
         Some(st) => st.get_data().check_id(id),
         None => false,
     }
