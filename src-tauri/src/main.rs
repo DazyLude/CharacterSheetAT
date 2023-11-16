@@ -1,7 +1,8 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use tauri::{ State, AppHandle };
+use app::app_state::editor_state;
+use tauri::{ State, AppHandle, Manager };
 use serde_json::Value;
 
 use app::windows;
@@ -30,14 +31,15 @@ fn change_data(app_handle: AppHandle, file: State<EditorState>, payload: ChangeJ
 }
 
 #[tauri::command]
-fn request_data(app_state: State<EditorState>, requested_data: Option<String>, requested_data_argument: Option<Value>) -> Result<PayloadJSON, String> {
+fn request_data(app_handle: AppHandle, requested_data: Option<String>, requested_data_argument: Option<Value>) -> Result<PayloadJSON, String> {
     match requested_data {
         Some(data) => {
-            handle_non_default_request(app_state, data.as_str(), requested_data_argument)
+            handle_non_default_request(app_handle, data.as_str(), requested_data_argument)
         }
         None => {
+            let state = app_handle.state::<EditorState>();
             return Ok(PayloadJSON {
-                data: app_state.get_data().as_value(),
+                data: state.get_data().as_value(),
             })
         }
     }

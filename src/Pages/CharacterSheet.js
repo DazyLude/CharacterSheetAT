@@ -103,7 +103,7 @@ export default function CharacterSheet() {
                         <GridController gridData={characterData.grid}>
                             {gridElementsList}
                         </GridController>
-                        <GhostController />
+                        {/* <GhostController /> */}
                 </div>
                 <div style={{gridColumn: "1 / -1", height: "500px"}}>
                     {/* intentionally empty; this is a blank filler at the bottom */}

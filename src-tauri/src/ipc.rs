@@ -1,3 +1,4 @@
+//! The IPC module consists of structs used for IPC, global events and commands definition
 use serde_json::{Value, Map, json};
 use tauri::{ Manager, State, AppHandle, RunEvent, App, WindowMenuEvent };
 use std::path::PathBuf;
@@ -10,13 +11,16 @@ use crate::app_state::{
 };
 use crate::character_data::CharacterData;
 use crate::disk_interactions::{load_startup_data, open_character_sheet, save_character_sheet, save_as_character_sheet};
-use crate::windows;
+use crate::windows::{self, CSATWindow, AddElementStateSync};
 
+
+/// Just a JSON value
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct PayloadJSON {
     pub data: Value,
 }
 
+/// struct used to issue changes to EditorState
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct ChangeJSON {
     pub value_type: String,
@@ -26,6 +30,7 @@ pub struct ChangeJSON {
     pub merge_object: Option<Map<String, Value>>,
 }
 
+/// Struct used to communicate pressed keys from frontend.
 #[derive(serde::Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct PressedKey {
     ctrl_key: bool,
@@ -69,6 +74,8 @@ pub fn run_event_handler(app_handle: &AppHandle, event: RunEvent) {
     }
 }
 
+/// Global, non-window specific events are setup here.
+/// If an event is listened to globally, but it's functionality is tied to a certain window, it should be defined in that window's module.
 pub fn setup_app_event_listeners(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     app.listen_global("error", log_tauri_error);
 
@@ -77,18 +84,11 @@ pub fn setup_app_event_listeners(app: &mut App) -> Result<(), Box<dyn std::error
         keypress_event_handler(&handle, e);
     });
 
-    app.listen_global("ghost_move" , |e| {
-        println!("ghost just moved: {:?}", e.payload());
-    });
-
-    let handle = app.handle();
-    app.listen_global("add_new_element", move |e| {
-        crate::windows::add_element::on_add_new_event(&handle, e)
-    });
-
     Ok(())
 }
 
+/// non window specific menu event handlers should be defined here.
+/// Same idea as with app_event_listeners
 pub fn menu_event_handler(event: WindowMenuEvent) {
     match event.menu_item_id() {
         "open" => {
@@ -121,7 +121,10 @@ pub fn menu_event_handler(event: WindowMenuEvent) {
             let app_handle = event.window().app_handle();
             let _ = match app_handle.get_window("add_element") {
                 Some(w) => w.set_focus(),
-                None => windows::add_element::builder(app_handle),
+                None => {
+                    windows::AddElementWindow::builder(&app_handle);
+                    Ok(())
+                },
             };
         },
         "remove_element" => {
@@ -148,26 +151,27 @@ pub fn menu_event_handler(event: WindowMenuEvent) {
 }
 
 pub mod event_emitters {
+    //! Global event emitters that are listened to at the frontend should be defined in this module.
     use crate::app_state::editor_state::EditorState;
-    use super::PayloadJSON;
+    use super::{PayloadJSON, emit_tauri_error};
     use tauri::Manager;
 
     pub fn load_data(app_handle: &tauri::AppHandle) {
         let data = app_handle.state::<EditorState>().get_data().as_value();
         app_handle
             .emit_all("new_character_sheet", PayloadJSON { data } )
-            .unwrap_or_else(|error|
-                app_handle.trigger_global("error", Some(error.to_string()))
-            );
+            .unwrap_or_else(|error| emit_tauri_error(app_handle, error.to_string()));
     }
 
     pub fn change_editor_context(app_handle: &tauri::AppHandle, action: String) {
         app_handle
             .emit_all("change_context", action)
-            .unwrap_or_else(|error|
-                app_handle.trigger_global("error", Some(error.to_string()))
-            );
+            .unwrap_or_else(|error| emit_tauri_error(app_handle, error.to_string()));
     }
+}
+
+pub fn emit_tauri_error(app_handle: &AppHandle, error_msg: String) {
+    app_handle.trigger_global("error", Some(error_msg));
 }
 
 
@@ -178,62 +182,9 @@ fn log_tauri_error(event: tauri::Event) {
     }
 }
 
-// command based IPC methods
-pub fn handle_non_default_request(
-    app_state: tauri::State<EditorState>,
-    requested_data: &str,
-    requested_data_argument: Option<Value>
-) -> Result<PayloadJSON, String> {
-    match requested_data {
-        "all" => {
-            return Ok(PayloadJSON {
-                data: app_state.get_data().as_value(),
-            });
-        }
-        "abs_path" => {
-            let path = match requested_data_argument.as_ref().and_then(Value::as_str) {
-                Some(p) => p.to_string(),
-                None => return Err(format!("incorrect data argument when requesting absolute path")),
-            };
-            return Ok(PayloadJSON{
-                data: Value::String(request_path(app_state, path)?)
-            });
-        }
-        "rel_path" => {
-            let path = match requested_data_argument.as_ref().and_then(Value::as_str) {
-                Some(p) => p.to_string(),
-                None => return Err(format!("incorrect data argument when requesting relative path")),
-            };
-            return Ok(PayloadJSON{
-                data: Value::String(make_path_relative(app_state, path)?)
-            });
-        }
-        _e => return Err(format!("incorrect data type requested: {}", _e)),
-    }
-}
-
-fn request_path(app_state: State<EditorState>, path: String) -> Result<String, String> {
-    let child_path : PathBuf = path.into();
-    if child_path.is_absolute() {
-        return Err(child_path.to_string_lossy().to_string());
-    }
-    let mut json_path : PathBuf = app_state.get_path();
-    json_path.pop();
-    Ok(json_path.join::<PathBuf>(child_path).to_string_lossy().to_string())
-}
-
-fn make_path_relative(app_state: State<EditorState>, path: String) -> Result<String, String> {
-    let mut json_path : PathBuf = app_state.get_path();
-    json_path.pop();
-    let child_path : PathBuf = path.into();
-    if !child_path.starts_with(&json_path) {
-        return Err(child_path.to_string_lossy().to_string());
-    }
-    Ok(child_path.strip_prefix(&json_path).unwrap().to_string_lossy().to_string())
-}
 
 // event based comms
-pub fn get_json_from_event(handle: &AppHandle, event: tauri::Event) -> Option<Value> {
+pub fn get_json_from_event(event: tauri::Event) -> Option<Value> {
     let payload_contents = match event.payload() {
         Some(s) => s,
         None => {
@@ -242,18 +193,17 @@ pub fn get_json_from_event(handle: &AppHandle, event: tauri::Event) -> Option<Va
     };
     match serde_json::from_str(payload_contents) {
         Ok(p) => p,
-        Err(e) => {
-            handle.trigger_global("error", Some(e.to_string()));
+        Err(_e) => {
             return None;
         },
     }
 }
 
 fn keypress_event_handler(handle: &AppHandle, event: tauri::Event) {
-    let payload_as_json = match get_json_from_event(handle, event) {
+    let payload_as_json = match get_json_from_event(event) {
         Some(p) => p,
         None => {
-            handle.trigger_global("error", Some("empty payload on the keypress event".to_string()));
+            emit_tauri_error(handle, "empty payload on the keypress event".to_string());
             return;
         }
     };
@@ -287,7 +237,10 @@ fn shortcut_handler(app_handle: &AppHandle, key: &PressedKey) {
                     let _ = w.set_focus();
                     w.show()
                 }
-                None => windows::add_element::builder(h),
+                None => {
+                    windows::AddElementWindow::builder(&h);
+                    Ok(())
+                },
             };
         }
         "open-rem" => {
@@ -311,4 +264,66 @@ fn shortcut_handler(app_handle: &AppHandle, key: &PressedKey) {
         }
         _ => return,
     }
+}
+
+// command based IPC methods
+pub fn handle_non_default_request(
+    app_handle: AppHandle,
+    requested_data: &str,
+    requested_data_argument: Option<Value>
+) -> Result<PayloadJSON, String> {
+    match requested_data {
+        "all" => { // same as default
+            return Ok(PayloadJSON {
+                data: app_handle.state::<EditorState>().get_data().as_value(),
+            });
+        }
+        "abs_path" => {
+            let editor_state = app_handle.state::<EditorState>();
+            let path = match requested_data_argument.as_ref().and_then(Value::as_str) {
+                Some(p) => p.to_string(),
+                None => return Err(format!("incorrect data argument when requesting absolute path")),
+            };
+            return Ok(PayloadJSON{
+                data: Value::String(request_path(editor_state, path)?)
+            });
+        }
+        "rel_path" => {
+            let editor_state = app_handle.state::<EditorState>();
+            let path = match requested_data_argument.as_ref().and_then(Value::as_str) {
+                Some(p) => p.to_string(),
+                None => return Err(format!("incorrect data argument when requesting relative path")),
+            };
+            return Ok(PayloadJSON{
+                data: Value::String(make_path_relative(editor_state, path)?)
+            });
+        }
+        "add-element" => {
+            match app_handle.try_state::<AddElementStateSync>() {
+                Some(state) => return Ok(PayloadJSON { data: state.get_cloned_state().as_json() }),
+                None => return Err("editor window state not managed".to_string()),
+            }
+        }
+        _e => return Err(format!("incorrect data type requested: {}", _e)),
+    }
+}
+
+fn request_path(app_state: State<EditorState>, path: String) -> Result<String, String> {
+    let child_path : PathBuf = path.into();
+    if child_path.is_absolute() {
+        return Err(child_path.to_string_lossy().to_string());
+    }
+    let mut json_path : PathBuf = app_state.get_path();
+    json_path.pop();
+    Ok(json_path.join::<PathBuf>(child_path).to_string_lossy().to_string())
+}
+
+fn make_path_relative(app_state: State<EditorState>, path: String) -> Result<String, String> {
+    let mut json_path : PathBuf = app_state.get_path();
+    json_path.pop();
+    let child_path : PathBuf = path.into();
+    if !child_path.starts_with(&json_path) {
+        return Err(child_path.to_string_lossy().to_string());
+    }
+    Ok(child_path.strip_prefix(&json_path).unwrap().to_string_lossy().to_string())
 }

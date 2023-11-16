@@ -2,9 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { UseEffectButton } from "./Components/CommonFormElements";
 
 import { invoke } from "@tauri-apps/api";
-import { listen } from '@tauri-apps/api/event';
-
-import { dispatcher, placementStringFromXYWH } from "./Utils";
+import { listen, emit } from '@tauri-apps/api/event';
 
 const constructibleElements = {
     "none": { // an example element
@@ -95,11 +93,11 @@ const constructibleElements = {
 }
 
 export default function ElementEditor() {
-    const [elementEditorState, setState] = useState({});
+    const [state, setState] = useState({});
+    const placement = state.placement ?? {x: 1, y: 1, w: 1, h: 1};
+    const id = state.id ?? "";
+    const isActive = state.is_active ?? false;
     const [selection, setSelection] = useState("none");
-    const placement = elementEditorState.placement ?? {x: 1, y: 1, w: 1, h: 1};
-    const id = elementEditorState.id ?? "";
-    const isActive = elementEditorState.active ?? false;
 
     useEffect( // requests data and subscribes to changes
         () => {
@@ -108,13 +106,14 @@ export default function ElementEditor() {
                 .catch((e) => console.error(e));
 
             const onLoad = (e) => {
-                const data = e.payload.data;
+                const data = e.payload;
+                console.log(data);
                 if (data !== undefined) {
                     setState(data);
                 }
             }
 
-            const unlisten = listen("new_add_element_data", onLoad);
+            const unlisten = listen("new_data", onLoad);
             return () => {
                 unlisten.then(f => f());
             };
@@ -123,28 +122,27 @@ export default function ElementEditor() {
     )
 
     const createGridElement = useCallback(
-        ({ elementType, elementId, elementPlacement }) => {
+        () => {
             const elementInitialData = { ...constructibleElements[selection].data };
-            dispatcher({type: "grid-merge", id: elementId, value: {type: elementType, ...elementPlacement}});
-            if (Object.keys(elementInitialData).length !== 0) {
-                dispatcher({type: "element-merge", id: elementId, value: elementInitialData});
-            }
+            emit("add_new_element", elementInitialData);
         },
         [selection]
     );
 
-    const usedKeys = Object.keys(gridData);
-    const lowestRow = Object.values(gridData).map(({y, h}) => y + h).reduce((val, sav) => val < sav ? sav : val, 1);
+    const setId = useCallback(
+        (newId) => {
+            emit("change_add_element_state", { id: newId });
+        }
+    )
 
-    useEffect(
-        () => {
-            mergePlacement({y: lowestRow})
-        },
-        [lowestRow]
-    );
+    const setPlacement = useCallback(
+        (newPlacement) => {
+            emit("change_add_element_state", { placement: newPlacement });
+        }
+    )
 
     const isCreateButtonActive = () => {
-        if (usedKeys.find((e) => e === id)) {
+        if (!isActive) {
             return <div className="error">id is already in use</div>;
         }
         if (selection === "none") {
@@ -175,7 +173,7 @@ export default function ElementEditor() {
                     value={selection}
                     onChange={(e) => {
                         setId(constructibleElements[e.target.value].idCode);
-                        mergePlacement({...constructibleElements[e.target.value].defaultSize})
+                        setPlacement({type: e.target.value, ...constructibleElements[e.target.value].defaultSize})
                         setSelection(e.target.value);
                     }}
                     >
@@ -192,7 +190,7 @@ export default function ElementEditor() {
                     min={1}
                     max={12}
                     value={placement.x}
-                    onChange={(e) => {mergePlacement({x: parseInt(e.target.value)})}}
+                    onChange={(e) => {setPlacement({x: parseInt(e.target.value)})}}
                     />
                 <label htmlFor="element-w">new element width (w): </label>
                 <input
@@ -202,7 +200,7 @@ export default function ElementEditor() {
                     max={13 - placement.x}
                     type="number"
                     value={placement.w}
-                    onChange={(e) => {mergePlacement({w: parseInt(e.target.value)})}}
+                    onChange={(e) => {setPlacement({w: parseInt(e.target.value)})}}
                     />
                 <label htmlFor="element-y">new element row (y): </label>
                 <input
@@ -211,7 +209,7 @@ export default function ElementEditor() {
                     type="number"
                     min={1}
                     value={placement.y}
-                    onChange={(e) => {mergePlacement({y: parseInt(e.target.value)})}}
+                    onChange={(e) => {setPlacement({y: parseInt(e.target.value)})}}
                     />
                 <label htmlFor="element-h">new element height (h): </label>
                 <input
@@ -220,7 +218,7 @@ export default function ElementEditor() {
                     type="number"
                     min={-1}
                     value={placement.h}
-                    onChange={(e) => {mergePlacement({h: parseInt(e.target.value)})}}
+                    onChange={(e) => {setPlacement({h: parseInt(e.target.value)})}}
                     />
             </div>
             {
@@ -231,11 +229,7 @@ export default function ElementEditor() {
                     title="add new element to the grid"
                     action={
                         () => {
-                            createGridElement({
-                                elementId: id,
-                                elementType: selection,
-                                elementPlacement: placement,
-                            })
+                            createGridElement()
                         }
                     }
                 />

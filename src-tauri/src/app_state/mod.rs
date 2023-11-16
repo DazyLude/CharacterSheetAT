@@ -1,6 +1,6 @@
+//! Non window specific states should be defined here
+
 use std::path::PathBuf;
-use std::sync::Mutex;
-use serde_json::{ Map, Value, json };
 use tauri::{ AppHandle, Manager };
 
 use crate::{
@@ -15,7 +15,6 @@ pub mod loaded_shortcuts;
 pub fn with_managed_states() -> tauri::Builder<tauri::Wry> {
     tauri::Builder::default()
         .manage(editor_state::EditorState::new())
-        .manage(GridGhost::new())
         .manage(loaded_shortcuts::LoadedShortcuts::get_default())
 }
 
@@ -50,25 +49,4 @@ pub fn load_json_file(app_handle: &AppHandle, v: CharacterData, p: PathBuf) {
 pub fn change_character_data(file: &editor_state::EditorState, change: ChangeJSON) -> Result<(), String> {
     let command = CharacterDataCommand::from_change_json(file.get_data(), change);
     file.change_data(command)
-}
-
-pub struct GridGhost {
-    is_displayed: Mutex<bool>,
-    style: Mutex<Option<String>>,
-    placement: Mutex<Map<String, Value>>,
-}
-
-impl GridGhost {
-    pub fn new() -> GridGhost {
-        let default_placement = json!({"x": 1, "y": 1, "w": 1, "h": 1}).as_object().unwrap().clone();
-        GridGhost {
-            is_displayed: Mutex::from(false),
-            style: Mutex::from(None),
-            placement: Mutex::from(default_placement)
-        }
-    }
-
-    pub fn set_new_style(&self, new_style: String) {
-        *self.style.lock().unwrap() = Some(new_style);
-    }
 }

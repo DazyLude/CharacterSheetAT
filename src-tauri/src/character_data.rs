@@ -34,7 +34,7 @@ impl CharacterDataCommand {
         )
     }
 
-    pub fn add_element(old_data: CharacterData, id: String, data: Option<Map<String, Value>>, placement: Map<String, Value>) -> CharacterDataCommand {
+    pub fn add_element(old_data: CharacterData, data: Option<Map<String, Value>>, id: String, placement: Map<String, Value>) -> CharacterDataCommand {
         let add_to_grid = ChangeJSON {
             value_type : "grid".to_string(),
             value_name: None,
@@ -51,7 +51,7 @@ impl CharacterDataCommand {
                     new_value: None,
                     merge_object: Some(d),
                 };
-                CharacterDataCommand::Stacked(
+                return CharacterDataCommand::Stacked(
                     StackedCommands {
                         old_data,
                         changes: vec![add_to_grid, add_to_data]
@@ -59,14 +59,14 @@ impl CharacterDataCommand {
                 )
             },
             None => {
-                CharacterDataCommand::Simple(
+                return CharacterDataCommand::Simple(
                     OrdinaryCommand {
                         old_data,
                         forward_change: Box::from(add_to_grid),
                     }
                 )
             }
-        }
+        };
     }
 }
 
@@ -233,18 +233,26 @@ impl<'a> CharacterData {
 
         Some(())
     }
+
+    /// removes data connected to an id from CharacterData
     pub fn remove_by_id(&mut self, id: &String) -> Option<()> {
         self.elements.remove(id);
         self.grid.remove(id);
         Some(())
     }
 
+    /// returns CharacterData as a JSON value
     pub fn as_value(&self) -> Value {
         let mut as_map = Map::new();
         as_map.insert("globals".to_string(), Value::Object(self.globals.clone()));
         as_map.insert("grid".to_string(), Value::Object(self.grid.clone()));
         as_map.insert("elements".to_string(), Value::Object(self.elements.clone()));
         Value::Object(as_map)
+    }
+
+    /// Checks if the provided id is in the grid.
+    pub fn check_id(&self, id: &String) -> bool {
+        !self.grid.contains_key(id)
     }
 
 }

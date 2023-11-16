@@ -5,6 +5,7 @@ use crate::disk_interactions::save_startup_data;
 use crate::funny_constants::APP_NAME;
 use std::ffi::OsStr;
 
+
 pub fn builder(app_handle: AppHandle) -> Result<(), tauri::Error> {
     std::thread::spawn(
         move || {
@@ -13,7 +14,7 @@ pub fn builder(app_handle: AppHandle) -> Result<(), tauri::Error> {
                     "editor",
                     tauri::WindowUrl::App("editor".into())
                 )
-                .title("CSAT editor")
+                .title(&(APP_NAME.to_string() + " editor"))
                 .fullscreen(false)
                 .resizable(true)
                 .inner_size(950., 700.)
