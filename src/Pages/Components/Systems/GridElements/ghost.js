@@ -3,23 +3,45 @@ import { useState, useEffect, createElement, useCallback } from "react";
 import MovingController from "./mover";
 import ResizingController from "./resizer";
 
-import { emit, listen } from "@tauri-apps/api/event";
+import { listen } from "@tauri-apps/api/event";
+import { invoke } from "@tauri-apps/api";
 import { GridElementOOC } from "./element";
+import { placementStringFromXYWH } from "../../../Utils";
 
 export function GhostController() {
-    const [displayed, setDisplayed] = useState(false);
-    const [style, setStyle] = useState({});
+    const [state, setState] = useState({});
+    const placement = {x: state.x ?? 1, y: state.y ?? 1, h: state.h ?? 1, w: state.w ?? 1};
+    const placementString = placementStringFromXYWH({ ...placement });
+    const displayed = state.displayed ?? true;
 
     const [active, setActive] = useState(false);
-    const [placement, setPlacement] = useState({});
     const [direction, setDirection] = useState("");
 
     const dispatcher = useCallback(
         (placement) => {
-            emit("ghost_moved", placement)
+            invoke("change_data", {target: "element_ghost", data: {...placement}})
+                .catch((e) => console.error(e));
         },
         []
     );
+
+    useEffect( // requests data and subscribes to changes
+        () => {
+            const onLoad = () => {
+                invoke("request_data", { requestedData: "ghost" })
+                    .then((e) => setState(e.data))
+                    .catch((e) => console.error(e));
+            }
+
+            onLoad();
+
+            const unlisten = listen("update_ghost", onLoad);
+            return () => {
+                unlisten.then(f => f());
+            };
+        },
+        []
+    )
 
     const releaseCallback = useCallback(
         (action) => {
@@ -48,11 +70,14 @@ export function GhostController() {
             setActive(false);
 
             const newPlacement = {"x": newX, "y": newY, "h": newH, "w": newW};
-            setPlacement(newPlacement);
             dispatcher(newPlacement);
         },
         [active, placement, dispatcher]
     )
+
+    if (!displayed) {
+        return (<></>);
+    }
 
     const BackendGhost = createElement(GridElementOOC, {
         move: () => {
@@ -62,19 +87,18 @@ export function GhostController() {
             setActive(true);
             setDirection(direction);
         },
-        id: "",
+        id: "new element placed here",
         style: {
             opacity: "0.5",
             zIndex: "11",
             position: "relative",
-            display: displayed ? "block" : "none",
-            ...style
+            display: "grid",
         },
     });
 
     if (!active) { // does nothing
         return (
-            <div className="grid-element" style={{position: "relative", gridArea: placement}}>
+            <div className="grid-element" style={{gridArea: placementString}}>
                 {BackendGhost}
             </div>
         )
@@ -82,7 +106,7 @@ export function GhostController() {
 
     const controllerMode = direction === "" ? MovingController : ResizingController;
 
-    const controller = createElement(controllerMode, {id: "ghost", direction, releaseCallback, placement});
+    const controller = createElement(controllerMode, {id: "ghost", direction, releaseCallback, initialGhostPlacement: placement});
 
     return (
         <>

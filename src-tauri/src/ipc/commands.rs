@@ -2,6 +2,7 @@ use std::path::PathBuf;
 
 use tauri::{ Manager, AppHandle, State };
 use serde_json::Value;
+use crate::app_state::ElementGhost;
 use crate::character_data::CharacterDataCommand;
 use crate::windows::{ AddElementStateSync, EditorStateSync };
 use super::{ChangeJSON, PayloadJSON};
@@ -9,7 +10,14 @@ use super::{ChangeJSON, PayloadJSON};
 pub fn handle_change_request(handle: AppHandle, target: String, data: Value) -> Result<(), String> {
     match target.as_str() {
         "character_data" => return change_character_data(&handle, data.into()),
-        "element_ghost" => Ok(()),
+        "element_ghost" => {
+            let new_placement = match data.as_object() {
+                Some(o) => o.clone(),
+                None => return Err(format!("invalid data in element ghost change request: {data}")),
+            };
+            handle.state::<ElementGhost>().update_placement(new_placement, &handle);
+            Ok(())
+        },
         e => return Err(format!("unknown change request target: {e}")),
     }
 }
@@ -59,6 +67,16 @@ pub fn handle_data_request(
             match app_handle.try_state::<AddElementStateSync>() {
                 Some(state) => return Ok(PayloadJSON { data: state.as_value(&app_handle) }),
                 None => return Err("add element window state not managed".to_string()),
+            }
+        }
+        "ghost" => {
+            match app_handle.try_state::<ElementGhost>() {
+                Some(state) => {
+                    let mut data = state.get_placement_as_map();
+                    data.insert("displayed".to_string(), Value::Bool(state.displayed.lock().unwrap().clone()));
+                    return Ok(PayloadJSON { data: Value::Object(data) });
+                }
+                None => return Err("ghost element state not managed".to_string()),
             }
         }
         _e => return Err(format!("incorrect data type requested: {}", _e)),

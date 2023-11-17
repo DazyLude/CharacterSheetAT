@@ -6,7 +6,7 @@ use serde_json::Value;
 
 use app::windows::{ EditorWindow, CSATWindow };
 use app::app_state::with_managed_states;
-use app::ipc::{ ChangeJSON, PayloadJSON, handle_data_request, handle_change_request };
+use app::ipc::{ PayloadJSON, handle_data_request, handle_change_request };
 use app::ipc::{ run_event_handler, setup_app_event_listeners, menu_event_handler };
 
 fn main() {

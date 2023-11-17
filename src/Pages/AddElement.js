@@ -117,6 +117,24 @@ export default function ElementEditor() {
         []
     )
 
+    useEffect( // requests data and subscribes to changes
+        () => {
+            const onLoad = () => {
+                invoke("request_data", {requestedData: "add-element"})
+                    .then((e) => setState(e.data))
+                    .catch((e) => console.error(e));
+            }
+
+            onLoad()
+
+            const unlisten = listen("update_ghost", onLoad);
+            return () => {
+                unlisten.then(f => f());
+            };
+        },
+        []
+    )
+
     const createGridElement = useCallback(
         () => {
             const elementInitialData = { ...constructibleElements[selection].data };
