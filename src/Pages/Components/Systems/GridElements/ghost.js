@@ -21,37 +21,6 @@ export function GhostController() {
         []
     );
 
-    useEffect( // subscribes to ghost display / hide event
-        () => {
-            const onEvent = (e) => {
-                const data = e.payload;
-                // display/hide
-                if (data.display == null) {
-                    setDisplayed(data.display);
-                }
-                // change style
-                if (data.style == null) {
-                    if (data.style in ghostStyles) {
-                        setStyle(ghostStyles[data.style]);
-                    } else {
-                        setStyle(ghostStyles["unknown"]);
-                    }
-                }
-                // placement
-                if (data.placement == null) {
-
-                }
-                console.log(data);
-            }
-
-            const unlisten = listen("change_ghost", onEvent);
-            return () => {
-                unlisten.then((f) => {f()});
-            };
-        },
-        []
-    )
-
     const releaseCallback = useCallback(
         (action) => {
             if (!active) {
@@ -123,16 +92,4 @@ export function GhostController() {
             {controller}
         </>
     )
-}
-
-const ghostStyles = {
-    "add": {
-
-    },
-    "remove": {
-
-    },
-    "unknown": {
-
-    }
 }

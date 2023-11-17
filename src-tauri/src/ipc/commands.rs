@@ -49,7 +49,7 @@ pub fn handle_data_request(
         }
         "add-element" => {
             match app_handle.try_state::<AddElementStateSync>() {
-                Some(state) => return Ok(PayloadJSON { data: state.as_value() }),
+                Some(state) => return Ok(PayloadJSON { data: state.as_value(&app_handle) }),
                 None => return Err("add element window state not managed".to_string()),
             }
         }

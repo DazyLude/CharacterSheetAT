@@ -1,17 +1,22 @@
-//! Non window specific states should be defined here
-
+//! Non window-specific states should be defined here
 use std::path::PathBuf;
 use tauri::{ AppHandle, Manager };
 
-use crate::
-    disk_interactions::load_json_from_disk;
+use crate::{
+    disk_interactions::load_json_from_disk,
+    windows::EditorStateSync
+};
 
-use crate::windows::EditorStateSync;
-pub mod loaded_shortcuts;
+mod loaded_shortcuts;
+mod element_ghost;
+
+pub use self::element_ghost::ElementGhost;
+pub use self::loaded_shortcuts::LoadedShortcuts;
 
 pub fn with_managed_states() -> tauri::Builder<tauri::Wry> {
     tauri::Builder::default()
-        .manage(loaded_shortcuts::LoadedShortcuts::get_default())
+        .manage(LoadedShortcuts::get_default())
+        .manage(ElementGhost::new())
 }
 
 pub fn app_state_to_recovery_string(app_handle: &AppHandle) -> String {

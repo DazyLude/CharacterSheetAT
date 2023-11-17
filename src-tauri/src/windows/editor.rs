@@ -203,10 +203,10 @@ impl EditorStateSync {
 }
 
 pub struct EditorState {
-    // persistent data
+    // persistent data - directly tied to what's on the disk
     pub path: PathBuf,
     pub original: CharacterData,
-    // session data
+    // session data - something that's just in-memory
     pub history: CommandStack<CharacterDataCommand, CharacterData>,
 }
 

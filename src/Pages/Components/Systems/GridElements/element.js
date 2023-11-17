@@ -98,7 +98,6 @@ export function GridElementOOC({move, resize, remove, id, style}) {
                     null
                     :
                     <button
-                        style={{position: "relative", zIndex: "4"}}
                         onMouseDown={(e) => {e.stopPropagation()}}
                         onClick={() => {remove()}}
                     >

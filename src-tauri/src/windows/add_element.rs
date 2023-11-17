@@ -1,11 +1,12 @@
-use std::{collections::HashMap, sync::Mutex};
+use std::sync::Mutex;
 
 use tauri::{AppHandle, Manager, WindowEvent};
 use serde_json::{Value, Map};
 
 use crate::{
     character_data::CharacterDataCommand,
-    ipc::{get_json_from_event, emit_tauri_error}
+    ipc::{get_json_from_event, emit_tauri_error},
+    app_state::ElementGhost
 };
 
 use crate::funny_constants::APP_NAME;
@@ -60,18 +61,19 @@ impl CSATWindow for AddElementWindow {
 }
 
 fn on_add_new_element_event(app_handle: &AppHandle, event: tauri::Event) {
-    let ae_state = match app_handle.try_state::<AddElementStateSync>() {
-        Some(state) => state.get_cloned_state(),
+    let id = match app_handle.try_state::<AddElementStateSync>() {
+        Some(state) => state.get_cloned_state().id,
         None => return,
     };
     let old_editor_data = match app_handle.try_state::<EditorStateSync>() {
         Some(state) => state.get_data(),
         None => return,
     };
+    let placement = app_handle.state::<ElementGhost>().get_placement_as_map();
 
     let element_data = get_json_from_event(event).as_ref().and_then(Value::as_object).cloned();
 
-    let add = CharacterDataCommand::add_element(old_editor_data, element_data, ae_state.id.clone(), ae_state.get_placement_as_map());
+    let add = CharacterDataCommand::add_element(old_editor_data, element_data, id, placement);
     let _ = app_handle.state::<EditorStateSync>().change_data(add, app_handle);
     app_handle.state::<AddElementStateSync>().set_to_unnocupied_space(app_handle);
     app_handle.state::<AddElementStateSync>().set_inactive(app_handle);
@@ -99,7 +101,7 @@ fn on_change_state_event(handle: &AppHandle, event: tauri::Event) {
     }
 
     match new_data_object.get("placement").and_then(Value::as_object) {
-        Some(pl) => old_data.update_placement(pl.clone()),
+        Some(pl) => handle.state::<ElementGhost>().update_placement(pl.clone()),
         None => {},
     };
 
@@ -111,8 +113,8 @@ pub struct AddElementStateSync {
 }
 
 impl AddElementStateSync {
-    pub fn as_value(&self) -> serde_json::Value {
-        self.state.lock().unwrap().as_value()
+    pub fn as_value(&self, handle: &AppHandle) -> serde_json::Value {
+        self.state.lock().unwrap().as_value(handle)
     }
 
     pub fn get_cloned_state(&self) -> AddElementState {
@@ -142,10 +144,11 @@ impl AddElementStateSync {
             Some(st) => st.get_data().get_grid().iter().map(get_row_below).max().unwrap_or(0)
         };
 
-        self.state.lock().unwrap()
-            .placement
-            .entry("y".to_string())
-            .and_modify(|n| *n = Value::Number(serde_json::Number::from(lowest_row)));
+        handle.state::<ElementGhost>()
+            .entry_and_modify(
+                "y".to_string(),
+                |n| *n = Value::Number(serde_json::Number::from(lowest_row))
+            );
     }
 
     pub fn new() -> Self {
@@ -155,32 +158,23 @@ impl AddElementStateSync {
 
 #[derive(Clone)]
 pub struct AddElementState {
-    pub placement: HashMap<String, Value>,
     pub id: String,
     pub is_active: bool,
 }
 
 impl AddElementState {
     pub fn new() -> AddElementState {
-        let value_of_one = Value::Number(serde_json::Number::from(1));
         AddElementState {
-            placement: HashMap::from([
-                ("x".to_string(), value_of_one.clone()),
-                ("y".to_string(), value_of_one.clone()),
-                ("w".to_string(), value_of_one.clone()),
-                ("h".to_string(), value_of_one.clone()),
-                ("type".to_string(), Value::String("div".to_string())),
-            ]),
             id: "".to_string(),
             is_active: false,
         }
     }
 
-    pub fn as_value(&self) -> Value {
+    pub fn as_value(&self, handle: &AppHandle) -> Value {
         let mut state_obj = Map::<String, Value>::new();
         state_obj.insert(
             "placement".to_string(),
-            Value::Object(self.get_placement_as_map())
+            Value::Object(handle.state::<ElementGhost>().get_placement_as_map())
         );
         state_obj.insert(
             "id".to_string(),
@@ -192,16 +186,6 @@ impl AddElementState {
         );
 
         Value::Object(state_obj)
-    }
-
-    fn get_placement_as_map(&self) -> Map<String, Value> {
-        Map::from_iter(self.placement.clone().into_iter())
-    }
-
-    fn update_placement(&mut self, new_placement: Map<String, Value>) {
-        for coordinate in new_placement {
-            self.placement.insert(coordinate.0, coordinate.1);
-        }
     }
 }
 

@@ -3,8 +3,7 @@ use serde_json::Value;
 use tauri::{ Manager, AppHandle, RunEvent, App, WindowMenuEvent };
 
 use crate::app_state::{
-    loaded_shortcuts::LoadedShortcuts,
-    load_app_state_from_recovery_string,
+    LoadedShortcuts, load_app_state_from_recovery_string,
 };
 use crate::character_data::CharacterData;
 use crate::disk_interactions::{load_startup_data, open_character_sheet, save_character_sheet, save_as_character_sheet};
