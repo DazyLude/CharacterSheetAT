@@ -12,7 +12,7 @@ export default function RemoveElement() {
 
     useEffect( // requests data and subscribes to changes
         () => {
-            invoke("request_data")
+            invoke("request_data", { requestedData: "editor" })
             .then((e) => setGridData(e.data.grid))
             .catch((e) => console.error(e));
 

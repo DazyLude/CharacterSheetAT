@@ -6,9 +6,8 @@ use std::path::PathBuf;
 use crate::app_state::{
     loaded_shortcuts::LoadedShortcuts,
     load_app_state_from_recovery_string,
-    load_json_file
 };
-use crate::character_data::CharacterData;
+use crate::character_data::{ CharacterData, CharacterDataCommand };
 use crate::disk_interactions::{load_startup_data, open_character_sheet, save_character_sheet, save_as_character_sheet};
 use crate::windows::{self, CSATWindow, AddElementStateSync, EditorStateSync};
 
@@ -103,18 +102,15 @@ pub fn menu_event_handler(event: WindowMenuEvent) {
             let app_handle = event.window().app_handle();
             let v = CharacterData::generate_empty();
             let p = "".into();
-            load_json_file(&app_handle, v, p);
-            let _ = event_emitters::load_data(&app_handle);
+            app_handle.state::<EditorStateSync>().change_associated_file(&app_handle, p, v);
         }
         "undo" => {
             let app_handle = event.window().app_handle();
-            app_handle.state::<EditorStateSync>().go_back();
-            let _ = event_emitters::load_data(&app_handle);
+            app_handle.state::<EditorStateSync>().go_back(&app_handle);
         }
         "redo" => {
             let app_handle = event.window().app_handle();
-            app_handle.state::<EditorStateSync>().go_forward();
-            let _ = event_emitters::load_data(&app_handle);
+            app_handle.state::<EditorStateSync>().go_forward(&app_handle);
         },
         "add_element" => {
             let app_handle = event.window().app_handle();
@@ -151,18 +147,10 @@ pub fn menu_event_handler(event: WindowMenuEvent) {
 
 pub mod event_emitters {
     //! Global event emitters that are listened to at the frontend should be defined in this module.
-    use crate::windows::EditorStateSync;
-    use super::{PayloadJSON, emit_tauri_error};
-    use tauri::Manager;
+    use super::emit_tauri_error;
+    use tauri::{ Manager, AppHandle };
 
-    pub fn load_data(app_handle: &tauri::AppHandle) {
-        let data = app_handle.state::<EditorStateSync>().get_data().as_value();
-        app_handle
-            .emit_all("new_character_sheet", PayloadJSON { data } )
-            .unwrap_or_else(|error| emit_tauri_error(app_handle, error.to_string()));
-    }
-
-    pub fn change_editor_context(app_handle: &tauri::AppHandle, action: String) {
+    pub fn change_editor_context(app_handle: &AppHandle, action: String) {
         app_handle
             .emit_all("change_context", action)
             .unwrap_or_else(|error| emit_tauri_error(app_handle, error.to_string()));
@@ -222,12 +210,10 @@ fn shortcut_handler(app_handle: &AppHandle, key: &PressedKey) {
             let _ = save_character_sheet(app_handle.state::<EditorStateSync>());
         },
         "undo" => {
-            app_handle.state::<EditorStateSync>().go_back();
-            let _ = event_emitters::load_data(&app_handle);
+            app_handle.state::<EditorStateSync>().go_back(&app_handle);
         },
         "redo" => {
-            app_handle.state::<EditorStateSync>().go_forward();
-            let _ = event_emitters::load_data(&app_handle);
+            app_handle.state::<EditorStateSync>().go_forward(&app_handle);
         },
         "open-add" => {
             let h = app_handle.clone();
@@ -266,17 +252,21 @@ fn shortcut_handler(app_handle: &AppHandle, key: &PressedKey) {
 }
 
 // command based IPC methods
-pub fn handle_non_default_request(
+pub fn change_character_data(handle: &AppHandle, change: ChangeJSON) -> Result<(), String> {
+    let data = match handle.try_state::<EditorStateSync>() {
+        Some(d) => d,
+        None => return Err("editor state not managed yet".to_string()),
+    };
+    let command = CharacterDataCommand::from_change_json(data.get_data(), change);
+    data.change_data(command, handle)
+}
+
+pub fn handle_data_request(
     app_handle: AppHandle,
     requested_data: &str,
     requested_data_argument: Option<Value>
 ) -> Result<PayloadJSON, String> {
     match requested_data {
-        "all" => { // same as default
-            return Ok(PayloadJSON {
-                data: app_handle.state::<EditorStateSync>().get_data().as_value(),
-            });
-        }
         "abs_path" => {
             let editor_state = app_handle.state::<EditorStateSync>();
             let path = match requested_data_argument.as_ref().and_then(Value::as_str) {
@@ -297,10 +287,16 @@ pub fn handle_non_default_request(
                 data: Value::String(make_path_relative(editor_state, path)?)
             });
         }
+        "editor" => {
+            match app_handle.try_state::<EditorStateSync>() {
+                Some(state) => return Ok(PayloadJSON { data: state.as_value() }),
+                None => return Err("editor window state not managed".to_string()),
+            }
+        }
         "add-element" => {
             match app_handle.try_state::<AddElementStateSync>() {
-                Some(state) => return Ok(PayloadJSON { data: state.get_cloned_state().as_json() }),
-                None => return Err("editor window state not managed".to_string()),
+                Some(state) => return Ok(PayloadJSON { data: state.as_value() }),
+                None => return Err("add element window state not managed".to_string()),
             }
         }
         _e => return Err(format!("incorrect data type requested: {}", _e)),

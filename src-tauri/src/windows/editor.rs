@@ -1,24 +1,25 @@
 use tauri::{ AppHandle, CustomMenuItem, Menu, Submenu, Manager, WindowEvent, Window };
 use tauri::api::dialog::confirm;
-use crate::app_state::app_state_to_recovery_string;
-use crate::disk_interactions::save_startup_data;
-use crate::funny_constants::APP_NAME;
+
 use std::ffi::OsStr;
-use std::sync::RwLock;
-
-
+use std::sync::Mutex;
 use std::path::PathBuf;
 
 use crate::{
+    app_state::app_state_to_recovery_string,
+    disk_interactions::save_startup_data,
+    funny_constants::APP_NAME,
+    ipc::emit_tauri_error,
     character_data::{CharacterData, CharacterDataCommand},
     command::CommandStack,
 };
 use super::CSATWindow;
-use crate::ipc::emit_tauri_error;
 
 pub struct EditorWindow {}
 
 impl CSATWindow for EditorWindow {
+    const LABEL: &'static str = "editor";
+
     fn builder(app_handle: &AppHandle) {
         let _ = app_handle.manage(EditorStateSync::new());
         let handle = app_handle.clone();
@@ -26,7 +27,7 @@ impl CSATWindow for EditorWindow {
             move || {
                 let _w = match tauri::WindowBuilder::new(
                     &handle,
-                    "editor",
+                    Self::LABEL,
                     tauri::WindowUrl::App("editor".into())
                 )
                 .title(&(APP_NAME.to_string() + " editor"))
@@ -130,56 +131,77 @@ impl EditorWindow {
 
 
 pub struct EditorStateSync {
-    state: RwLock<EditorState>,
+    state: Mutex<EditorState>,
 }
 
 impl EditorStateSync {
     pub fn new() -> Self {
-        EditorStateSync { state: RwLock::from(EditorState::new()) }
+        EditorStateSync { state: Mutex::from(EditorState::new()) }
+    }
+
+    fn tell_to_reload(handle: &AppHandle) {
+        handle
+            .emit_to( "editor", "new_data", {} )
+            .unwrap_or_else(|error| emit_tauri_error(handle, error.to_string()));
+    }
+
+    pub fn change_associated_file(&self, handle: &AppHandle, path: PathBuf, data: CharacterData) {
+        self.set_path(path);
+        self.set_data(data, handle);
+        self.remove_not_saved_flag();
+    }
+
+    pub fn as_value(&self) -> serde_json::Value {
+        self.get_data().as_value().clone()
     }
 
     pub fn get_data(&self) -> CharacterData {
-        self.state.read().unwrap().history.data.clone()
+        self.state.lock().unwrap().history.data.clone()
     }
 
     pub fn get_path(&self) -> PathBuf {
-        self.state.read().unwrap().path.clone()
+        self.state.lock().unwrap().path.clone()
     }
 
     pub fn set_path(&self, path: PathBuf) {
-        self.state.write().unwrap().path = path;
+        self.state.lock().unwrap().path = path;
     }
 
-    pub fn set_data(&self, data: CharacterData) {
-        self.state.write().unwrap().history.data = data;
+    pub fn set_data(&self, data: CharacterData, handle: &AppHandle) {
+        self.state.lock().unwrap().history.data = data.clone();
+        Self::tell_to_reload(handle);
     }
 
-    pub fn change_data(&self, command: CharacterDataCommand) -> Result<(), String> {
-        let mut state = self.state.write().unwrap();
+    pub fn change_data(&self, command: CharacterDataCommand, handle: &AppHandle) -> Result<(), String> {
+        let mut state = self.state.lock().unwrap();
         state.history.do_one(command)?;
+        Self::tell_to_reload(handle);
         Ok(())
     }
 
-    pub fn go_back(&self) {
-        let mut state = self.state.write().unwrap();
+    pub fn go_back(&self, handle: &AppHandle) {
+        let mut state = self.state.lock().unwrap();
+        Self::tell_to_reload(handle);
         state.history.undo_one();
     }
 
-    pub fn go_forward(&self) {
-        let mut state = self.state.write().unwrap();
+    pub fn go_forward(&self, handle: &AppHandle) {
+        let mut state = self.state.lock().unwrap();
+        Self::tell_to_reload(handle);
         state.history.redo_one();
     }
 
     pub fn remove_not_saved_flag(&self) {
-        let mut state = self.state.write().unwrap();
+        let mut state = self.state.lock().unwrap();
         state.original = state.history.data.clone();
     }
 
     pub fn has_unsaved_chages(&self) -> bool {
-        let state = self.state.read().unwrap();
+        let state = self.state.lock().unwrap();
         state.original != state.history.data
     }
 }
+
 pub struct EditorState {
     // persistent data
     pub path: PathBuf,

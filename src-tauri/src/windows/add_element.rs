@@ -17,6 +17,7 @@ pub struct AddElementWindow {}
 
 
 impl CSATWindow for AddElementWindow {
+    const LABEL: &'static str = "add_element";
     fn builder(app_handle: &AppHandle) {
         let _ = app_handle.manage(AddElementStateSync::new());
         let handle = app_handle.clone();
@@ -24,7 +25,7 @@ impl CSATWindow for AddElementWindow {
             move || {
                 let w = match tauri::WindowBuilder::new(
                     &handle,
-                    "add_element",
+                    Self::LABEL,
                     tauri::WindowUrl::App("add_element".into())
                 )
                 .title(&(APP_NAME.to_string() + " editor: add element"))
@@ -73,7 +74,7 @@ fn on_add_new_element_event(app_handle: &AppHandle, event: tauri::Event) {
 
     let add = CharacterDataCommand::add_element(old_editor_data, element_data, ae_state.id.clone(), ae_state.get_placement_as_map());
     app_handle.state::<AddElementStateSync>().set_inactive(app_handle);
-    let _ = app_handle.state::<EditorStateSync>().change_data(add);
+    let _ = app_handle.state::<EditorStateSync>().change_data(add, app_handle);
 }
 
 fn on_change_state_event(handle: &AppHandle, event: tauri::Event) {
@@ -111,12 +112,16 @@ pub struct AddElementStateSync {
 }
 
 impl AddElementStateSync {
+    pub fn as_value(&self) -> serde_json::Value {
+        self.state.lock().unwrap().as_value()
+    }
+
     pub fn get_cloned_state(&self) -> AddElementState {
         self.state.lock().unwrap().clone()
     }
 
     pub fn set_new_state(&self, new_state: AddElementState, handle: &AppHandle) {
-        let _ = handle.emit_to("add_element", "new_data", new_state.as_json());
+        let _ = handle.emit_to("add_element", "new_data", new_state.as_value());
         *self.state.lock().unwrap() = new_state;
     }
 
@@ -154,7 +159,7 @@ impl AddElementState {
         }
     }
 
-    pub fn as_json(&self) -> Value {
+    pub fn as_value(&self) -> Value {
         let mut state_obj = Map::<String, Value>::new();
         state_obj.insert(
             "placement".to_string(),

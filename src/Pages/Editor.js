@@ -10,7 +10,7 @@ import { listen } from '@tauri-apps/api/event';
 import { invoke } from "@tauri-apps/api";
 import { EditorContextProvider } from "./Components/Systems/appContext";
 
-export default function CharacterSheet() {
+export default function Editor() {
     const [mousePosition, setMousePosition] = useState([0, 0]);
     const [characterData, setCharacterData] = useState({globals:{}, grid:{}, elements:{}});
     const characterDispatch = useCallback(
@@ -22,18 +22,18 @@ export default function CharacterSheet() {
 
     useEffect( // requests data and subscribes to changes
         () => {
-            invoke("request_data")
+            invoke("request_data", { requestedData: "editor" })
                 .then((e) => setCharacterData(e.data))
                 .catch((e) => console.error(e));
 
-            const onLoad = (e) => {
-                const data = e.payload.data;
-                if (data !== undefined) {
-                    setCharacterData(data);
-                }
+            const onLoad = () => {
+                console.log("got a new_data event")
+                invoke("request_data", { requestedData: "editor" })
+                    .then((e) => setCharacterData(e.data))
+                    .catch((e) => console.error(e));
             }
 
-            const unlisten = listen("new_character_sheet", onLoad);
+            const unlisten = listen("new_data", onLoad);
             return () => {
                 unlisten.then(f => f());
             };

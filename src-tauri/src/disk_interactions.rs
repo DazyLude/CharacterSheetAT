@@ -1,8 +1,7 @@
 use tauri::{ Manager, State };
 use tauri::api::dialog::FileDialogBuilder;
-use crate::app_state::load_json_file;
-use crate::ipc::event_emitters::load_data;
 use crate::windows::EditorStateSync;
+use crate::ipc::emit_tauri_error;
 
 use tauri::AppHandle;
 use serde_json::Value;
@@ -24,7 +23,9 @@ pub fn save_startup_data(app_handle: &AppHandle, data: &String) -> Result<(), Er
                     std::fs::write(&appdata_file_path, &data.as_bytes())?;
                     return Ok(());
                 }
-                _ => {},
+                _ => {
+                    emit_tauri_error(app_handle, e.to_string());
+                },
             }
             Err(e)
         }
@@ -69,16 +70,15 @@ pub fn open_character_sheet(window: tauri::Window) {
                 let v = match load_json_from_disk(&p) {
                     Ok(d) => d,
                     Err(e) => {
-                        println!("{}", e.to_string());
+                        emit_tauri_error(&app_handle, e.to_string());
                         return;
                     },
                 };
-                load_json_file(&app_handle, v.into(), p);
+                app_handle.state::<EditorStateSync>().change_associated_file(&app_handle, p, v.into());
             },
             None => return, // path was not provided by the user, we can just exit
         };
 
-        let _ = load_data(&app_handle);
         window.set_focus().unwrap();
     });
 }

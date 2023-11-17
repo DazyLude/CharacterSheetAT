@@ -1,12 +1,12 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use tauri::{ State, AppHandle, Manager };
+use tauri::AppHandle;
 use serde_json::Value;
 
-use app::windows::{ *, CSATWindow };
-use app::app_state::{ with_managed_states, change_character_data };
-use app::ipc::{ event_emitters::load_data, ChangeJSON, PayloadJSON, handle_non_default_request };
+use app::windows::{ EditorWindow, CSATWindow };
+use app::app_state::with_managed_states;
+use app::ipc::{ ChangeJSON, PayloadJSON, handle_data_request, change_character_data };
 use app::ipc::{ run_event_handler, setup_app_event_listeners, menu_event_handler };
 
 fn main() {
@@ -23,23 +23,12 @@ fn main() {
 }
 
 #[tauri::command]
-fn change_data(app_handle: AppHandle, file: State<EditorStateSync>, payload: ChangeJSON) -> Result<(), String> {
-    let _ = change_character_data(&file, payload);
-    load_data(&app_handle);
+fn change_data(app_handle: AppHandle, payload: ChangeJSON) -> Result<(), String> {
+    let _ = change_character_data(&app_handle, payload);
     Ok(())
 }
 
 #[tauri::command]
-fn request_data(app_handle: AppHandle, requested_data: Option<String>, requested_data_argument: Option<Value>) -> Result<PayloadJSON, String> {
-    match requested_data {
-        Some(data) => {
-            handle_non_default_request(app_handle, data.as_str(), requested_data_argument)
-        }
-        None => {
-            let state = app_handle.state::<EditorStateSync>();
-            return Ok(PayloadJSON {
-                data: state.get_data().as_value(),
-            })
-        }
-    }
+fn request_data(app_handle: AppHandle, requested_data: String, requested_data_argument: Option<Value>) -> Result<PayloadJSON, String> {
+    handle_data_request(app_handle, &requested_data, requested_data_argument)
 }

@@ -1,9 +1,9 @@
-import CharacterSheet from './CharacterSheet';
+import Editor from './Editor';
 import AddElement from './AddElement';
 import RemoveElement from './RemoveElement';
 
 export {
-    CharacterSheet,
+    Editor,
     AddElement,
     RemoveElement,
 };
