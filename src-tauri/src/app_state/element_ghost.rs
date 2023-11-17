@@ -34,7 +34,6 @@ impl ElementGhost {
         Map::from_iter(self.placement.lock().unwrap().clone().into_iter())
     }
 
-
     pub fn update_placement(&self, new_placement: Map<String, Value>) {
         let mut placement = self.placement.lock().unwrap().clone();
         for coordinate in new_placement {

@@ -21,6 +21,32 @@ pub struct ChangeJSON {
     pub merge_object: Option<Map<String, Value>>,
 }
 
+impl From<Value> for ChangeJSON {
+    fn from(v: Value) -> Self {
+        let v_o = v.as_object();
+        let mut c_v = ChangeJSON {
+            value_type: "undefined".to_string(),
+            id: None,
+            value_name: None,
+            new_value: None,
+            merge_object: None,
+        };
+
+        match v_o {
+            None => {},
+            Some(o) => {
+                c_v.value_type = o.get("value_type").and_then(Value::as_str).unwrap_or("undefined").to_string();
+                c_v.id = o.get("id").and_then(Value::as_str).map(str::to_string);
+                c_v.value_name = o.get("value_name").and_then(Value::as_str).map(str::to_string);
+                c_v.new_value = o.get("new_value").cloned();
+                c_v.merge_object = o.get("merge_object").and_then(Value::as_object).cloned();
+            }
+        }
+
+        c_v
+    }
+}
+
 /// Struct used to communicate pressed keys from frontend.
 #[derive(serde::Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct PressedKey {

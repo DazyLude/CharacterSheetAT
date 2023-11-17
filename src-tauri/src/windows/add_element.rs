@@ -45,6 +45,8 @@ impl CSATWindow for AddElementWindow {
                 w.listen("add_new_element", move |e| {on_add_new_element_event(&h, e)});
                 let h = handle.clone();
                 w.listen("change_add_element_state", move |e| {on_change_state_event(&h, e)});
+                let h = handle.clone();
+                w.listen("ghost_moved_by_editor", move |_e| {update_window(&h)});
             }
         );
     }
@@ -108,6 +110,10 @@ fn on_change_state_event(handle: &AppHandle, event: tauri::Event) {
     handle.state::<AddElementStateSync>().set_new_state(old_data, handle);
 }
 
+fn update_window(handle: &AppHandle) {
+    let _ = handle.emit_to("add_element", "new_data", {});
+}
+
 pub struct AddElementStateSync {
     state: Mutex<AddElementState>,
 }
@@ -122,7 +128,7 @@ impl AddElementStateSync {
     }
 
     pub fn set_new_state(&self, new_state: AddElementState, handle: &AppHandle) {
-        let _ = handle.emit_to("add_element", "new_data", {});
+        update_window(handle);
         *self.state.lock().unwrap() = new_state;
     }
 

@@ -25,7 +25,7 @@ impl CSATWindow for EditorWindow {
         let handle = app_handle.clone();
         std::thread::spawn(
             move || {
-                let _w = match tauri::WindowBuilder::new(
+                let w = match tauri::WindowBuilder::new(
                     &handle,
                     Self::LABEL,
                     tauri::WindowUrl::App("editor".into())
@@ -43,6 +43,9 @@ impl CSATWindow for EditorWindow {
                         return;
                     },
                 };
+
+                let h = handle.clone();
+                w.listen("ghost_moved_by_add_element", move |_e| {move_ghost(&h)});
             }
         );
     }
@@ -129,6 +132,17 @@ impl EditorWindow {
     }
 }
 
+fn tell_to_reload(handle: &AppHandle) {
+    handle
+        .emit_to( "editor", "new_data", {} )
+        .unwrap_or_else(|error| emit_tauri_error(handle, error.to_string()));
+}
+
+fn move_ghost(handle: &AppHandle) {
+    handle
+        .emit_to( "editor", "move_ghost", {} )
+        .unwrap_or_else(|error| emit_tauri_error(handle, error.to_string()));
+}
 
 pub struct EditorStateSync {
     state: Mutex<EditorState>,
@@ -137,12 +151,6 @@ pub struct EditorStateSync {
 impl EditorStateSync {
     pub fn new() -> Self {
         EditorStateSync { state: Mutex::from(EditorState::new()) }
-    }
-
-    fn tell_to_reload(handle: &AppHandle) {
-        handle
-            .emit_to( "editor", "new_data", {} )
-            .unwrap_or_else(|error| emit_tauri_error(handle, error.to_string()));
     }
 
     pub fn change_associated_file(&self, handle: &AppHandle, path: PathBuf, data: CharacterData) {
@@ -169,25 +177,25 @@ impl EditorStateSync {
 
     pub fn set_data(&self, data: CharacterData, handle: &AppHandle) {
         self.state.lock().unwrap().history.data = data.clone();
-        Self::tell_to_reload(handle);
+        tell_to_reload(handle);
     }
 
     pub fn change_data(&self, command: CharacterDataCommand, handle: &AppHandle) -> Result<(), String> {
         let mut state = self.state.lock().unwrap();
         state.history.do_one(command)?;
-        Self::tell_to_reload(handle);
+        tell_to_reload(handle);
         Ok(())
     }
 
     pub fn go_back(&self, handle: &AppHandle) {
         let mut state = self.state.lock().unwrap();
-        Self::tell_to_reload(handle);
+        tell_to_reload(handle);
         state.history.undo_one();
     }
 
     pub fn go_forward(&self, handle: &AppHandle) {
         let mut state = self.state.lock().unwrap();
-        Self::tell_to_reload(handle);
+        tell_to_reload(handle);
         state.history.redo_one();
     }
 

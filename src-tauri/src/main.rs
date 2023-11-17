@@ -6,7 +6,7 @@ use serde_json::Value;
 
 use app::windows::{ EditorWindow, CSATWindow };
 use app::app_state::with_managed_states;
-use app::ipc::{ ChangeJSON, PayloadJSON, handle_data_request, change_character_data };
+use app::ipc::{ ChangeJSON, PayloadJSON, handle_data_request, handle_change_request };
 use app::ipc::{ run_event_handler, setup_app_event_listeners, menu_event_handler };
 
 fn main() {
@@ -23,9 +23,8 @@ fn main() {
 }
 
 #[tauri::command]
-fn change_data(app_handle: AppHandle, payload: ChangeJSON) -> Result<(), String> {
-    let _ = change_character_data(&app_handle, payload);
-    Ok(())
+fn change_data(app_handle: AppHandle, target: String, data: Value) -> Result<(), String> {
+    handle_change_request(app_handle, target, data)
 }
 
 #[tauri::command]

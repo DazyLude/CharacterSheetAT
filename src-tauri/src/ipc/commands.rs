@@ -6,7 +6,15 @@ use crate::character_data::CharacterDataCommand;
 use crate::windows::{ AddElementStateSync, EditorStateSync };
 use super::{ChangeJSON, PayloadJSON};
 
-pub fn change_character_data(handle: &AppHandle, change: ChangeJSON) -> Result<(), String> {
+pub fn handle_change_request(handle: AppHandle, target: String, data: Value) -> Result<(), String> {
+    match target.as_str() {
+        "character_data" => return change_character_data(&handle, data.into()),
+        "element_ghost" => Ok(()),
+        e => return Err(format!("unknown change request target: {e}")),
+    }
+}
+
+fn change_character_data(handle: &AppHandle, change: ChangeJSON) -> Result<(), String> {
     let data = match handle.try_state::<EditorStateSync>() {
         Some(d) => d,
         None => return Err("editor state not managed yet".to_string()),

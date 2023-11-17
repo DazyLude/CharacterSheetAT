@@ -38,66 +38,78 @@ export function dispatcher({type, id, name, value}) {
     }
 }
 
-
-export function changeGlobal(value_name, new_value) {
-    invoke("change_data", {payload: {value_type: "global", new_value, value_name}})
-        .catch((e) => console.error(e));
+function changeGlobal(value_name, new_value) {
+    changeData(
+        {value_type: "global", new_value, value_name},
+        "character_data"
+    );
 }
 
-export function changeGrid(id, value_name, new_value) {
-    invoke("change_data", {payload: {value_type: "grid", id, new_value, value_name}})
-        .catch((e) => console.error(e));
+function changeGrid(id, value_name, new_value) {
+    changeData(
+        {value_type: "grid", id, new_value, value_name},
+        "character_data"
+    );
 }
 
-export function changeElement(id, value_name, new_value) {
-    invoke("change_data", {payload: {value_type: "element", id, new_value, value_name}})
-        .catch((e) => console.error(e));
+function changeElement(id, value_name, new_value) {
+    changeData(
+        {value_type: "element", id, new_value, value_name},
+        "character_data"
+    );
 }
 
-export function mergeGlobal(value_name, merge_object) {
-    if (typeof(merge_object) !== 'object') {
-        console.error("merge methods accept objects as values only");
-    }
-    invoke("change_data", {payload: {value_type: "global", value_name, merge_object}})
-        .catch((e) => console.error(e));
+function mergeGlobal(value_name, merge_object) {
+    changeData(
+        {value_type: "global", value_name, merge_object},
+        "character_data"
+    );
 }
 
-export function mergeGrid(id, merge_object) {
-    if (typeof(merge_object) !== 'object') {
-        console.error("merge methods accept objects as values only");
-    }
-    invoke("change_data", {payload: {value_type: "grid", id, merge_object}})
-        .catch((e) => console.error(e));
+function mergeGrid(id, merge_object) {
+    changeData(
+        {value_type: "grid", id, merge_object},
+        "character_data"
+    );
 }
 
-export function mergeElement(id, merge_object) {
-    if (typeof(merge_object) !== 'object') {
-        console.error("merge methods accept objects as values only");
-    }
-    invoke("change_data", {payload: {value_type: "element", id, merge_object}})
-        .catch((e) => console.error(e));
+function mergeElement(id, merge_object) {
+    changeData(
+        {value_type: "element", id, merge_object},
+        "character_data"
+    );
 }
 
-export function mergeWithSet(id, item_name, merge_object) {
-    if (typeof(merge_object) !== 'object') {
-        console.error("merge methods accept objects as values only");
-    }
-    invoke("change_data", {payload: {value_type: "element-set", id, value_name: item_name, merge_object}})
-        .catch((e) => console.error(e));
+function mergeWithSet(id, item_name, merge_object) {
+    changeData(
+        {value_type: "element-set", id, value_name: item_name, merge_object},
+        "character_data"
+    );
 }
 
-export function addToSet(id, item_name, new_value) {
-    invoke("change_data", {payload: {value_type: "element-set", id, value_name: item_name, new_value}})
-        .catch((e) => console.error(e));
+function addToSet(id, item_name, new_value) {
+    changeData(
+        {value_type: "element-set", id, value_name: item_name, new_value},
+        "character_data"
+    );
 }
 
-export function removeFromSet(id, item_name) {
-    invoke("change_data", {payload: {value_type: "remove-set", id, value_name: item_name}})
-        .catch((e) => console.error(e));
+function removeFromSet(id, item_name) {
+    changeData(
+        {value_type: "remove-set", id, value_name: item_name},
+        "character_data"
+    );
 }
 
-export function removeById(id) {
-    invoke("change_data", {payload: {value_type: "remove", id}})
+function removeById(id) {
+    changeData(
+        {value_type: "remove", id},
+        "character_data"
+    );
+}
+
+export function changeData(data, target) {
+    invoke("change_data", {target: target ?? "", data: data ?? {}})
         .catch((e) => console.error(e));
 }
 
