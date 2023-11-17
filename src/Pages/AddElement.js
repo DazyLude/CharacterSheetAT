@@ -101,17 +101,13 @@ export default function ElementEditor() {
 
     useEffect( // requests data and subscribes to changes
         () => {
-            invoke("request_data", {requestedData: "add-element"})
-                .then((e) => setState(e.data))
-                .catch((e) => console.error(e));
-
-            const onLoad = (e) => {
-                const data = e.payload;
-                console.log(data);
-                if (data !== undefined) {
-                    setState(data);
-                }
+            const onLoad = () => {
+                invoke("request_data", {requestedData: "add-element"})
+                    .then((e) => setState(e.data))
+                    .catch((e) => console.error(e));
             }
+
+            onLoad()
 
             const unlisten = listen("new_data", onLoad);
             return () => {

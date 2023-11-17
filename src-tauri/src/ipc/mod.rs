@@ -1,9 +1,9 @@
+use serde_json::{Value, Map, json};
 mod events;
 mod commands;
 
 pub use commands::*;
 pub use events::*;
-use serde_json::{Value, Map, json};
 
 /// Just a JSON value
 #[derive(Clone, serde::Serialize, serde::Deserialize)]

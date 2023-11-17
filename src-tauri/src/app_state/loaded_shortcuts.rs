@@ -13,7 +13,6 @@ impl LoadedShortcuts {
         loaded_shortcuts.insert(PressedKey::compose(true, false, "KeyZ".to_string()), "undo".into());
         loaded_shortcuts.insert(PressedKey::compose(true, false, "KeyY".to_string()), "redo".into());
         loaded_shortcuts.insert(PressedKey::compose(true, false, "KeyE".to_string()), "open-add".into());
-        loaded_shortcuts.insert(PressedKey::compose(true, false, "KeyD".to_string()), "open-rem".into());
         loaded_shortcuts.insert(PressedKey::compose(true, false, "Digit1".to_string()), "mod1".into());
         loaded_shortcuts.insert(PressedKey::compose(true, false, "Digit2".to_string()), "mod2".into());
         loaded_shortcuts.insert(PressedKey::compose(true, false, "Digit3".to_string()), "mod3".into());

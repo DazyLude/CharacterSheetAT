@@ -2,7 +2,6 @@ use tauri::{ AppHandle, Manager, WindowEvent };
 
 mod editor;
 mod add_element;
-pub mod remove_element;
 
 pub use self::add_element::{ AddElementWindow, AddElementStateSync };
 pub use self::editor::{ EditorWindow, EditorStateSync };
@@ -28,15 +27,6 @@ pub fn run_event_handler(app_handle: &AppHandle, label: String, event: WindowEve
         }
         "add_element" => {
             AddElementWindow::run_event_handler(app_handle, event);
-        }
-        "remove_element" => {
-            match event {
-                WindowEvent::Focused(true) => {
-                }
-                WindowEvent::CloseRequested { .. } | WindowEvent::Focused(false) => {
-                }
-                _ => {}
-            }
         }
         _ => {},
     }

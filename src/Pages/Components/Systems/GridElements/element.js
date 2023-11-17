@@ -1,7 +1,7 @@
 import { useContext, useCallback, useMemo, createElement } from "react";
 
 import { EditorContext } from "../appContext";
-import { placementStringFromXYWH } from "../../../Utils";
+import { placementStringFromXYWH, dispatcher } from "../../../Utils";
 
 import { GridControllerContext } from "./context";
 
@@ -25,9 +25,16 @@ export function GridElement({id, children, position}) {
         [gridControllerCallback, id, position]
     );
 
+    const remove = useCallback(
+        () => {
+            dispatcher({type: "remove", id});
+        },
+        [id]
+    )
+
     let unlockedElement = useMemo(
         () => {
-            return createElement(GridElementOOC, {move, resize, id});
+            return createElement(GridElementOOC, {move, resize, remove, id});
         },
         [move, resize, id]
     )
@@ -39,7 +46,7 @@ export function GridElement({id, children, position}) {
     )
 };
 
-export function GridElementOOC({move, resize, id, style}) {
+export function GridElementOOC({move, resize, remove, id, style}) {
     return (
         <div style={{
             zIndex: "3",
@@ -86,7 +93,20 @@ export function GridElementOOC({move, resize, id, style}) {
                 onMouseDown={() => {move()}}
                 style={{background: "gray", width: "100%", height: "100%", cursor: "move"}}
             >
-                { id === undefined ?
+                {
+                    remove == null ?
+                    null
+                    :
+                    <button
+                        style={{position: "relative", zIndex: "4"}}
+                        onMouseDown={(e) => {e.stopPropagation()}}
+                        onClick={() => {remove()}}
+                    >
+                        x
+                    </button>
+                }
+                {
+                    id === undefined ?
                     null
                     :
                     <div style={{height: "40px", textOverflow:"ellipsis", overflow: "hidden"}}>id: {id}</div>

@@ -22,16 +22,13 @@ export default function Editor() {
 
     useEffect( // requests data and subscribes to changes
         () => {
-            invoke("request_data", { requestedData: "editor" })
-                .then((e) => setCharacterData(e.data))
-                .catch((e) => console.error(e));
-
             const onLoad = () => {
-                console.log("got a new_data event")
                 invoke("request_data", { requestedData: "editor" })
                     .then((e) => setCharacterData(e.data))
                     .catch((e) => console.error(e));
             }
+
+            onLoad();
 
             const unlisten = listen("new_data", onLoad);
             return () => {

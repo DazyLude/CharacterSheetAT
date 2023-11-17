@@ -7,21 +7,18 @@ import { listen } from '@tauri-apps/api/event';
 import { dispatcher, placementStringFromXYWH } from "./Utils";
 
 export default function RemoveElement() {
+    const [state, setState] = useState({"a": {}, "b": {}});
     const [selection, setSelection] = useState("none");
-    const [gridData, setGridData] = useState({});
 
     useEffect( // requests data and subscribes to changes
         () => {
-            invoke("request_data", { requestedData: "editor" })
-            .then((e) => setGridData(e.data.grid))
-            .catch((e) => console.error(e));
-
-            const onLoad = (e) => {
-                const data = e.payload.data.grid;
-                if (data !== undefined) {
-                    setGridData(data);
-                }
+            const onLoad = () => {
+                invoke("request_data", { requestedData: "remove-element" })
+                    .then((e) => setState(e.data.grid))
+                    .catch((e) => console.error(e));
             }
+
+            onLoad();
 
             const unlisten = listen("new_character_sheet", onLoad);
             return () => {
@@ -31,37 +28,6 @@ export default function RemoveElement() {
         []
     )
 
-    const drawGhost = useCallback(
-        (id) => {
-            if (gridData[id] === undefined) {
-                invoke("request_ghost_drawn", {
-                    ghostStyle: {
-                        "display": "none"
-                    }})
-                    .catch((e) => console.error(e));
-                return;
-            }
-            invoke("request_ghost_drawn", {
-                ghostStyle: {
-                    "background": "red",
-                    "gridArea": placementStringFromXYWH(gridData[id])
-                }})
-                .catch((e) => console.error(e));
-        },
-        [gridData]
-    )
-
-    useEffect(
-        () => {
-            const onRequest = () => {drawGhost(selection);};
-            const unlisten = listen("remove_ghost_request", onRequest);
-            return () => {
-                unlisten.then(f => f());
-            };
-        },
-        [drawGhost, selection]
-    )
-
     const dispatch = useCallback(
         (id) => {
             dispatcher({type: "remove", id});
@@ -69,7 +35,7 @@ export default function RemoveElement() {
         []
     );
 
-    const usedKeys = Object.keys(gridData);
+    const usedKeys = Object.keys(state);
     const removerOptions = usedKeys.map((key) => {
         return <option value={key} key={key}>{key}</option>
     })
@@ -87,7 +53,6 @@ export default function RemoveElement() {
                 value={selection}
                 onChange={(e) => {
                     setSelection(e.target.value);
-                    drawGhost(e.target.value)
                 }}
             >
                 <option value={"none"}>select</option>

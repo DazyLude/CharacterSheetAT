@@ -5,11 +5,11 @@ use serde_json::{Value, Map};
 
 use crate::{
     character_data::CharacterDataCommand,
-    windows::{CSATWindow, EditorStateSync},
     ipc::{get_json_from_event, emit_tauri_error}
 };
 
 use crate::funny_constants::APP_NAME;
+use super::{ CSATWindow, EditorStateSync };
 
 pub struct AddElementWindow {}
 
@@ -120,7 +120,7 @@ impl AddElementStateSync {
     }
 
     pub fn set_new_state(&self, new_state: AddElementState, handle: &AppHandle) {
-        let _ = handle.emit_to("add_element", "new_data", new_state.as_value());
+        let _ = handle.emit_to("add_element", "new_data", {});
         *self.state.lock().unwrap() = new_state;
     }
 

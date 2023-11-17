@@ -80,13 +80,6 @@ pub fn menu_event_handler(event: WindowMenuEvent) {
                 },
             };
         },
-        "remove_element" => {
-            let app_handle = event.window().app_handle();
-            let _ = match app_handle.get_window("remove_element") {
-                Some(w) => w.set_focus(),
-                None => windows::remove_element::builder(app_handle),
-            };
-        },
         "readonly_switch" => {
             let app_handle = event.window().app_handle();
             change_editor_context(&app_handle, "readOnly-switch".to_string());
@@ -179,16 +172,6 @@ fn shortcut_handler(app_handle: &AppHandle, key: &PressedKey) {
                     windows::AddElementWindow::builder(&h);
                     Ok(())
                 },
-            };
-        }
-        "open-rem" => {
-            let h = app_handle.clone();
-            let _ = match app_handle.get_window("remove_element") {
-                Some(w) => {
-                    let _ = w.set_focus();
-                    w.show()
-                }
-                None => windows::remove_element::builder(h),
             };
         }
         "mod1" => {
