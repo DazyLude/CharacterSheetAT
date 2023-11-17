@@ -5,13 +5,11 @@ use serde_json::{Value, Map};
 
 use crate::{
     character_data::CharacterDataCommand,
-    windows::EditorStateSync,
+    windows::{CSATWindow, EditorStateSync},
     ipc::{get_json_from_event, emit_tauri_error}
 };
 
 use crate::funny_constants::APP_NAME;
-
-use super::CSATWindow;
 
 pub struct AddElementWindow {}
 
@@ -20,6 +18,7 @@ impl CSATWindow for AddElementWindow {
     const LABEL: &'static str = "add_element";
     fn builder(app_handle: &AppHandle) {
         let _ = app_handle.manage(AddElementStateSync::new());
+        app_handle.state::<AddElementStateSync>().set_to_unnocupied_space(app_handle);
         let handle = app_handle.clone();
         std::thread::spawn(
             move || {
@@ -73,8 +72,9 @@ fn on_add_new_element_event(app_handle: &AppHandle, event: tauri::Event) {
     let element_data = get_json_from_event(event).as_ref().and_then(Value::as_object).cloned();
 
     let add = CharacterDataCommand::add_element(old_editor_data, element_data, ae_state.id.clone(), ae_state.get_placement_as_map());
-    app_handle.state::<AddElementStateSync>().set_inactive(app_handle);
     let _ = app_handle.state::<EditorStateSync>().change_data(add, app_handle);
+    app_handle.state::<AddElementStateSync>().set_to_unnocupied_space(app_handle);
+    app_handle.state::<AddElementStateSync>().set_inactive(app_handle);
 }
 
 fn on_change_state_event(handle: &AppHandle, event: tauri::Event) {
@@ -94,7 +94,6 @@ fn on_change_state_event(handle: &AppHandle, event: tauri::Event) {
         Some(id) => {
             old_data.id = id.to_string();
             old_data.is_active = check_id_availability(handle, &old_data.id);
-            println!("id {} is available: {}", old_data.id, old_data.is_active);
         },
         None => {},
     }
@@ -129,6 +128,24 @@ impl AddElementStateSync {
         let mut new_state = self.state.lock().unwrap().clone();
         new_state.is_active = false;
         self.set_new_state(new_state, handle)
+    }
+
+    pub fn set_to_unnocupied_space(&self, handle: &AppHandle) {
+        let get_row_below = |(_k, v): (&String, &Value)| -> i64 {
+            let y = v.get("y").and_then(Value::as_i64).unwrap_or(0);
+            let h = v.get("h").and_then(Value::as_i64).unwrap_or(0);
+            y + h
+        };
+
+        let lowest_row = match handle.try_state::<EditorStateSync>() {
+            None => return,
+            Some(st) => st.get_data().get_grid().iter().map(get_row_below).max().unwrap_or(0)
+        };
+
+        self.state.lock().unwrap()
+            .placement
+            .entry("y".to_string())
+            .and_modify(|n| *n = Value::Number(serde_json::Number::from(lowest_row)));
     }
 
     pub fn new() -> Self {

@@ -254,6 +254,9 @@ impl<'a> CharacterData {
         !self.grid.contains_key(id)
     }
 
+    pub fn get_grid(&self) -> Map<String, Value> {
+        self.grid.clone()
+    }
 }
 
 impl From<Value> for CharacterData {
