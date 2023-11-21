@@ -119,8 +119,8 @@ pub struct AddElementStateSync {
 }
 
 impl AddElementStateSync {
-    pub fn as_value(&self, handle: &AppHandle) -> serde_json::Value {
-        self.state.lock().unwrap().as_value(handle)
+    pub fn as_value(&self) -> serde_json::Value {
+        self.state.lock().unwrap().as_value()
     }
 
     pub fn get_cloned_state(&self) -> AddElementState {
@@ -128,14 +128,13 @@ impl AddElementStateSync {
     }
 
     pub fn set_new_state(&self, new_state: AddElementState, handle: &AppHandle) {
-        update_window(handle);
         *self.state.lock().unwrap() = new_state;
+        update_window(handle);
     }
 
     pub fn set_inactive(&self, handle: &AppHandle) {
-        let mut new_state = self.state.lock().unwrap().clone();
-        new_state.is_active = false;
-        self.set_new_state(new_state, handle)
+        self.state.lock().unwrap().is_active = false;
+        update_window(handle);
     }
 
     pub fn new() -> Self {
@@ -157,12 +156,8 @@ impl AddElementState {
         }
     }
 
-    pub fn as_value(&self, handle: &AppHandle) -> Value {
+    pub fn as_value(&self) -> Value {
         let mut state_obj = Map::<String, Value>::new();
-        state_obj.insert(
-            "placement".to_string(),
-            Value::Object(handle.state::<ElementGhost>().get_placement_as_map())
-        );
         state_obj.insert(
             "id".to_string(),
             Value::String(self.id.clone())

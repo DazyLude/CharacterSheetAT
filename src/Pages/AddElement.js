@@ -93,8 +93,9 @@ const constructibleElements = {
 }
 
 export default function ElementEditor() {
+    const [ghostState, setGhostState] = useState({});
+    const placement = {x: ghostState.x ?? 1, y: ghostState.y ?? 1, w: ghostState.w ?? 1, h: ghostState.h ?? 1};
     const [state, setState] = useState({});
-    const placement = state.placement ?? {x: 1, y: 1, w: 1, h: 1};
     const id = state.id ?? "";
     const isActive = state.is_active ?? false;
     const [selection, setSelection] = useState("none");
@@ -120,9 +121,10 @@ export default function ElementEditor() {
     useEffect( // requests data and subscribes to changes
         () => {
             const onLoad = () => {
-                invoke("request_data", {requestedData: "add-element"})
-                    .then((e) => setState(e.data))
+                invoke("request_data", {requestedData: "ghost"})
+                    .then((e) => setGhostState(e.data))
                     .catch((e) => console.error(e));
+                console.log(ghostState);
             }
 
             onLoad()

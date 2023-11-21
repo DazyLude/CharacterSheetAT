@@ -65,17 +65,13 @@ pub fn handle_data_request(
         }
         "add-element" => {
             match app_handle.try_state::<AddElementStateSync>() {
-                Some(state) => return Ok(PayloadJSON { data: state.as_value(&app_handle) }),
+                Some(state) => return Ok(PayloadJSON { data: state.as_value() }),
                 None => return Err("add element window state not managed".to_string()),
             }
         }
         "ghost" => {
             match app_handle.try_state::<ElementGhost>() {
-                Some(state) => {
-                    let mut data = state.get_placement_as_map();
-                    data.insert("displayed".to_string(), Value::Bool(state.displayed.lock().unwrap().clone()));
-                    return Ok(PayloadJSON { data: Value::Object(data) });
-                }
+                Some(state) => return Ok(PayloadJSON { data: state.as_value() }),
                 None => return Err("ghost element state not managed".to_string()),
             }
         }

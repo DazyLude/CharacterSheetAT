@@ -34,6 +34,15 @@ impl ElementGhost {
         }
     }
 
+    pub fn as_value(&self) -> Value {
+        let mut map = self.get_placement_as_map();
+        map.insert(
+            "displayed".to_string(),
+            Value::Bool(self.displayed.lock().unwrap().clone())
+        );
+        Value::Object(map)
+    }
+
     pub fn get_placement_as_map(&self) -> Map<String, Value> {
         Map::from_iter(self.placement.lock().unwrap().clone().into_iter())
     }
