@@ -97,7 +97,7 @@ function SpellListHead() {
             <span>Range</span>
             {isEditingElements ?
             <>
-                <span style={{gridColumn: "7/9"}}>Priority</span>
+                <span style={{gridColumn: "7/9"}}>Weight</span>
             </>
                 :
             <>
@@ -117,7 +117,7 @@ function Spell({entry, editItem, removeItem, isOpen, spoilerStateHandler}) {
     const isPrepared = entry.isPrepared;
     const placement = entry.placement ?? [0, 0];
 
-    const setPriority = (value) => {editItem({placement: [placement[0], value]})};
+    const setWeight = (value) => {editItem({placement: [placement[0], value]})};
     const description = createElement(SpellDescription, {longDescription, text, editItem, removeItem, isOpen, spoilerStateHandler});
 
     return(
@@ -175,7 +175,7 @@ function Spell({entry, editItem, removeItem, isOpen, spoilerStateHandler}) {
                             textAlign: "center",
                         }}
                         value={placement[1]}
-                        onChange={value => setPriority(value)}
+                        onChange={value => setWeight(value)}
                     />
                 </div>
                 :

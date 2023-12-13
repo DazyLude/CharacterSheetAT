@@ -124,7 +124,6 @@ export default function ElementEditor() {
                 invoke("request_data", {requestedData: "ghost"})
                     .then((e) => setGhostState(e.data))
                     .catch((e) => console.error(e));
-                console.log(ghostState);
             }
 
             onLoad()

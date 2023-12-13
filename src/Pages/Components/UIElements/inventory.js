@@ -59,7 +59,7 @@ function Title({carriedWeight, str}) {
 
 function InventoryItem({entry, editItem, removeItem}) {
     const {isEditingElements} = useContext(EditorContext);
-    const setPriority = (value) => {editItem({placement: [entry.placement[0], value]})};
+    const setWeight = (value) => {editItem({placement: [entry.placement[0], value]})};
     const incrementColumn = () => {editItem({placement: [entry.placement[0] + 1, entry.placement[1]]})};
     const decrementColumn = () => {editItem({placement: [entry.placement[0] - 1, entry.placement[1]]})};
     if (isEditingElements) {
@@ -77,7 +77,7 @@ function InventoryItem({entry, editItem, removeItem}) {
                             textAlign: "center",
                         }}
                         value={entry.placement[1]}
-                        onChange={value => setPriority(value)}
+                        onChange={value => setWeight(value)}
                     />
                     <UseEffectButton
                         style={{
@@ -123,7 +123,7 @@ function InventoryHead() {
                 <>
                     <div style={{display: "flex", justifyContent: "space-between"}}>
                         <span>Name</span>
-                        <span>Priority</span>
+                        <span>Weight</span>
                     </div>
                     <div>{/* empty block */}</div>
                     <div>{/* empty block */}</div>

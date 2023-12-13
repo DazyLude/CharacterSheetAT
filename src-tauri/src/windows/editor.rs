@@ -115,8 +115,7 @@ impl EditorWindow {
         let edit_menu = Menu::new()
             .add_item(CustomMenuItem::new("undo", "Undo").accelerator("ctrl+Z"))
             .add_item(CustomMenuItem::new("redo", "Redo").accelerator("ctrl+Y"))
-            .add_item(CustomMenuItem::new("add_element", "Add Element").accelerator("ctrl+E"))
-            .add_item(CustomMenuItem::new("remove_element", "Remove Element").accelerator("ctrl+D"));
+            .add_item(CustomMenuItem::new("add_element", "Add Element").accelerator("ctrl+E"));
         let edit_submenu = Submenu::new("Edit", edit_menu);
 
         let mode_menu = Menu::new()
@@ -136,6 +135,9 @@ fn tell_to_reload(handle: &AppHandle) {
     handle
         .emit_to( "editor", "new_data", {} )
         .unwrap_or_else(|error| emit_tauri_error(handle, error.to_string()));
+    handle
+        .emit_to( "debug_window", "new_data", {} )
+        .unwrap_or_else(|error| emit_tauri_error(handle, error.to_string()));
 }
 
 fn move_ghost(handle: &AppHandle) {
@@ -153,14 +155,14 @@ impl EditorStateSync {
         EditorStateSync { state: Mutex::from(EditorState::new()) }
     }
 
-    pub fn change_associated_file(&self, handle: &AppHandle, path: PathBuf, data: CharacterData) {
+    pub fn change_associated_file(&self, handle: &AppHandle, path: PathBuf, data: serde_json::Value) {
         self.set_path(path);
-        self.set_data(data, handle);
+        self.set_data(data.into(), handle);
         self.remove_not_saved_flag();
     }
 
     pub fn as_value(&self) -> serde_json::Value {
-        self.get_data().as_value().clone()
+        self.get_data().into()
     }
 
     pub fn get_data(&self) -> CharacterData {

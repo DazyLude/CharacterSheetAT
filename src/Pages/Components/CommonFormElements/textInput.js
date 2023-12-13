@@ -1,12 +1,18 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { createElement, useContext, useEffect, useRef, useState } from "react";
 import { EditorContext } from "../Systems/appContext";
 
-export default function TextInput({value, onChange, style}) {
+export function TextInput({value, onChange, style}) {
+    const {readOnly} = useContext(EditorContext);
+    onChange ??= ((e) => {});
+    return createElement(TextInputNoContext, {value, onChange, style, readOnly})
+}
+
+export function TextInputNoContext({value, onChange, style, readOnly}) {
     const [selectionStart, setSelectionStart] = useState(0);
     value ??= "";
     const [oldValue, setOldValue] = useState(value);
     const elementRef = useRef(null);
-    const {readOnly} = useContext(EditorContext);
+    readOnly ??= false;
     onChange ??= ((e) => {});
 
     useEffect(

@@ -3,7 +3,7 @@ import NumberInput from "./numberInput";
 import { Spoiler, ControlledSpoiler } from "./spoiler";
 import { Table } from "./table";
 import TextFieldInput from "./textFieldInput";
-import TextInput from "./textInput";
+import { TextInput, TextInputNoContext } from "./textInput";
 import UseEffectButton from "./useEffectButton";
 
 export {
@@ -12,6 +12,6 @@ export {
     Spoiler, ControlledSpoiler,
     Table,
     TextFieldInput,
-    TextInput,
+    TextInput, TextInputNoContext,
     UseEffectButton,
 }

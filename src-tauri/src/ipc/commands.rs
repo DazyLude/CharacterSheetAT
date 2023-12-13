@@ -17,7 +17,7 @@ pub fn handle_change_request(handle: AppHandle, target: String, data: Value) -> 
             };
             handle.state::<ElementGhost>().update_placement(new_placement, &handle);
             Ok(())
-        },
+        }
         e => return Err(format!("unknown change request target: {e}")),
     }
 }
@@ -74,6 +74,27 @@ pub fn handle_data_request(
                 Some(state) => return Ok(PayloadJSON { data: state.as_value() }),
                 None => return Err("ghost element state not managed".to_string()),
             }
+        }
+        "variable" => {
+            let variable_name = match requested_data_argument.as_ref().and_then(Value::as_str) {
+                Some(s) => s.to_string(),
+                None => return Err(format!("incorrect variable name: {requested_data_argument:?}")),
+            };
+            let data = match app_handle.try_state::<EditorStateSync>() {
+                Some(state) => state.get_data(),
+                None => return Err("editor window state not managed".to_string()),
+            };
+            match data.get_variable(&variable_name, None) {
+                Ok(o) => Ok(PayloadJSON{ data: o }),
+                Err(e) => return Err(e),
+            }
+        }
+        "variables" => {
+            let data = match app_handle.try_state::<EditorStateSync>() {
+                Some(state) => state.get_data(),
+                None => return Err("editor window state not managed".to_string()),
+            };
+            Ok(PayloadJSON{ data: Value::Object(data.get_variables()) })
         }
         _e => return Err(format!("incorrect data type requested: {}", _e)),
     }

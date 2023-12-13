@@ -1,7 +1,7 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { useEffect } from 'react';
 
-import { Editor, AddElement, RemoveElement } from './Pages';
+import { Editor, AddElement, Debug } from './Pages';
 import { emit } from '@tauri-apps/api/event';
 
 function App() {
@@ -24,7 +24,7 @@ function App() {
                 <Route path="/" element={<></>} />
                 <Route path="/editor" element={<Editor/>} />
                 <Route path="/add_element" element={<AddElement/>} />
-                <Route path="/remove_element" element={<RemoveElement/>} />
+                <Route path="/debug_window" element={<Debug/>} />
             </Routes>
         </BrowserRouter>
     );

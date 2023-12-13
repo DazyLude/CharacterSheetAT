@@ -16,6 +16,7 @@ impl LoadedShortcuts {
         loaded_shortcuts.insert(PressedKey::compose(true, false, "Digit1".to_string()), "mod1".into());
         loaded_shortcuts.insert(PressedKey::compose(true, false, "Digit2".to_string()), "mod2".into());
         loaded_shortcuts.insert(PressedKey::compose(true, false, "Digit3".to_string()), "mod3".into());
+        loaded_shortcuts.insert(PressedKey::compose(true, false, "Digit0".to_string()), "debug_window".into());
 
         LoadedShortcuts { shortcuts: Mutex::from(loaded_shortcuts) }
     }

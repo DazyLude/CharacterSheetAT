@@ -5,7 +5,6 @@ use tauri::{ Manager, AppHandle, RunEvent, App, WindowMenuEvent };
 use crate::app_state::{
     LoadedShortcuts, load_app_state_from_recovery_string,
 };
-use crate::character_data::CharacterData;
 use crate::disk_interactions::{load_startup_data, open_character_sheet, save_character_sheet, save_as_character_sheet};
 use crate::windows::{self, CSATWindow, EditorStateSync};
 
@@ -57,7 +56,7 @@ pub fn menu_event_handler(event: WindowMenuEvent) {
         }
         "new" => {
             let app_handle = event.window().app_handle();
-            let v = CharacterData::generate_empty();
+            let v = Value::Object(serde_json::Map::new());
             let p = "".into();
             app_handle.state::<EditorStateSync>().change_associated_file(&app_handle, p, v);
         }
@@ -91,7 +90,10 @@ pub fn menu_event_handler(event: WindowMenuEvent) {
             let app_handle = event.window().app_handle();
             change_editor_context(&app_handle, "elementEdit-switch".to_string());
         }
-        e => println!("Got an unimplemented menu event with id: {:?}", e),
+        e => {
+            let app_handle = event.window().app_handle();
+            emit_tauri_error(&app_handle, format!("Got an unimplemented menu event with id: {:?}", e));
+        }
     }
 }
 
@@ -181,6 +183,19 @@ fn shortcut_handler(app_handle: &AppHandle, key: &PressedKey) {
         }
         "mod3" => {
             change_editor_context(app_handle, "elementEdit-switch".to_string());
+        }
+        "debug_window" => {
+            let h = app_handle.clone();
+            let _ = match app_handle.get_window("debug_window") {
+                Some(w) => {
+                    let _ = w.set_focus();
+                    w.show()
+                }
+                None => {
+                    windows::DebugWindow::builder(&h);
+                    Ok(())
+                },
+            };
         }
         _ => return,
     }

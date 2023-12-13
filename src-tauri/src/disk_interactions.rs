@@ -74,7 +74,7 @@ pub fn open_character_sheet(window: tauri::Window) {
                         return;
                     },
                 };
-                app_handle.state::<EditorStateSync>().change_associated_file(&app_handle, p, v.into());
+                app_handle.state::<EditorStateSync>().change_associated_file(&app_handle, p, v);
             },
             None => return, // path was not provided by the user, we can just exit
         };
@@ -84,7 +84,7 @@ pub fn open_character_sheet(window: tauri::Window) {
 }
 
 pub fn save_character_sheet(app_state: State<EditorStateSync>) -> Result<(), String> {
-    let data = serde_json::to_string(&app_state.get_data().as_value()).unwrap();
+    let data = serde_json::to_string::<Value>(&app_state.get_data().into()).unwrap();
     let path = app_state.get_path();
     if path.to_str() == Some("") {return Ok(());}
 
@@ -100,7 +100,7 @@ pub fn save_character_sheet(app_state: State<EditorStateSync>) -> Result<(), Str
 pub fn save_as_character_sheet(window: tauri::Window) {
     FileDialogBuilder::new().save_file(move |file_path| {
         let app = &window.app_handle();
-        let data_json = app.state::<EditorStateSync>().get_data().as_value();
+        let data_json : Value = app.state::<EditorStateSync>().get_data().into();
         let data = serde_json::to_string(&data_json).unwrap();
         match file_path {
             Some(p) => {

@@ -24,7 +24,9 @@ export default function Editor() {
         () => {
             const onLoad = () => {
                 invoke("request_data", { requestedData: "editor" })
-                    .then((e) => setCharacterData(e.data))
+                    .then((e) => {
+                        setCharacterData(e.data);
+                    })
                     .catch((e) => console.error(e));
             }
 

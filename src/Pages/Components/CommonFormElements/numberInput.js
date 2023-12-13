@@ -13,8 +13,10 @@ export default function NumberInput({style, onChange, value}) {
             value={value}
             onChange={event => {
                 if (readOnly) return;
-                const newValue = parseFloat(event.target.value);
-                onChange(isNaN(newValue) ? event.target.value : newValue);
+                console.log(event.target.value);
+                const value = event.target.value;
+                const parsedValue = parseFloat(value);
+                onChange(isNaN(parsedValue) ? value : parsedValue);
             }}
         />
     );

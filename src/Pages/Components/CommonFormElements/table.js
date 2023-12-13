@@ -62,15 +62,15 @@ export function Table({data, itemElement, defaultItemObject, dispatcher, childre
     );
 
     const leastPopulatedColumn = columnPopulation.indexOf(smallestPopulation);
-    const lowestPriority = tableEntries.reduce(
+    const lowestWeight = tableEntries.reduce(
         (leastSoFar, [_, entry]) => {
-            const [currentColumn, currentPriority] = entry.placement ?? [0,0];
+            const [currentColumn, currentWeight] = entry.placement ?? [0,0];
             if (currentColumn % columns !== leastPopulatedColumn) {
                 return leastSoFar;
             }
-            leastSoFar ??= currentPriority;
-            if (currentPriority < leastSoFar) {
-                return currentPriority;
+            leastSoFar ??= currentWeight;
+            if (currentWeight < leastSoFar) {
+                return currentWeight;
             }
             return leastSoFar;
         },
@@ -88,7 +88,7 @@ export function Table({data, itemElement, defaultItemObject, dispatcher, childre
             name: `${count + 1}`,
             value: {
                 ...newItem,
-                placement: [leastPopulatedColumn, lowestPriority]
+                placement: [leastPopulatedColumn, lowestWeight]
             }
         });
     }
@@ -187,9 +187,9 @@ function TableColumns({columns, columnStyle, Head, displayItems}) {
         const cmpFn = (itemA, itemB) => {
             const tablePositionA = itemA.props.entry.placement ?? [0, 0];
             const tablePositionB = itemB.props.entry.placement ?? [0, 0];
-            const priorityA = tablePositionA[1] ?? 0;
-            const priorityB = tablePositionB[1] ?? 1;
-            return priorityB - priorityA;
+            const weightA = tablePositionA[1] ?? 0;
+            const weightB = tablePositionB[1] ?? 1;
+            return weightA - weightB;
         }
         arrayOfItems.sort(cmpFn);
     });

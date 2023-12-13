@@ -36,7 +36,6 @@ export function EditorContextProvider({children}) {
         () => {
             const onEvent = (e) => {
                 const data = e.payload;
-                console.log(data);
                 contextDispatcher({type: data});
             }
 

@@ -1,7 +1,6 @@
 import { invoke } from "@tauri-apps/api";
 
 export function dispatcher({type, id, name, value}) {
-    console.log("called dispatcher")
     switch(type) {
         case "global":
             changeGlobal(name, value);

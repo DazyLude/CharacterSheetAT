@@ -2,9 +2,11 @@ use tauri::{ AppHandle, Manager, WindowEvent };
 
 mod editor;
 mod add_element;
+mod debug_window;
 
 pub use self::add_element::{ AddElementWindow, AddElementStateSync };
 pub use self::editor::{ EditorWindow, EditorStateSync };
+pub use self::debug_window::*;
 
 pub trait CSATWindow {
     const LABEL: &'static str;
