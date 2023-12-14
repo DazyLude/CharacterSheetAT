@@ -1,17 +1,19 @@
 import { createElement, useContext } from "react";
 import { EditorContext } from "../Systems/appContext";
-import { getStatModNumeric, getStatMod } from "../../Utils";
+import { getStatModNumeric, getStatMod, changeData } from "../../Utils";
 import { TextFieldInput, TextInput, ControlledSpoiler, Checkbox, Table, NumberInput} from "../CommonFormElements";
 
-export default function SpellList({characterData, characterDispatch, id}) {
+export default function SpellList({characterData}) {
     const skills = characterData.globals.stats ?? {};
     const proficiencyModifier = characterData.globals.proficiencyModifier ?? 0;
-    const data = characterData.elements[id] ?? {};
-    const dispatcher = (args) => {characterDispatch({id: id, ...args})}; // operation type is defined later
+    const data = characterData.globals.spells ?? {data: {}};
+    const spellDispatcher = (args) => {
+        changeData({value_type: "global", id: "spells", ...args}, "character_data")
+    };
 
     const spellCastingAbility = data.spellCastingAbility ?? "cha";
     const spellSavingThrow = getStatModNumeric(skills[spellCastingAbility], 8 + proficiencyModifier);
-    const spellAttackBonus = getStatMod(skills[spellCastingAbility], proficiencyModifier + data.weaponBonus);
+    const spellAttackBonus = getStatMod(skills[spellCastingAbility], proficiencyModifier);
 
     const defaultSpell = {
         isPrepared: false,
@@ -25,7 +27,7 @@ export default function SpellList({characterData, characterDispatch, id}) {
     }
 
     const changeSpellCastingAbility = (val) => {
-        dispatcher({type: "element-merge", value: {"spellCastingAbility": val}});
+        spellDispatcher({merge_object: {"spellCastingAbility": val}});
     }
 
     const columnStyle = {
@@ -42,10 +44,10 @@ export default function SpellList({characterData, characterDispatch, id}) {
             Head={SpellListHead}
             columnStyle={columnStyle}
             columns={1}
-            data={{count: data.count, dataSet: data.data}}
+            data={{count: data.count ?? 0, dataSet: data.data}}
             itemElement={Spell}
             defaultItemObject={defaultSpell}
-            dispatcher={dispatcher}
+            dispatcher={spellDispatcher}
         >
             <Title
                 spellCastingAbility={spellCastingAbility}

@@ -1,5 +1,18 @@
 import { invoke } from "@tauri-apps/api";
 
+export function edit_variable({name, newValue}) {
+    changeData(
+        {
+            value_type: "any-set",
+            merge_object: {
+                path: ['variables', name],
+                new_value: newValue
+            }
+        },
+        "character_data"
+    );
+}
+
 export function dispatcher({type, id, name, value}) {
     switch(type) {
         case "global":
@@ -107,6 +120,7 @@ function removeById(id) {
     );
 }
 
+/// data: {value_type: String, id?: String, value_name?: String, new_value?: Value, merge_object?: Object}
 export function changeData(data, target) {
     invoke("change_data", {target: target ?? "", data: data ?? {}})
         .catch((e) => console.error(e));

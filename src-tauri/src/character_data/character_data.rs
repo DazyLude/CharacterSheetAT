@@ -32,6 +32,50 @@ impl CharacterData {
         Some(())
     }
 
+    pub fn add_to_global_set(&mut self, global_name: String, entry_name: String, value: Value) -> Option<()> {
+        let element_data = match self
+            .globals
+            .get_mut(&global_name)
+            .and_then(Value::as_object_mut)
+            .unwrap()
+            .entry("data")
+            .or_insert(Value::Object(Map::new()))
+            .as_object_mut() {
+            Some(d) => d,
+            None => return None,
+        };
+        *element_data.entry(entry_name).or_insert(Value::Null) = value;
+        Some(())
+    }
+
+    pub fn remove_from_global_set(&mut self, global_name: String, entry_name: String) -> Option<()> {
+        let element_data = match self
+            .globals
+            .get_mut(&global_name)
+            .and_then(Value::as_object_mut)
+            .and_then(|o| o.get_mut("data"))
+            .and_then(Value::as_object_mut) {
+            Some(d) => d,
+            None => return None,
+        };
+        element_data.remove(&entry_name)?;
+        Some(())
+    }
+
+    pub fn merge_with_global_set(&mut self, global_name: String, entry_name: String, mut merge_with: Map<String, Value>) -> Option<()> {
+        let element_data = match self
+            .globals
+            .get_mut(&global_name)
+            .and_then(Value::as_object_mut)
+            .and_then(|o| o.get_mut("data"))
+            .and_then(Value::as_object_mut) {
+            Some(d) => d,
+            None => return None,
+        };
+        element_data.entry(&entry_name).or_insert(Value::Object(Map::new())).as_object_mut().unwrap().append(&mut merge_with);
+        Some(())
+    }
+
     /// edit_grid changes an element's position object's field
     pub fn edit_grid(&mut self, id: String, value_name: String, new_value: Value) -> Option<()> {
         match self.grid.entry(id).or_insert(Value::Object(Map::new())).as_object_mut() {
@@ -293,6 +337,18 @@ impl CharacterData {
                         .and_then(|stats| stats.get(id)) {
                     None => return Ok(Value::Number(Number::from(0))),
                     Some(v) => return Ok(v.clone())
+                }
+            }
+            "stat_cap" => {
+                match self.globals.get("stats")
+                        .and_then(Value::as_object)
+                        .and_then(|stats| stats.get(id))
+                        .and_then(Value::as_number)
+                        .and_then(Number::as_i64) {
+                    None => return Ok(Value::Number(Number::from(0))),
+                    Some(n) => {
+                        return Ok(Value::Number(Number::from(std::cmp::min((n - 10) / 2, 2))));
+                    }
                 }
             }
             "stat_mod" => {

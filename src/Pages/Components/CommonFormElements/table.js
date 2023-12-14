@@ -78,15 +78,14 @@ export function Table({data, itemElement, defaultItemObject, dispatcher, childre
     ) ?? 0;
 
     const incrementCount = () => {
-        dispatcher({type: "element-merge", value: {count: count + 1}});
+        dispatcher({merge_object: {count: count + 1}});
     }
 
     const addItem = () => {
         const newItem = defaultItemObject;
         dispatcher({
-            type: "element-set-add",
-            name: `${count + 1}`,
-            value: {
+            value_name: `${count + 1}`,
+            new_value: {
                 ...newItem,
                 placement: [leastPopulatedColumn, lowestWeight]
             }
@@ -95,16 +94,14 @@ export function Table({data, itemElement, defaultItemObject, dispatcher, childre
 
     const removeItem = (removedItemId) => {
         dispatcher({
-            type: "element-set-remove",
-            name: `${removedItemId}`,
+            value_name: `${removedItemId}`,
         })
     }
 
     const editItem = (replacedItemId, replacement) => {
         dispatcher({
-            type: "element-set-merge",
-            name: `${replacedItemId}`,
-            value: replacement,
+            value_name: `${replacedItemId}`,
+            merge_object: replacement,
         })
     }
     const displayItems = tableEntries.map(([id, entry]) => {

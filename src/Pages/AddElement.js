@@ -76,12 +76,12 @@ const constructibleElements = {
         defaultSize: {w: 5, h: 5},
     },
     "inventory": {
-        data: {data: {}, count: 0},
+        data: {},
         idCode: "inventory",
         defaultSize: {w: 12, h: 10},
     },
     "spellList": {
-        data: {data: {}, count: 0, spellCastingAbility: "cha", weaponBonus: 0},
+        data: {},
         idCode: "spell list",
         defaultSize: {w: 12, h: 10},
     },

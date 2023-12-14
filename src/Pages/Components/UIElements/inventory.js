@@ -1,12 +1,15 @@
-import { TextInput, NumberInput, Table, UseEffectButton } from "../CommonFormElements";
+import { TextInput, NumberInput, Table, UseEffectButton, Checkbox, ControlledSpoiler, TextFieldInput } from "../CommonFormElements";
 import { useContext } from "react";
 import { EditorContext } from "../Systems/appContext";
+import { changeData } from "../../Utils";
 
-export default function Inventory({characterData, characterDispatch, id}) {
+export default function Inventory({characterData}) {
     const stats = characterData.stats ?? {};
     const str = stats.str ?? 0;
-    const data = characterData.elements[id] ?? {};
-    const dispatcher = (args) => {characterDispatch({id: id, ...args})}; // operation type is defined later
+    const data = characterData.globals.inventory ?? {data: {}};
+    const inventoryDispatcher = (args) => {
+        changeData({value_type: "global", id: "inventory", ...args}, "character_data")
+    };
 
     const carriedWeight = Object.values(data.data).reduce(
         (accumulator, entry) => {return accumulator += entry.wght * entry.qty},
@@ -34,10 +37,10 @@ export default function Inventory({characterData, characterDispatch, id}) {
             Head={InventoryHead}
             columnStyle={{...columnStyle}}
             columns={2}
-            data={{count: data.count, dataSet: data.data}}
+            data={{count: data.count ?? 0, dataSet: data.data}}
             itemElement={InventoryItem}
             defaultItemObject={defaultItem}
-            dispatcher={dispatcher}
+            dispatcher={inventoryDispatcher}
         >
             <Title carriedWeight={carriedWeight} str={str}/>
         </Table>
@@ -57,11 +60,15 @@ function Title({carriedWeight, str}) {
     );
 }
 
-function InventoryItem({entry, editItem, removeItem}) {
+function InventoryItem({entry, editItem, removeItem, spoilerStateHandler, isOpen}) {
     const {isEditingElements} = useContext(EditorContext);
     const setWeight = (value) => {editItem({placement: [entry.placement[0], value]})};
     const incrementColumn = () => {editItem({placement: [entry.placement[0] + 1, entry.placement[1]]})};
     const decrementColumn = () => {editItem({placement: [entry.placement[0] - 1, entry.placement[1]]})};
+    const hasLongDesc = entry.hasLongDesc ?? false;
+
+
+
     if (isEditingElements) {
         return (
             <>
@@ -94,8 +101,15 @@ function InventoryItem({entry, editItem, removeItem}) {
                         action={() => {incrementColumn()}}
                     />
                 </div>
+                <div>
+                    <Checkbox
+                        style={{width: "99%"}}
+                        isChecked={hasLongDesc}
+                        changeHandler={(value) => {editItem({hasLongDesc: value})}}
+                    />
+                </div>
                 <UseEffectButton
-                    style={{height: "25px", padding: "0px 0px 3px", gridColumn: "3/-1"}}
+                    style={{height: "25px", padding: "0px 0px 3px", gridColumn: "4/-1"}}
                     title={"del"}
                     action={() => {removeItem()}}
                 />
@@ -104,7 +118,9 @@ function InventoryItem({entry, editItem, removeItem}) {
     } // else:
     return(
         <>
-            <TextInput style={{height: "25px", width: "98%"}} value={entry.name} onChange={(value) => {editItem({name: value})}} />
+            <div>
+                <ItemDescription spoilerStateHandler={spoilerStateHandler} isOpen={isOpen} longDescription={entry.hasLongDesc} style={{height: "25px", width: "98%"}} text={entry.name} onChange={(value) => {editItem({name: value})}} />
+            </div>
             <NumberInput style={{height: "25px"}} value={entry.qty} onChange={(value) => {editItem({qty: value})}} />
             <div>{/* empty block */}</div>
             <span style={{textAlign: "right"}}>
@@ -114,6 +130,34 @@ function InventoryItem({entry, editItem, removeItem}) {
         </>
     );
 }
+
+function ItemDescription({longDescription, text, onChange, spoilerStateHandler, isOpen, style}) {
+    if (longDescription) {
+        return(
+            <ControlledSpoiler
+                isOpen={isOpen}
+                stateHandler={spoilerStateHandler}
+                preview={<TextInput style={{height: "30px", width: "69%", ...style}} value={text} onChange={onChange}/>}
+            >
+                <TextFieldInput
+                    size={{
+                        height: "100px",
+                        width: "100%",
+                    }}
+                    value={text}
+                    onChange={onChange}
+                />
+            </ControlledSpoiler>
+        );
+    }
+    else return(
+        <TextInput
+            style={{width: "90%", height: "30px", ...style}}
+            value={text}
+            onChange={onChange}
+        />
+    );
+};
 
 function InventoryHead() {
     const {isEditingElements} = useContext(EditorContext);
@@ -126,9 +170,9 @@ function InventoryHead() {
                         <span>Weight</span>
                     </div>
                     <div>{/* empty block */}</div>
+                    <div>desc</div>
                     <div>{/* empty block */}</div>
-                    <div>{/* empty block */}</div>
-                    <div>{/* empty block */}</div>
+                    <div>rem</div>
                 </>
                 :
                 <>

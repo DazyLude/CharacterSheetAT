@@ -54,11 +54,13 @@ export default function VariableTable() {
 
     const table_rows = [];
     for (const v_name in data) {
-        const row = (<div key={v_name}>
-                        |<span>{v_name}</span>
-                        |<TextInputNoContext style={{width: "40%"}} value={data[v_name]} onChange={(c) => {changeVariable(v_name, c)}} />
-                        |<span>{processedVariables[v_name]??""}</span>|
-                    </div>);
+        const row = (<tr key={v_name}>
+                        <td>{v_name}</td>
+                        <td>
+                            <TextInputNoContext style={{width: "100%"}} value={data[v_name]} onChange={(c) => {changeVariable(v_name, c)}} />
+                        </td>
+                        <td>{processedVariables[v_name]??""}</td>
+                    </tr>);
         table_rows.push(row);
     }
 
@@ -70,10 +72,17 @@ export default function VariableTable() {
         .catch((e) => {console.error(e);});
 
     return (
-        <div>
+        <div className={"sheet-subscript"}>
             Name: <TextInputNoContext value={newVarName} onChange={setNewVarName}/>
             <UseEffectButton action={() => {addNewVariable(newVarName); setNewVarName("");}} title={"add"}/>
-            {table_rows}
+            <table>
+                <tr>
+                    <th>Name</th>
+                    <th style={{width: "400px"}}>Value</th>
+                    <th>Proccessed Value</th>
+                </tr>
+                {table_rows}
+            </table>
         </div>
     );
 }

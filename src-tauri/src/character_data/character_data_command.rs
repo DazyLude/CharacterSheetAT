@@ -74,8 +74,12 @@ impl Command<CharacterData> for CharacterDataCommand {
                     ("grid",        Some(i), Some(n), Some(v), None   ) => apply_to.edit_grid(i, n, v),
                     ("element",     Some(i), None,    None,    Some(m)) => apply_to.merge_element(&i, m),
                     ("element",     Some(i), Some(n), Some(v), None   ) => apply_to.edit_element(i, n, v),
-                    ("global",      None,    Some(n), None,    Some(m)) => apply_to.merge_global(n, m),
+                    ("global",      None,    Some(n), None,    Some(m)) |
+                    ("global",      Some(n), None,    None,    Some(m)) => apply_to.merge_global(n, m),
                     ("global",      None,    Some(n), Some(v), None   ) => apply_to.edit_global(n, v),
+                    ("global",      Some(i), Some(n), Some(v), None   ) => apply_to.add_to_global_set(i, n, v),
+                    ("global",      Some(i), Some(n), None,    None   ) => apply_to.remove_from_global_set(i, n),
+                    ("global",      Some(i), Some(n), None,    Some(m)) => apply_to.merge_with_global_set(i, n, m),
                     ("element-set", Some(i), Some(n), None,    Some(m)) => apply_to.merge_with_set_item(i, &n, &m),
                     ("element-set", Some(i), Some(n), Some(v), None   ) => apply_to.add_to_set(i, &n, &v),
                     ("remove",      Some(i), None   , None,    None   ) => apply_to.remove_by_id(&i),
