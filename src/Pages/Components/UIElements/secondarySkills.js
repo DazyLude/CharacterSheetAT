@@ -145,15 +145,15 @@ function SecondarySkillRow(props) {
                         <div>
                             set proficiency:
                             <Checkbox
-                                isChecked={proficiency===true || (proficiency.mul === 1 && (proficiency.add ?? 0) === 0)}
-                                changeHandler={(val) => {setProficient(val)}}
+                                value={proficiency===true || (proficiency.mul === 1 && (proficiency.add ?? 0) === 0)}
+                                onChange={(val) => {setProficient(val)}}
                             />
                         </div>
                         <div>
                             set expertise:
                             <Checkbox
-                                isChecked={proficiency.mul === 2 && (proficiency.add ?? 0) === 0}
-                                changeHandler={(val) => {setExpert(val)}}
+                                value={proficiency.mul === 2 && (proficiency.add ?? 0) === 0}
+                                onChange={(val) => {setExpert(val)}}
                             />
                         </div>
                         or set custom modifier formula:
@@ -197,8 +197,8 @@ function SecondarySkillRow(props) {
                 }}
             >
                 <Checkbox
-                    isChecked={proficiency}
-                    changeHandler={(value) => {skill.changeHandler(value)}}
+                    value={proficiency}
+                    onChange={(value) => {skill.changeHandler(value)}}
                 />
                 <div>
                     {modifier}

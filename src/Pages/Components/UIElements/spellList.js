@@ -127,8 +127,8 @@ function Spell({entry, editItem, removeItem, isOpen, spoilerStateHandler}) {
             {/* prepared status */}
             <Checkbox
                 style={{width: "99%"}}
-                isChecked={isPrepared}
-                changeHandler={(value) => {editItem({isPrepared: value})}}
+                value={isPrepared}
+                onChange={(value) => {editItem({isPrepared: value})}}
             />
             {/* name */}
             <TextInput

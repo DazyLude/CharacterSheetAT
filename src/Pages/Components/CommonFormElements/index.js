@@ -1,5 +1,5 @@
 import Checkbox from "./checkbox";
-import NumberInput from "./numberInput";
+import { NumberInput, NumberInputWithPostfix } from "./numberInput";
 import { Spoiler, ControlledSpoiler } from "./spoiler";
 import { Table } from "./table";
 import TextFieldInput from "./textFieldInput";
@@ -8,7 +8,7 @@ import UseEffectButton from "./useEffectButton";
 
 export {
     Checkbox,
-    NumberInput,
+    NumberInput, NumberInputWithPostfix,
     Spoiler, ControlledSpoiler,
     Table,
     TextFieldInput,

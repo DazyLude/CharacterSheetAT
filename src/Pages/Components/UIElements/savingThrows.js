@@ -78,8 +78,8 @@ function SavingThrowRow({skill}) {
             }}
         >
             <Checkbox
-                isChecked={isProficient}
-                changeHandler={changeHandler}
+                value={isProficient}
+                onChange={changeHandler}
             />
             <div className="sheet-subscript">{modifier}</div>
             <div style={{textAlign: "left"}} className="sheet-subscript">{name}</div>

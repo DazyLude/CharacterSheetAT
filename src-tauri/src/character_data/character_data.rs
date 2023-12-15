@@ -35,8 +35,9 @@ impl CharacterData {
     pub fn add_to_global_set(&mut self, global_name: String, entry_name: String, value: Value) -> Option<()> {
         let element_data = match self
             .globals
-            .get_mut(&global_name)
-            .and_then(Value::as_object_mut)
+            .entry(&global_name)
+            .or_insert(Value::Object(Map::new()))
+            .as_object_mut()
             .unwrap()
             .entry("data")
             .or_insert(Value::Object(Map::new()))
@@ -346,8 +347,13 @@ impl CharacterData {
                         .and_then(Value::as_number)
                         .and_then(Number::as_i64) {
                     None => return Ok(Value::Number(Number::from(0))),
-                    Some(n) => {
-                        return Ok(Value::Number(Number::from(std::cmp::min((n - 10) / 2, 2))));
+                    Some(mut n) => {
+                        if n < 10 {
+                            n = (n - 11) / 2
+                        } else {
+                            n = (n - 10) / 2
+                        }
+                        return Ok(Value::Number(Number::from(std::cmp::min(n, 2))));
                     }
                 }
             }
@@ -358,8 +364,13 @@ impl CharacterData {
                         .and_then(Value::as_number)
                         .and_then(Number::as_i64) {
                     None => return Ok(Value::Number(Number::from(0))),
-                    Some(n) => {
-                        return Ok(Value::Number(Number::from((n - 10) / 2)));
+                    Some(mut n) => {
+                        if n < 10 {
+                            n = (n - 11) / 2
+                        } else {
+                            n = (n - 10) / 2
+                        }
+                        return Ok(Value::Number(Number::from(n)));
                     }
                 }
             }

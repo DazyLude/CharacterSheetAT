@@ -173,7 +173,7 @@ function TableColumns({columns, columnStyle, Head, displayItems}) {
         if (typeof(tablePosition) === 'undefined') {
             tablePosition = [0, 0];
         }
-        let column = (tablePosition[0] ?? 0) % columns;
+        let column = ((((tablePosition[0] ?? 0) % columns) + columns) % columns);
         if (columnItems[column] === undefined) {
             column = 0;
         }

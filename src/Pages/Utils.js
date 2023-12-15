@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api";
 
-export function edit_variable({name, newValue}) {
+export function editVariable({name, newValue}) {
     changeData(
         {
             value_type: "any-set",
