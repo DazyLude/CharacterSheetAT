@@ -147,13 +147,15 @@ export default function ElementEditor() {
     const setId = useCallback(
         (newId) => {
             emit("change_add_element_state", { id: newId });
-        }
+        },
+        []
     )
 
     const setPlacement = useCallback(
         (newPlacement) => {
             emit("change_add_element_state", { placement: newPlacement });
-        }
+        },
+        []
     )
 
     const isCreateButtonActive = () => {

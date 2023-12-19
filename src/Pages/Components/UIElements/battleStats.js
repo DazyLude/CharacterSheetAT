@@ -51,7 +51,6 @@ export default function BattleStats({ characterData, characterDispatch, id }) {
         [setDefaultArmor, setDefaultInitiave, useCustomArmorClass, useCustomInitiative, characterData]
     )
 
-    initiative ??= 0;
     const changeHandler = (name, value) => {
         characterDispatch({
             type: "global",

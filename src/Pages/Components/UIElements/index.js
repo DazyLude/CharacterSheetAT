@@ -55,4 +55,4 @@ const classLibrary = {
 
 export function getUIElementFromString(typeString) {
     return classLibrary[typeString] ?? "div";
-};
+}

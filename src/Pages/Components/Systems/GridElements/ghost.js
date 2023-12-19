@@ -1,4 +1,4 @@
-import { useState, useEffect, createElement, useCallback } from "react";
+import { useState, useEffect, createElement, useCallback, useMemo } from "react";
 
 import MovingController from "./mover";
 import ResizingController from "./resizer";
@@ -10,7 +10,7 @@ import { placementStringFromXYWH } from "../../../Utils";
 
 export function GhostController() {
     const [state, setState] = useState({});
-    const placement = {x: state.x ?? 1, y: state.y ?? 1, h: state.h ?? 1, w: state.w ?? 1};
+    const placement = useMemo(() => {return {x: state.x ?? 1, y: state.y ?? 1, h: state.h ?? 1, w: state.w ?? 1}}, [state]);
     const placementString = placementStringFromXYWH({ ...placement });
     const displayed = state.displayed ?? true;
 

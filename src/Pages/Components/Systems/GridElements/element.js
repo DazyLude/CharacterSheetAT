@@ -36,7 +36,7 @@ export function GridElement({id, children, position}) {
         () => {
             return createElement(GridElementOOC, {move, resize, remove, id});
         },
-        [move, resize, id]
+        [move, resize, id, remove]
     )
 
     return (

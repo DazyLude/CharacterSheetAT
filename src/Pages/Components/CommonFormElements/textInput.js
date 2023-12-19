@@ -23,7 +23,7 @@ export function TextInputNoContext({value, onChange, style, readOnly}) {
                 input.setSelectionRange(selectionStart - lenDiff, selectionStart - lenDiff);
             }
         },
-        [elementRef, selectionStart, value]
+        [elementRef, selectionStart, value, oldValue]
     )
 
     return(

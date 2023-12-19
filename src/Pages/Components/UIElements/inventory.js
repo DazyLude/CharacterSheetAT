@@ -107,93 +107,90 @@ function InventoryItem({ entry, editItem, removeItem, spoilerStateHandler, isOpe
     const [page, setPage] = useState(0);
     const pagesCount = 4;
 
-    const pages = useCallback(
-        (page) => {
-            const n = ((page % pagesCount) + pagesCount) % pagesCount;
-            switch (n) {
-                case 0:
-                default:
-                    return (<>
-                        <TextInput
-                            style={{ gridColumn: "1/4", height: "25px", width: "100%" }}
-                            value={entry.text}
-                            onChange={(value) => { editItem({ text: value }) }}
-                        />
-                        <span style={{ gridColumn: "4/8" }}>long desc</span>
-                        <Checkbox
-                            style={{ width: "99%", gridColumn: "8/9" }}
-                            value={hasLongDesc}
-                            onChange={(value) => { editItem({ hasLongDesc: value }) }}
+    const pages = (page) => {
+        const n = ((page % pagesCount) + pagesCount) % pagesCount;
+        switch (n) {
+            case 0:
+            default:
+                return (<>
+                    <TextInput
+                        style={{ gridColumn: "1/4", height: "25px", width: "100%" }}
+                        value={entry.text}
+                        onChange={(value) => { editItem({ text: value }) }}
+                    />
+                    <span style={{ gridColumn: "4/8" }}>long desc</span>
+                    <Checkbox
+                        style={{ width: "99%", gridColumn: "8/9" }}
+                        value={hasLongDesc}
+                        onChange={(value) => { editItem({ hasLongDesc: value }) }}
+                    />
+                    <UseEffectButton
+                        style={{ gridColumn: "9/13", height: "25px", padding: "0px", marginLeft: "5px" }}
+                        title={"del item"}
+                        action={() => { removeItem() }}
+                    />
+                </>);
+            case 1:
+                return (<>
+                    <span style={{ gridColumn: "1/4" }}> weight/column </span>
+                    <div style={{ gridColumn: "4/10", width: "100%", display: "flex", justifyContent: "space-around" }}>
+                        <NumberInput
+                            style={{
+                                width: "22%",
+                                textAlign: "center",
+                            }}
+                            value={entry.placement[1]}
+                            onChange={value => setWeight(value)}
                         />
                         <UseEffectButton
-                            style={{ gridColumn: "9/13", height: "25px", padding: "0px", marginLeft: "5px" }}
-                            title={"del item"}
-                            action={() => { removeItem() }}
+                            style={{
+                                height: "25px", padding: "0px 0px 3px", width: "30%"
+                            }}
+                            title={"<"}
+                            action={() => { decrementColumn() }}
                         />
-                    </>);
-                case 1:
-                    return (<>
-                        <span style={{ gridColumn: "1/4" }}> weight/column </span>
-                        <div style={{ gridColumn: "4/10", width: "100%", display: "flex", justifyContent: "space-around" }}>
-                            <NumberInput
-                                style={{
-                                    width: "22%",
-                                    textAlign: "center",
-                                }}
-                                value={entry.placement[1]}
-                                onChange={value => setWeight(value)}
-                            />
-                            <UseEffectButton
-                                style={{
-                                    height: "25px", padding: "0px 0px 3px", width: "30%"
-                                }}
-                                title={"<"}
-                                action={() => { decrementColumn() }}
-                            />
-                            <UseEffectButton
-                                style={{
-                                    height: "25px", padding: "0px 0px 3px", width: "30%"
-                                }}
-                                title={">"}
-                                action={() => { incrementColumn() }}
-                            />
-                        </div>
-                    </>);
-                case 2:
-                    return (<>
-                        <span style={{ gridColumn: "1/3" }}> equippable </span>
-                        <Checkbox
-                            style={{ width: "99%", gridColumn: "3/4" }}
-                            value={isEquippable}
-                            onChange={(value) => { editItem({ equipment: value }) }}
+                        <UseEffectButton
+                            style={{
+                                height: "25px", padding: "0px 0px 3px", width: "30%"
+                            }}
+                            title={">"}
+                            action={() => { incrementColumn() }}
                         />
-                        <span style={{ gridColumn: "6/10" }}> attunable </span>
-                        <Checkbox
-                            style={{ width: "99%", gridColumn: "10/11" }}
-                            value={isAttunable}
-                            onChange={(value) => { editItem({ attunement: value }) }}
-                        />
-                    </>);
-                case 3:
-                    return (<>
-                        <span style={{ gridColumn: "1/2" }}> type </span>
-                        <TextInput
-                            style={{ width: "99%", gridColumn: "2/6" }}
-                            value={entry.itemType ?? ""}
-                            onChange={(value) => { editItem({ itemType: value }) }}
-                        />
-                        <span style={{ gridColumn: "6/9" }}> bonus </span>
-                        <TextInput
-                            style={{ width: "99%", gridColumn: "9/13" }}
-                            value={entry.bonus ?? ""}
-                            onChange={(value) => { editItem({ bonus: value }) }}
-                        />
-                    </>);
+                    </div>
+                </>);
+            case 2:
+                return (<>
+                    <span style={{ gridColumn: "1/3" }}> equippable </span>
+                    <Checkbox
+                        style={{ width: "99%", gridColumn: "3/4" }}
+                        value={isEquippable}
+                        onChange={(value) => { editItem({ equipment: value }) }}
+                    />
+                    <span style={{ gridColumn: "6/10" }}> attunable </span>
+                    <Checkbox
+                        style={{ width: "99%", gridColumn: "10/11" }}
+                        value={isAttunable}
+                        onChange={(value) => { editItem({ attunement: value }) }}
+                    />
+                </>);
+            case 3:
+                return (<>
+                    <span style={{ gridColumn: "1/2" }}> type </span>
+                    <TextInput
+                        style={{ width: "99%", gridColumn: "2/6" }}
+                        value={entry.itemType ?? ""}
+                        onChange={(value) => { editItem({ itemType: value }) }}
+                    />
+                    <span style={{ gridColumn: "6/9" }}> bonus </span>
+                    <TextInput
+                        style={{ width: "99%", gridColumn: "9/13" }}
+                        value={entry.bonus ?? ""}
+                        onChange={(value) => { editItem({ bonus: value }) }}
+                    />
+                </>);
 
-            }
-        },
-        [entry]
-    )
+        }
+    };
     const additionalButtons = (isEquippable ? 1 : 0) + (isAttunable ? 1 : 0);
 
     const attune = () => {
@@ -233,7 +230,7 @@ function InventoryItem({ entry, editItem, removeItem, spoilerStateHandler, isOpe
             {isAttunable ? <div onClick={attune} style={{ gridColumn: "11/13", fontWeight: attuned ? "bold" : "normal" }}>att</div> : null}
             <NumberInput style={{ gridColumn: "13/15", height: "25px", textAlign: "center" }} value={entry.qty} onChange={(value) => { editItem({ qty: value }) }} />
 
-            <NumberInputWithPostfix postfix={'\xA0' + "lb"} style={{ textAlign: "right", gridColumn: "15/-1", height: "25px" }} value={entry.wght} onChange={(value) => { editItem({ wght: value }) }} />
+            <NumberInputWithPostfix postfix={'\xA0'.concat('lb')} style={{ textAlign: "right", gridColumn: "15/-1", height: "25px" }} value={entry.wght} onChange={(value) => { editItem({ wght: value }) }} />
 
         </>
     );
