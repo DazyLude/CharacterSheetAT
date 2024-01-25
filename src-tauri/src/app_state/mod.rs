@@ -9,14 +9,17 @@ use crate::{
 
 mod loaded_shortcuts;
 mod element_ghost;
+mod config;
 
-pub use self::element_ghost::ElementGhost;
-pub use self::loaded_shortcuts::LoadedShortcuts;
+pub use self::element_ghost::*;
+pub use self::loaded_shortcuts::*;
+pub use self::config::*;
 
-pub fn with_managed_states() -> tauri::Builder<tauri::Wry> {
-    tauri::Builder::default()
-        .manage(LoadedShortcuts::get_default())
-        .manage(ElementGhost::new())
+pub fn manage_states(app_handle: &AppHandle) {
+    let open_config = ConfigState::open(app_handle);
+    app_handle.manage::<LoadedShortcuts>(open_config.load_shortcuts(app_handle));
+    app_handle.manage::<ConfigState>(open_config);
+    app_handle.manage::<ElementGhost>(ElementGhost::new());
 }
 
 pub fn app_state_to_recovery_string(app_handle: &AppHandle) -> String {

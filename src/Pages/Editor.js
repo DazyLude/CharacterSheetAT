@@ -10,6 +10,8 @@ import { listen } from '@tauri-apps/api/event';
 import { invoke } from "@tauri-apps/api";
 import { EditorContextProvider } from "./Components/Systems/appContext";
 
+import { emit } from '@tauri-apps/api/event';
+
 export default function Editor() {
     const [mousePosition, setMousePosition] = useState([0, 0]);
     const [characterData, setCharacterData] = useState({globals:{}, grid:{}, elements:{}});
@@ -19,6 +21,19 @@ export default function Editor() {
         },
         []
     );
+
+    useEffect(
+        () => {
+            const onKeyDown = (e) => {
+                if ((e.ctrlKey || e.altKey) && !e.repeat) {
+                    emit("keypress", { ctrl_key: e.ctrlKey, alt_key: e.altKey, shift_key: e.shiftKey, key_code: e.code });
+                }
+            }
+            window.addEventListener("keydown", onKeyDown);
+            return () => {window.removeEventListener("keydown", onKeyDown)};
+        },
+        []
+    )
 
     useEffect( // requests data and subscribes to changes
         () => {

@@ -1,19 +1,19 @@
-use tauri::{ AppHandle, CustomMenuItem, Menu, Submenu, Manager, WindowEvent, Window };
 use tauri::api::dialog::confirm;
+use tauri::{AppHandle, CustomMenuItem, Manager, Menu, Submenu, Window, WindowEvent};
 
 use std::ffi::OsStr;
-use std::sync::Mutex;
 use std::path::PathBuf;
+use std::sync::Mutex;
 
+use super::CSATWindow;
 use crate::{
-    app_state::app_state_to_recovery_string,
-    disk_interactions::save_startup_data,
-    funny_constants::APP_NAME,
-    ipc::emit_tauri_error,
+    app_state::{app_state_to_recovery_string, ConfigState},
     character_data::{CharacterData, CharacterDataCommand},
     command::CommandStack,
+    disk_interactions::save_startup_data,
+    funny_constants::APP_NAME,
+    ipc::{emit_tauri_error, AppEvent},
 };
-use super::CSATWindow;
 
 pub struct EditorWindow {}
 
@@ -23,31 +23,29 @@ impl CSATWindow for EditorWindow {
     fn builder(app_handle: &AppHandle) {
         let _ = app_handle.manage(EditorStateSync::new());
         let handle = app_handle.clone();
-        std::thread::spawn(
-            move || {
-                let w = match tauri::WindowBuilder::new(
-                    &handle,
-                    Self::LABEL,
-                    tauri::WindowUrl::App("editor".into())
-                )
-                .title(&(APP_NAME.to_string() + " editor"))
-                .fullscreen(false)
-                .resizable(true)
-                .inner_size(950., 700.)
-                .menu(EditorWindow::generate_editor_menu())
-                .build()
-                {
-                    Ok(w) => w,
-                    Err(e) => {
-                        emit_tauri_error(&handle, e.to_string());
-                        return;
-                    },
-                };
+        std::thread::spawn(move || {
+            let w = match tauri::WindowBuilder::new(
+                &handle,
+                Self::LABEL,
+                tauri::WindowUrl::App("editor".into()),
+            )
+            .title(&(APP_NAME.to_string() + " editor"))
+            .fullscreen(false)
+            .resizable(true)
+            .inner_size(950., 700.)
+            .menu(EditorWindow::generate_editor_menu(&handle))
+            .build()
+            {
+                Ok(w) => w,
+                Err(e) => {
+                    emit_tauri_error(&handle, e.to_string());
+                    return;
+                }
+            };
 
-                let h = handle.clone();
-                w.listen("ghost_moved_by_add_element", move |_e| {move_ghost(&h)});
-            }
-        );
+            let h = handle.clone();
+            w.listen("ghost_moved_by_add_element", move |_e| move_ghost(&h));
+        });
     }
 
     fn run_event_handler(app_handle: &AppHandle, event: WindowEvent) {
@@ -62,11 +60,15 @@ impl CSATWindow for EditorWindow {
                     let r_s = app_state_to_recovery_string(&h);
                     let _ = save_startup_data(&h, &r_s);
                     match h.get_window("add_element") {
-                        Some(cw) => {let _ = cw.close();}
+                        Some(cw) => {
+                            let _ = cw.close();
+                        }
                         None => {}
                     };
                     match h.get_window("remove_element") {
-                        Some(cw) => {let _ = cw.close();}
+                        Some(cw) => {
+                            let _ = cw.close();
+                        }
                         None => {}
                     };
                     let _ = w.close();
@@ -82,10 +84,9 @@ impl CSATWindow for EditorWindow {
                             if answer {
                                 close(&app_handle_clone, &window_clone);
                             }
-                        }
+                        },
                     );
-                }
-                else {
+                } else {
                     close(app_handle, &window);
                 };
             }
@@ -95,7 +96,12 @@ impl CSATWindow for EditorWindow {
 
     fn after_events_cleared(app_handle: &AppHandle, window_handle: &Window) {
         let mut title_suffix = "".to_string();
-        title_suffix += app_handle.state::<EditorStateSync>().get_path().file_name().and_then(OsStr::to_str).unwrap_or("not_named");
+        title_suffix += app_handle
+            .state::<EditorStateSync>()
+            .get_path()
+            .file_name()
+            .and_then(OsStr::to_str)
+            .unwrap_or("not_named");
         if app_handle.state::<EditorStateSync>().has_unsaved_chages() {
             title_suffix += "*";
         }
@@ -104,24 +110,61 @@ impl CSATWindow for EditorWindow {
 }
 
 impl EditorWindow {
-    fn generate_editor_menu() -> Menu {
+    fn generate_editor_menu(app_handle: &AppHandle) -> Menu {
+        let shortcuts = app_handle.state::<ConfigState>();
+        let make_label = |text: &str, act: AppEvent| -> String {
+            match shortcuts.get_accel(act).as_str() {
+                "unknown" => text.to_string(),
+                smth_else => text.to_string() + "\t" + smth_else,
+            }
+        };
         let file_menu = Menu::new()
-            .add_item(CustomMenuItem::new("new", "New"))
-            .add_item(CustomMenuItem::new("save", "Save").accelerator("ctrl+S"))
-            .add_item(CustomMenuItem::new("save as", "Save As"))
-            .add_item(CustomMenuItem::new("open", "Open"));
+            .add_item(CustomMenuItem::new(
+                "new",
+                make_label("New", AppEvent::FileNew),
+            ))
+            .add_item(CustomMenuItem::new(
+                "save",
+                make_label("Save", AppEvent::FileSave),
+            ))
+            .add_item(CustomMenuItem::new(
+                "save as",
+                make_label("Save As", AppEvent::FileSaveAs),
+            ))
+            .add_item(CustomMenuItem::new(
+                "open",
+                make_label("Open", AppEvent::FileOpen),
+            ));
         let file_submenu = Submenu::new("File", file_menu);
 
         let edit_menu = Menu::new()
-            .add_item(CustomMenuItem::new("undo", "Undo").accelerator("ctrl+Z"))
-            .add_item(CustomMenuItem::new("redo", "Redo").accelerator("ctrl+Y"))
-            .add_item(CustomMenuItem::new("add_element", "Add Element").accelerator("ctrl+E"));
+            .add_item(CustomMenuItem::new(
+                "undo",
+                make_label("Undo", AppEvent::ActionUndo),
+            ))
+            .add_item(CustomMenuItem::new(
+                "redo",
+                make_label("Redo", AppEvent::ActionRedo),
+            ))
+            .add_item(CustomMenuItem::new(
+                "add_element",
+                make_label("Add Element", AppEvent::WindowAddElement),
+            ));
         let edit_submenu = Submenu::new("Edit", edit_menu);
 
         let mode_menu = Menu::new()
-            .add_item(CustomMenuItem::new("readonly_switch", "Switch Readonly Mode").accelerator("ctrl+1"))
-            .add_item(CustomMenuItem::new("layout_switch", "Switch Layout Editing Mode").accelerator("ctrl+2"))
-            .add_item(CustomMenuItem::new("element_switch", "Switch Element Editing Mode").accelerator("ctrl+3"));
+            .add_item(CustomMenuItem::new(
+                "readonly_switch",
+                make_label("Switch Readonly Mode", AppEvent::ModReadOnly),
+            ))
+            .add_item(CustomMenuItem::new(
+                "layout_switch",
+                make_label("Switch Layout Editing Mode", AppEvent::ModGridEdit),
+            ))
+            .add_item(CustomMenuItem::new(
+                "element_switch",
+                make_label("Switch Element Editing Mode", AppEvent::ModElementEdit),
+            ));
         let mode_submenu = Submenu::new("Mode", mode_menu);
 
         Menu::new()
@@ -133,16 +176,16 @@ impl EditorWindow {
 
 fn tell_to_reload(handle: &AppHandle) {
     handle
-        .emit_to( "editor", "new_data", {} )
+        .emit_to("editor", "new_data", {})
         .unwrap_or_else(|error| emit_tauri_error(handle, error.to_string()));
     handle
-        .emit_to( "debug_window", "new_data", {} )
+        .emit_to("debug_window", "new_data", {})
         .unwrap_or_else(|error| emit_tauri_error(handle, error.to_string()));
 }
 
 fn move_ghost(handle: &AppHandle) {
     handle
-        .emit_to( "editor", "move_ghost", {} )
+        .emit_to("editor", "move_ghost", {})
         .unwrap_or_else(|error| emit_tauri_error(handle, error.to_string()));
 }
 
@@ -152,10 +195,17 @@ pub struct EditorStateSync {
 
 impl EditorStateSync {
     pub fn new() -> Self {
-        EditorStateSync { state: Mutex::from(EditorState::new()) }
+        EditorStateSync {
+            state: Mutex::from(EditorState::new()),
+        }
     }
 
-    pub fn change_associated_file(&self, handle: &AppHandle, path: PathBuf, data: serde_json::Value) {
+    pub fn change_associated_file(
+        &self,
+        handle: &AppHandle,
+        path: PathBuf,
+        data: serde_json::Value,
+    ) {
         self.set_path(path);
         self.set_data(data.into(), handle);
         self.remove_not_saved_flag();
@@ -182,7 +232,11 @@ impl EditorStateSync {
         tell_to_reload(handle);
     }
 
-    pub fn change_data(&self, command: CharacterDataCommand, handle: &AppHandle) -> Result<(), String> {
+    pub fn change_data(
+        &self,
+        command: CharacterDataCommand,
+        handle: &AppHandle,
+    ) -> Result<(), String> {
         let mut state = self.state.lock().unwrap();
         state.history.do_one(command)?;
         tell_to_reload(handle);

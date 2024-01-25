@@ -2,10 +2,10 @@ use std::path::PathBuf;
 
 use tauri::{ Manager, AppHandle, State };
 use serde_json::Value;
-use crate::app_state::ElementGhost;
+use crate::app_state::{ElementGhost, ConfigState};
 use crate::character_data::CharacterDataCommand;
 use crate::windows::{ AddElementStateSync, EditorStateSync };
-use super::{ChangeJSON, PayloadJSON};
+use super::{ChangeJSON, PayloadJSON, emit_tauri_error};
 
 pub fn handle_change_request(handle: AppHandle, target: String, data: Value) -> Result<(), String> {
     match target.as_str() {
@@ -18,6 +18,13 @@ pub fn handle_change_request(handle: AppHandle, target: String, data: Value) -> 
             handle.state::<ElementGhost>().update_placement(new_placement, &handle);
             Ok(())
         }
+        "config" => {
+            let data = match data.as_object() {
+                Some(d) => d.clone(),
+                None => return Err(format!("invalid data in config change request: {data}")),
+            };
+            handle.state::<ConfigState>().apply_changes(data)
+        },
         e => return Err(format!("unknown change request target: {e}")),
     }
 }
@@ -96,6 +103,13 @@ pub fn handle_data_request(
             };
             Ok(PayloadJSON{ data: Value::Object(data.get_variables()) })
         }
+        "config" => {
+            let data = match app_handle.try_state::<ConfigState>() {
+                Some(state) => state.get_raw(),
+                None => return Err("configuration not managed".to_string()),
+            };
+            Ok(PayloadJSON{ data })
+        }
         _e => return Err(format!("incorrect data type requested: {}", _e)),
     }
 }
@@ -118,4 +132,14 @@ fn make_path_relative(app_state: State<EditorStateSync>, path: String) -> Result
         return Err(child_path.to_string_lossy().to_string());
     }
     Ok(child_path.strip_prefix(&json_path).unwrap().to_string_lossy().to_string())
+}
+
+pub fn handle_call(app_handle: AppHandle, code: String, args: Option<Value>) {
+    match code.as_str() {
+        "save_config" => {
+            let config_state = app_handle.state::<ConfigState>();
+            config_state.save_to_disk(&app_handle);
+        }
+        _ => emit_tauri_error(&app_handle, format!("unimplemented call code: {}, with args: {:?}", code, args)),
+    }
 }
