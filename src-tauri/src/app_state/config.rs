@@ -6,7 +6,7 @@ use std::sync::Mutex;
 
 use tauri::AppHandle;
 
-use crate::disk_interactions::load_json_from_disk;
+use crate::disk_interactions::{load_json_from_disk, save_json_to_disk};
 use crate::ipc::{emit_tauri_error, AppEvent, PressedKey};
 
 use super::{CatalogueItemType, LoadedShortcuts};
@@ -160,30 +160,6 @@ impl Config {
     }
 
     pub fn save(&self, app_handle: &AppHandle) {
-        let data_dir_path = match app_handle.path_resolver().app_data_dir() {
-            Some(p) => p,
-            None => {
-                emit_tauri_error(app_handle, "app data directory not provided".to_string());
-                return;
-            }
-        };
-        let config_file_path = data_dir_path.join::<PathBuf>("config.json".into());
-        let file = match std::fs::OpenOptions::new()
-            .create(true)
-            .write(true)
-            .open(config_file_path)
-        {
-            Ok(f) => f,
-            Err(e) => {
-                emit_tauri_error(
-                    app_handle,
-                    format!("error when opening config file: {}", e.to_string()),
-                );
-                return;
-            }
-        };
-        let writer = std::io::BufWriter::new(file);
-
         let mut diff = Map::new();
         let default = Self::default();
         for (f, fv) in default {
@@ -199,16 +175,15 @@ impl Config {
                 }
             }
         }
-
-        match serde_json::to_writer(writer, &Value::Object(diff)) {
-            Err(e) => {
-                emit_tauri_error(
-                    app_handle,
-                    format!("error when writing config file: {}", e.to_string()),
-                );
+        let data_dir_path = match app_handle.path_resolver().app_data_dir() {
+            Some(p) => p,
+            None => {
+                emit_tauri_error(app_handle, "app data directory not provided".to_string());
+                return;
             }
-            _ => {}
-        }
+        };
+        let config_file_path = data_dir_path.join::<PathBuf>("config.json".into());
+        save_json_to_disk(app_handle, &config_file_path, Value::Object(diff));
     }
 
     pub fn as_value(&self) -> Value {
@@ -294,7 +269,7 @@ impl Config {
                     continue;
                 },
             };
-            let catalogue = match catalogue_unchecked.as_object() {
+            let catalogue = match catalogue_unchecked.as_object().and_then(|o| o.get("data")).and_then(Value::as_object) {
                 Some(o) => o.clone(),
                 None => {
                     emit_tauri_error(app_handle, format!("unknown catalogue format: {:?}", catalogue_unchecked));

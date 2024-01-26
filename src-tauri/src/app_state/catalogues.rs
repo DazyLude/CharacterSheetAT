@@ -39,6 +39,15 @@ pub enum CatalogueItemType {
     Spell,
 }
 
+impl ToString for CatalogueItemType {
+    fn to_string(&self) -> String {
+        match self {
+            CatalogueItemType::Item => "spell",
+            CatalogueItemType::Spell => "item",
+        }.to_string()
+    }
+}
+
 impl From<&str> for CatalogueItemType {
     fn from(value: &str) -> Self {
         match value {

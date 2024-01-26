@@ -62,6 +62,34 @@ pub fn load_json_from_disk(path: &PathBuf) -> Result<Value, String> {
     open_file(&path).and_then(parse_from_reader)
 }
 
+pub fn save_json_to_disk(app_handle: &AppHandle, path: &PathBuf, data: Value) {
+    let file = match std::fs::OpenOptions::new()
+        .create(true)
+        .write(true)
+        .open(path)
+    {
+        Ok(f) => f,
+        Err(e) => {
+            emit_tauri_error(
+                app_handle,
+                format!("error when saving a file ({:?}): {}", path, e.to_string()),
+            );
+            return;
+        }
+    };
+    let writer = std::io::BufWriter::new(file);
+
+    match serde_json::to_writer(writer, &data) {
+        Err(e) => {
+            emit_tauri_error(
+                app_handle,
+                format!("error when writing to file ({:?}): {}", path, e.to_string()),
+            );
+        }
+        _ => {}
+    }
+}
+
 pub fn open_character_sheet(window: tauri::Window) {
     FileDialogBuilder::new().pick_file(move |file_path| {
         let app_handle = window.app_handle();

@@ -3,11 +3,17 @@ use std::path::PathBuf;
 use super::{emit_tauri_error, ChangeJSON, PayloadJSON};
 use crate::app_state::{CatalogueItemType, CatalogueState, ConfigState, ElementGhost};
 use crate::character_data::CharacterDataCommand;
+use crate::disk_interactions::save_json_to_disk;
 use crate::windows::{AddElementStateSync, EditorStateSync};
-use serde_json::Value;
+use serde_json::{Map, Value};
+use tauri::api::dialog::FileDialogBuilder;
 use tauri::{AppHandle, Manager, State};
 
-pub fn handle_change_request(app_handle: AppHandle, target: String, data: Value) -> Result<(), String> {
+pub fn handle_change_request(
+    app_handle: AppHandle,
+    target: String,
+    data: Value,
+) -> Result<(), String> {
     match target.as_str() {
         "character_data" => return change_character_data(&app_handle, data.into()),
         "element_ghost" => {
@@ -41,12 +47,16 @@ pub fn handle_change_request(app_handle: AppHandle, target: String, data: Value)
                         (_, _) => return Err(format!("incorrect add to catalogue data format: got {:?}, {{item: {{...}}, type: \"...\"}} required", data)),
                     }
                 }
-                None => return Err(format!("invalid data in add item to catalogue request: {data}")),
+                None => {
+                    return Err(format!(
+                        "invalid data in add item to catalogue request: {data}"
+                    ))
+                }
             };
             match app_handle.try_state::<CatalogueState>() {
                 Some(state) => {
                     state.add_item(item_type, item);
-                },
+                }
                 None => return Err(format!("catalogue state not managed")),
             }
             Ok(())
@@ -159,7 +169,10 @@ pub fn handle_data_request(
         "catalogue_query" => {
             let (item_type, query) = match requested_data_argument {
                 Some(ref v) => {
-                    let query = v.get("query").and_then(Value::as_str).and_then(|s| Some(s.to_string()));
+                    let query = v
+                        .get("query")
+                        .and_then(Value::as_str)
+                        .and_then(|s| Some(s.to_string()));
                     let item_type = v.get("type").and_then(Value::as_str);
                     match (item_type, query) {
                         (Some(t), Some(q)) => (CatalogueItemType::from(t), q),
@@ -217,6 +230,30 @@ pub fn handle_call(app_handle: AppHandle, code: String, args: Option<Value>) {
         "save_config" => {
             let config_state = app_handle.state::<ConfigState>();
             config_state.save_to_disk(&app_handle);
+        }
+        "export_catalogues" => {
+            let catalogues_state = app_handle.state::<CatalogueState>();
+            let catalogues_to_save : Vec<_> = catalogues_state
+                .export_current_catalogues()
+                .into_iter()
+                .map(|(cat_t, cat_v)| {
+                    let mut temp_map = Map::new();
+                    let cat_t = Value::String(cat_t.to_string());
+                    temp_map.insert("type".to_string(), cat_t);
+                    temp_map.insert("data".to_string(), cat_v);
+                    Value::Object(temp_map)
+                })
+                .collect();
+            for cat in catalogues_to_save {
+                let app_handle_clone = app_handle.clone();
+                FileDialogBuilder::new().save_file(move |file_path| {
+                    let path = match file_path {
+                        Some(p) => p,
+                        None => return, // path was not provided by the user, we can just exit
+                    };
+                    save_json_to_disk(&app_handle_clone, &path, cat)
+                });
+            }
         }
         _ => emit_tauri_error(
             &app_handle,
