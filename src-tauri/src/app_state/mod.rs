@@ -10,14 +10,21 @@ use crate::{
 mod loaded_shortcuts;
 mod element_ghost;
 mod config;
+mod catalogues;
 
 pub use self::element_ghost::*;
 pub use self::loaded_shortcuts::*;
 pub use self::config::*;
+pub use self::catalogues::*;
 
 pub fn manage_states(app_handle: &AppHandle) {
     let open_config = ConfigState::open(app_handle);
     app_handle.manage::<LoadedShortcuts>(open_config.load_shortcuts(app_handle));
+    let catalogue = CatalogueState::new();
+    for new_catalogue in open_config.load_catalogues(app_handle) {
+        catalogue.load_catalogue(new_catalogue);
+    }
+    app_handle.manage::<CatalogueState>(catalogue);
     app_handle.manage::<ConfigState>(open_config);
     app_handle.manage::<ElementGhost>(ElementGhost::new());
 }

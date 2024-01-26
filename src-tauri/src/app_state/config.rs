@@ -1,17 +1,15 @@
 //! loads cofig data and passes it to the respective modules
 use serde_json::{Map, Value};
 use std::collections::{BTreeMap, HashMap};
-use std::fs::File;
-use std::io::{BufReader, Read};
 use std::path::PathBuf;
-use std::str::FromStr;
 use std::sync::Mutex;
 
 use tauri::AppHandle;
 
-use crate::ipc::{emit_tauri_error, emit_tauri_log, AppEvent, PressedKey};
+use crate::disk_interactions::load_json_from_disk;
+use crate::ipc::{emit_tauri_error, AppEvent, PressedKey};
 
-use super::LoadedShortcuts;
+use super::{CatalogueItemType, LoadedShortcuts};
 
 pub struct ConfigState {
     pub data: Mutex<Config>,
@@ -43,6 +41,10 @@ impl ConfigState {
 
     pub fn get_raw(&self) -> Value {
         self.data.lock().unwrap().as_value()
+    }
+
+    pub fn load_catalogues(&self, app_handle: &AppHandle) -> Vec<(CatalogueItemType, Map<String, Value>)> {
+        self.data.lock().unwrap().load_catalogues(app_handle)
     }
 
     pub fn get_accel(&self, action: AppEvent) -> String {
@@ -86,6 +88,7 @@ impl Config {
 
         let mut data = Map::new();
         data.insert("shortcuts".to_string(), Value::Object(shortcuts));
+        data.insert("catalogues".to_string(), Value::Array(Vec::new()));
         data
     }
 
@@ -98,27 +101,13 @@ impl Config {
             }
         };
         let config_file_path = data_dir_path.join::<PathBuf>("config.json".into());
-        let file = match File::open(config_file_path) {
-            Ok(f) => f,
-            Err(e) => {
-                emit_tauri_error(app_handle, format!("couldn't open config file: {e}"));
-                return;
-            }
-        };
-        let mut buffer = String::new();
-        match BufReader::new(file).read_to_string(&mut buffer) {
-            Ok(b) => emit_tauri_log(app_handle, format!("read {b} bytes from config file")),
-            Err(e) => {
-                emit_tauri_error(app_handle, format!("error when reading config file: {e}"));
-                return;
-            }
-        }
-        let config_value = match Value::from_str(&buffer) {
+
+        let config_value = match load_json_from_disk(&config_file_path) {
             Ok(v) => v,
             Err(e) => {
-                emit_tauri_error(app_handle, format!("couldn't parse config data: {e}"));
+                emit_tauri_error(app_handle, e);
                 return;
-            }
+            },
         };
 
         let saved_config = match config_value.as_object() {
@@ -142,6 +131,30 @@ impl Config {
                     *ev = v.clone();
                 }
             }
+            None => {}
+        }
+
+        match saved_config.get("catalogues").and_then(Value::as_array) {
+            Some(a) => {
+                for c in a {
+                    let (items_type, path) = match c.as_object() {
+                        Some(o) => {
+                            let t = o.get("type").and_then(Value::as_str);
+                            let p = o.get("path").and_then(Value::as_str);
+                            match (t, p) {
+                                (Some(st), Some(sp)) => (st.to_string(), sp.to_string()),
+                                (_, _) => continue,
+                            }
+
+                        }
+                        None => continue,
+                    };
+                    let mut cat = Map::new();
+                    cat.insert("type".to_string(), Value::String(items_type));
+                    cat.insert("path".to_string(), Value::String(path));
+                    self.data.get_mut("catalogues").and_then(Value::as_array_mut).unwrap().push(c.clone());
+                }
+            },
             None => {}
         }
     }
@@ -265,5 +278,32 @@ impl Config {
             }
         }
         LoadedShortcuts::from_map(shortcut_map)
+    }
+
+    pub fn load_catalogues(&self, app_handle: &AppHandle) -> Vec<(CatalogueItemType, Map<String, Value>)> {
+        let cats = self.data.get("catalogues").and_then(Value::as_array).unwrap();
+        let mut loaded_cats = Vec::new();
+        for cat in cats {
+            let cat = cat.as_object().unwrap();
+            let item_type : CatalogueItemType = cat.get("type").and_then(Value::as_str).unwrap().into();
+            let catalogue_path : PathBuf = cat.get("type").and_then(Value::as_str).unwrap().into();
+            let catalogue_unchecked = match load_json_from_disk(&catalogue_path) {
+                Ok(v) => v,
+                Err(e) => {
+                    emit_tauri_error(app_handle, e);
+                    continue;
+                },
+            };
+            let catalogue = match catalogue_unchecked.as_object() {
+                Some(o) => o.clone(),
+                None => {
+                    emit_tauri_error(app_handle, format!("unknown catalogue format: {:?}", catalogue_unchecked));
+                    continue;
+                },
+            };
+            loaded_cats.push((item_type, catalogue));
+        }
+
+        loaded_cats
     }
 }
