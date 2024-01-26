@@ -47,6 +47,10 @@ impl ConfigState {
         self.data.lock().unwrap().load_catalogues(app_handle)
     }
 
+    pub fn add_catalogue(&self, items_type: CatalogueItemType, path: PathBuf) {
+        self.data.lock().unwrap().add_catalogue(items_type, path)
+    }
+
     pub fn get_accel(&self, action: AppEvent) -> String {
         self.data
             .lock()
@@ -261,7 +265,7 @@ impl Config {
         for cat in cats {
             let cat = cat.as_object().unwrap();
             let item_type : CatalogueItemType = cat.get("type").and_then(Value::as_str).unwrap().into();
-            let catalogue_path : PathBuf = cat.get("type").and_then(Value::as_str).unwrap().into();
+            let catalogue_path : PathBuf = cat.get("path").and_then(Value::as_str).unwrap().into();
             let catalogue_unchecked = match load_json_from_disk(&catalogue_path) {
                 Ok(v) => v,
                 Err(e) => {
@@ -280,5 +284,13 @@ impl Config {
         }
 
         loaded_cats
+    }
+
+    pub fn add_catalogue(&mut self, items_type: CatalogueItemType, path: PathBuf) {
+        let cats = self.data.get_mut("catalogues").and_then(Value::as_array_mut).unwrap();
+        let mut catalogue_obj = Map::new();
+        catalogue_obj.insert("type".to_string(), Value::String(items_type.to_string()));
+        catalogue_obj.insert("path".to_string(), Value::String(path.to_string_lossy().to_string()));
+        cats.push(Value::Object(catalogue_obj));
     }
 }

@@ -33,7 +33,7 @@ impl CatalogueState {
     }
 }
 
-#[derive(PartialEq, Eq, PartialOrd, Ord, strum_macros::EnumIter)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, strum_macros::EnumIter, Clone, Copy)]
 pub enum CatalogueItemType {
     Item,
     Spell,

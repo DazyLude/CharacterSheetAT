@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use super::{emit_tauri_error, ChangeJSON, PayloadJSON};
 use crate::app_state::{CatalogueItemType, CatalogueState, ConfigState, ElementGhost};
 use crate::character_data::CharacterDataCommand;
-use crate::disk_interactions::save_json_to_disk;
+use crate::disk_interactions::{load_json_from_disk, save_json_to_disk};
 use crate::windows::{AddElementStateSync, EditorStateSync};
 use serde_json::{Map, Value};
 use tauri::api::dialog::FileDialogBuilder;
@@ -36,6 +36,66 @@ pub fn handle_change_request(
                 None => return Err(format!("invalid data in config change request: {data}")),
             };
             app_handle.state::<ConfigState>().apply_changes(data)
+        }
+        "catalogue_import" => {
+            let app_handle_cl = app_handle.clone();
+            FileDialogBuilder::new().pick_file(move |file_path| {
+                let path = match file_path {
+                    Some(p) => p,
+                    None => return, // path was not provided by the user, we can just exit
+                };
+                let value_unchecked = load_json_from_disk(&path);
+                let (catalogue, items_type) = match value_unchecked {
+                    Ok(ref v) => {
+                        let catalogue_unchecked = match v.as_object() {
+                            Some(o) => o,
+                            None => {
+                                emit_tauri_error(
+                                    &app_handle_cl,
+                                    format!("cannot parse file as json object"),
+                                );
+                                return;
+                            }
+                        };
+                        let catalogue = match catalogue_unchecked
+                            .get("data")
+                            .and_then(Value::as_object)
+                        {
+                            Some(d) => d,
+                            None => {
+                                emit_tauri_error(&app_handle_cl, format!("no data in catalogue file"));
+                                return;
+                            }
+                        };
+                        let items_type: CatalogueItemType = match catalogue_unchecked
+                            .get("type")
+                            .and_then(Value::as_str)
+                        {
+                            Some(d) => d.into(),
+                            None => {
+                                emit_tauri_error(&app_handle_cl, format!("no type in catalogue file"));
+                                return;
+                            }
+                        };
+                        (catalogue, items_type)
+                    }
+                    Err(e) => {
+                        emit_tauri_error(&app_handle_cl, e);
+                        return;
+                    },
+                };
+                let cat_state = match app_handle_cl.try_state::<CatalogueState>() {
+                    Some(state) => state,
+                    None => return,
+                };
+                cat_state.load_catalogue((items_type, catalogue.clone()));
+                let config_state = match app_handle_cl.try_state::<ConfigState>() {
+                    Some(s) => s,
+                    None => return,
+                };
+                config_state.add_catalogue(items_type, path);
+            });
+            Ok(())
         }
         "catalogue_add" => {
             let (item_type, item) = match data.as_object() {
@@ -233,7 +293,7 @@ pub fn handle_call(app_handle: AppHandle, code: String, args: Option<Value>) {
         }
         "export_catalogues" => {
             let catalogues_state = app_handle.state::<CatalogueState>();
-            let catalogues_to_save : Vec<_> = catalogues_state
+            let catalogues_to_save: Vec<_> = catalogues_state
                 .export_current_catalogues()
                 .into_iter()
                 .map(|(cat_t, cat_v)| {
